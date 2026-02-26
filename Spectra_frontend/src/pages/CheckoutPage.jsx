@@ -6,8 +6,8 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Nếu bạn truyền từ CartPage qua navigate("/checkout", { state: { cartItems } })
-  // thì sẽ lấy được ở đây. Nếu không có thì dùng demo data.
+  // Nếu truyền từ CartPage: navigate("/checkout", { state: { cartItems } })
+  // thì lấy được cartItems ở đây. Nếu không có thì dùng demo.
   const initialCart =
     location.state?.cartItems ??
     [
@@ -66,8 +66,23 @@ export default function CheckoutPage() {
       return;
     }
 
-    alert("Đặt hàng thành công (demo)!");
-    navigate("/orders"); // hoặc navigate("/") tuỳ bạn
+    // tạo mã đơn demo
+    const orderId = "OD" + Math.floor(100000 + Math.random() * 900000);
+
+    // chuyển sang trang thành công + gửi dữ liệu để hiển thị
+    navigate("/checkout-success", {
+      state: {
+        orderId,
+        customer: {
+          fullName: form.fullName,
+          phone: form.phone,
+          email: form.email,
+          address: form.address,
+          note: form.note,
+        },
+        total,
+      },
+    });
   };
 
   return (
@@ -173,7 +188,9 @@ export default function CheckoutPage() {
 
             <div className="row">
               <span>Phí vận chuyển</span>
-              <span>{cartItems.length ? formatVND(shippingFee) : formatVND(0)}</span>
+              <span>
+                {cartItems.length ? formatVND(30000) : formatVND(0)}
+              </span>
             </div>
 
             <div className="line" />

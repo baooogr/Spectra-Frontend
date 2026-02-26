@@ -26,6 +26,7 @@ import OrderHistory from "./components/product/OrderHistory";
 import OrderDetail from "./components/product/OrderDetail";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/checkout-success" element={<CheckoutSuccess />} />
         </Routes>
       </div>
     </BrowserRouter>
