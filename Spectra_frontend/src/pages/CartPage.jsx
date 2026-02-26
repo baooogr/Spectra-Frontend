@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import "./CartPage.css";
+import { useNavigate } from "react-router-dom";
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState([
@@ -22,6 +23,8 @@ export default function CartPage() {
         "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=200&q=80",
     },
   ]);
+
+  const navigate = useNavigate();
 
   const shippingFee = 30000;
 
@@ -47,6 +50,15 @@ export default function CartPage() {
 
   const clearCart = () => setCartItems([]);
 
+  const goCheckout = () => {
+    if (cartItems.length === 0) return;
+    // Nếu bạn muốn truyền dữ liệu qua state:
+    // navigate("/checkout", { state: { cartItems, subtotal, shippingFee, total } });
+
+    // Còn nếu chỉ cần chuyển trang:
+    navigate("/checkout");
+  };
+
   return (
     <div className="cart">
       <div className="cart__container">
@@ -59,6 +71,16 @@ export default function CartPage() {
               <div className="cart__empty">
                 <p>Giỏ hàng đang trống.</p>
                 <small>Hãy thêm sản phẩm để tiếp tục mua sắm.</small>
+
+                {/* Nút đi mua sắm (tuỳ chọn) */}
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    className="btn btn--primary"
+                    onClick={() => navigate("/")}
+                  >
+                    Quay lại mua sắm
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -119,40 +141,55 @@ export default function CartPage() {
                   <button className="btn btn--ghost" onClick={clearCart}>
                     Xóa tất cả
                   </button>
+
+                  <button
+                    className="btn btn--primary"
+                    onClick={goCheckout}
+                    disabled={cartItems.length === 0}
+                    title={
+                      cartItems.length === 0
+                        ? "Giỏ hàng trống"
+                        : "Sang trang thanh toán"
+                    }
+                  >
+                    Tiếp tục thanh toán
+                  </button>
+                </div>
+
+                {/* Hiển thị nhanh tổng tiền (tuỳ chọn) */}
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>Tạm tính</span>
+                    <span>{formatVND(subtotal)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>Phí vận chuyển</span>
+                    <span>{formatVND(shippingFee)}</span>
+                  </div>
+                  <div style={{ height: 1, background: "#eaeaea", margin: "10px 0" }} />
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span>Tổng</span>
+                    <span>{formatVND(total)}</span>
+                  </div>
                 </div>
               </>
             )}
           </div>
 
-          {/* RIGHT */}
-          {/* <div className="cart__right">
+          {/* RIGHT (Bạn đang comment, giữ nguyên) */}
+          {/*
+          <div className="cart__right">
             <div className="summary">
-              <h2 className="summary__title">Tóm tắt</h2>
-
-              <div className="summary__row">
-                <span>Tạm tính</span>
-                <span>{formatVND(subtotal)}</span>
-              </div>
-
-              <div className="summary__row">
-                <span>Phí vận chuyển</span>
-                <span>
-                  {cartItems.length > 0 ? formatVND(shippingFee) : formatVND(0)}
-                </span>
-              </div>
-
-              <div className="summary__divider" />
-
-              <div className="summary__row summary__row--total">
-                <span>Tổng</span>
-                <span>{formatVND(total)}</span>
-              </div>
-
-              <small className="summary__note">
-                * Chỉ hiển thị giỏ hàng (không có chức năng thanh toán).
-              </small>
+              ...
             </div>
-          </div> */}
+          </div>
+          */}
         </div>
       </div>
     </div>
