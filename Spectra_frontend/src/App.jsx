@@ -24,6 +24,7 @@ import ProductDetail from "./components/product/ProductDetail";
 import productList from "./components/product/data/ProductList";
 import OrderHistory from "./components/product/OrderHistory";
 import OrderDetail from "./components/product/OrderDetail";
+import CartPage from "./pages/CartPage";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/orders/:id" element={<OrderDetail />} />
+          <Route path="/cart" element={<CartPage />} />
         </Routes>
       </div>
     </BrowserRouter>
