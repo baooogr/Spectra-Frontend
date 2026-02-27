@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-
+import { useCart } from "../../context/CartContext";
 import ImageGallery from "./ImageGallery";
 import Section from "./Section";
 import Tabs from "./Tabs";
 import TabButton from "./TabButton";
 
 import productList from "./data/ProductList";
+import Modal from "../ui/Modal";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -14,13 +15,24 @@ export default function ProductDetail() {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedTab, setSelectedTab] = useState("fit");
+  const { addToCart } = useCart();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   if (!product) return <p>Không tìm thấy sản phẩm</p>;
 
   const tabContent = product.detail[selectedTab];
 
+  const handleAddToCart = () => {
+    addToCart(product, quantity); 
+    setIsModalOpen(true); 
+  };
+
   return (
     <>
+      {/* MODAL */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
       <div
         style={{
           maxWidth: 1100,
@@ -77,6 +89,7 @@ export default function ProductDetail() {
           </div>
 
           <button
+            onClick={handleAddToCart}
             style={{
               padding: "10px 18px",
               border: "1px solid #333",

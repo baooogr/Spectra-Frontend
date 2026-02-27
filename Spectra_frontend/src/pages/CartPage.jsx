@@ -1,30 +1,12 @@
 import React, { useMemo, useState } from "react";
 import "./CartPage.css";
 import { useNavigate } from "react-router-dom";
-
+import { useCart } from "../context/CartContext";
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Kính râm Aviator Cổ điển",
-      variant: "Màu: Đen",
-      price: 1250000,
-      quantity: 1,
-      image:
-        "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=200&q=80",
-    },
-    {
-      id: 2,
-      name: "Kính cận chống ánh sáng xanh",
-      variant: "Độ: -2.00 | Gọng: Trong suốt",
-      price: 850000,
-      quantity: 2,
-      image:
-        "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=200&q=80",
-    },
-  ]);
-
   const navigate = useNavigate();
+  
+ 
+  const { cartItems, updateQty, removeItem, clearCart } = useCart();
 
   const shippingFee = 30000;
 
@@ -37,24 +19,11 @@ export default function CartPage() {
   const formatVND = (n) =>
     n.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
 
-  const updateQty = (id, nextQty) => {
-    if (nextQty < 1) return;
-    setCartItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, quantity: nextQty } : it))
-    );
-  };
-
-  const removeItem = (id) => {
-    setCartItems((prev) => prev.filter((it) => it.id !== id));
-  };
-
-  const clearCart = () => setCartItems([]);
-
   const goCheckout = () => {
     if (cartItems.length === 0) return;
-    
-    navigate("/checkout");
+    navigate("/checkout", { state: { cartItems } }); 
   };
+   
 
   return (
     <div className="cart">
