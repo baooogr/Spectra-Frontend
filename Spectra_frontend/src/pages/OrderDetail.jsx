@@ -1,11 +1,11 @@
 import { useParams, Link } from "react-router-dom";
-import { orderList } from "../components/product/data/OrderList";
+import { useOrder } from "../context/OrderContext";
 import "./OrderDetail.css";
 
 function OrderDetail() {
     const { id } = useParams();
-
-    const order = orderList.find((o) => o.id === id);
+    const { orders } = useOrder();
+    const order = orders?.find((o) => String(o.id) === String(id));
 
     if (!order) {
         return (

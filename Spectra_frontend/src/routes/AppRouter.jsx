@@ -1,22 +1,25 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-// Import Layout
+
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 
-// Import Pages (Của bạn và Nhật Anh)
+
 import MainPage from "../pages/MainPage";
 import OrderHistory from "../pages/OrderHistory";
 import OrderDetail from "../pages/OrderDetail";
 
-// ---> THÊM IMPORT 3 TRANG MỚI CỦA TUẤN ANH Ở ĐÂY <---
+
 import CartPage from "../pages/CartPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import CheckoutSuccess from "../pages/CheckoutSuccess";
 
-// Import Component chi tiết sản phẩm
+
 import ProductDetail from "../components/product/ProductDetail";
+
+import LoginPage from "../pages/LoginPage";
+import RegisterPage from "../pages/RegisterPage";
 
 export default function AppRouter() {
   return (
@@ -37,6 +40,10 @@ export default function AppRouter() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
+
+          {/* LOGIN/REGISTER*/}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </main>
 

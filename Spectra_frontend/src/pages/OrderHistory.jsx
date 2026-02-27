@@ -1,29 +1,11 @@
 import "./OrderHistory.css";
 import { Link } from "react-router-dom";
+import { useOrder } from "../context/OrderContext";
 
-const orders = [
-  {
-    id: "OD001",
-    date: "2025-02-10",
-    status: "Completed",
-    total: 45.85,
-    items: [
-      { name: "Graphite Point Guard Glasses", qty: 1, price: 15.95 },
-      { name: "Classic Frame Black", qty: 2, price: 14.95 }
-    ]
-  },
-  {
-    id: "OD002",
-    date: "2025-02-15",
-    status: "Pending",
-    total: 29.95,
-    items: [
-      { name: "Metal Square Glasses", qty: 1, price: 29.95 }
-    ]
-  }
-];
+
 
 function OrderHistory() {
+  const { orders } = useOrder();
   return (
     <div className="order-container">
       <h2>Order History</h2>
