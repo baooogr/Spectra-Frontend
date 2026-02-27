@@ -1,10 +1,10 @@
 .main-page {
-  /* Bỏ max-width để full màn hình, set padding 40px cho đều với Header */
+ 
   padding: 40px; 
   font-family: sans-serif;
 }
 
-/* Các đoạn code bên dưới giữ nguyên... */
+
 .main-header {
   text-align: center;
   margin-bottom: 40px;

@@ -52,10 +52,7 @@ export default function CartPage() {
 
   const goCheckout = () => {
     if (cartItems.length === 0) return;
-    // Nếu bạn muốn truyền dữ liệu qua state:
-    // navigate("/checkout", { state: { cartItems, subtotal, shippingFee, total } });
-
-    // Còn nếu chỉ cần chuyển trang:
+    
     navigate("/checkout");
   };
 
@@ -182,7 +179,7 @@ export default function CartPage() {
             )}
           </div>
 
-          {/* RIGHT (Bạn đang comment, giữ nguyên) */}
+          {/* RIGHT */}
           {/*
           <div className="cart__right">
             <div className="summary">

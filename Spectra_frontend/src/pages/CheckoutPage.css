@@ -164,10 +164,10 @@
     grid-template-columns: 1fr;
   }
 }
-/* --- THÊM CLASS CHO BÁO LỖI --- */
+
 .input-error {
-  border-color: #d32f2f !important; /* Viền đỏ khi lỗi */
-  background-color: #fffafa; /* Nền hơi hồng nhạt */
+  border-color: #d32f2f !important; 
+  background-color: #fffafa; 
 }
 
 .error-text {

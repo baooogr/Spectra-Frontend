@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom"; // Import hook để lấy param từ URL
+import { useSearchParams } from "react-router-dom"; 
 import "./MainPage.css"; 
 
 import ProductCard from "../components/product/ProductCard";
 import productList from "../components/product/data/ProductList";
 
 export default function MainPage() {
-  // Lấy giá trị 'search' từ thanh địa chỉ (URL)
+  // Lấy giá trị 'search' 
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
@@ -23,7 +23,7 @@ export default function MainPage() {
     return productList.filter((product) => {
       
       // 1. Lọc theo từ khóa tìm kiếm (Tên sản phẩm)
-      // Chuyển cả tên sản phẩm và từ khóa về chữ thường để so sánh không phân biệt hoa thường
+      
       const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
 
       // 2. Các logic lọc cũ
@@ -39,22 +39,22 @@ export default function MainPage() {
       else if (selectedPrice === "15to20") priceMatch = product.price >= 15 && product.price <= 20;
       else if (selectedPrice === "over20") priceMatch = product.price > 20;
 
-      // Phải thoả mãn TẤT CẢ các điều kiện (bao gồm cả từ khóa tìm kiếm)
+      
       return searchMatch && shapeMatch && materialMatch && priceMatch;
     });
-  }, [selectedShapes, selectedMaterials, selectedPrice, searchQuery]); // Thêm searchQuery vào mảng phụ thuộc
+  }, [selectedShapes, selectedMaterials, selectedPrice, searchQuery]); 
 
-  // Reset trang về 1 mỗi khi đổi bộ lọc hoặc đổi từ khóa tìm kiếm
+ 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
 
-  // Cuộn lên đầu khi chuyển trang
+  
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
-  // --- LOGIC PHÂN TRANG ---
+
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
