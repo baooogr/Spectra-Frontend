@@ -1,41 +1,49 @@
 import React, { useState, useContext } from "react"; 
-import { Link, useNavigate } from "react-router-dom"; 
-import { UserContext } from "../context/UserContext"; 
-import { GoogleLogin } from "@react-oauth/google"; 
+import { Link, useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState(""); 
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useContext(UserContext); 
+  const { login } = useContext(UserContext);
 
- 
+  
   const handleLogin = async (e) => {
-    e.preventDefault(); 
+    e.preventDefault();
     setErrorMsg("");
+    setSuccessMsg(""); 
     setIsLoading(true);
 
     try {
       const response = await fetch("https://myspectra.runasp.net/api/Auth/login", {
-        method: "POST", 
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email, password: password }), 
+        body: JSON.stringify({ email: email, password: password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        alert(`Đăng nhập thành công! Xin chào ${data.fullName}`);
         
-        login({ 
-          token: data.token, 
-          fullName: data.fullName 
-        }); 
+        login({
+          token: data.token,
+          fullName: data.fullName
+        });
         
-        navigate("/"); 
+        
+        setSuccessMsg(`Đăng nhập thành công! Xin chào ${data.fullName}`);
+        
+        
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+        
       } else {
         setErrorMsg(data.message || "Sai tài khoản hoặc mật khẩu!");
       }
@@ -51,6 +59,8 @@ export default function LoginPage() {
   const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true);
     setErrorMsg("");
+    setSuccessMsg(""); 
+    
     try {
       const response = await fetch("https://myspectra.runasp.net/api/Auth/google", {
         method: "POST",
@@ -61,11 +71,20 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        login({ 
-          token: data.token, 
-          fullName: data.fullName 
+        
+        login({
+          token: data.token,
+          fullName: data.fullName
         });
-        navigate("/");
+        
+       
+        setSuccessMsg(`Đăng nhập Google thành công! Xin chào ${data.fullName}`);
+        
+        
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+
       } else {
         setErrorMsg("Xác thực Google thất bại từ máy chủ!");
       }
@@ -80,9 +99,17 @@ export default function LoginPage() {
     <div style={{ maxWidth: "400px", margin: "80px auto", padding: "30px", border: "1px solid #eaeaea", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
       <h2 style={{ textAlign: "center", marginBottom: "20px" }}>Đăng Nhập</h2>
       
+      
       {errorMsg && (
         <div style={{ backgroundColor: "#fee2e2", color: "#b91c1c", padding: "10px", borderRadius: "6px", marginBottom: "15px", textAlign: "center", fontSize: "14px" }}>
           {errorMsg}
+        </div>
+      )}
+
+     
+      {successMsg && (
+        <div style={{ backgroundColor: "#dcfce7", color: "#15803d", padding: "10px", borderRadius: "6px", marginBottom: "15px", textAlign: "center", fontSize: "14px" }}>
+          {successMsg}
         </div>
       )}
 
@@ -107,7 +134,8 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)} 
             required 
             placeholder="Nhập mật khẩu"
-            style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" 
+}}
           />
         </div>
 
@@ -115,11 +143,14 @@ export default function LoginPage() {
           type="submit" 
           disabled={isLoading}
           style={{ 
-            marginTop: "10px", padding: "12px", background: isLoading ? "#666" : "#000", color: "white", 
-            fontWeight: "bold", border: "none", borderRadius: "6px", cursor: isLoading ? "not-allowed" : "pointer" 
+            marginTop: "10px", padding: "12px", background: isLoading ?
+"#666" : "#000", color: "white", 
+            fontWeight: "bold", border: "none", borderRadius: "6px", cursor: isLoading ?
+"not-allowed" : "pointer" 
           }}
-        >
-          {isLoading ? "Đang xử lý..." : "Đăng Nhập"}
+        > 
+          {isLoading ?
+"Đang xử lý..." : "Đăng Nhập"}
         </button>
       </form>
       
