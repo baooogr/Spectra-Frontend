@@ -1,0 +1,9 @@
+.admin-layout { display: flex; min-height: 100vh; font-family: sans-serif; }
+.admin-sidebar { width: 250px; background-color: #111827; color: white; display: flex; flex-direction: column; }
+.admin-logo { padding: 20px; font-size: 24px; font-weight: bold; border-bottom: 1px solid #374151; }
+.admin-nav { display: flex; flex-direction: column; padding: 20px 0; flex: 1; }
+.admin-link { color: #d1d5db; text-decoration: none; padding: 12px 20px; display: block; transition: 0.2s; }
+.admin-link:hover { background-color: #374151; color: white; }
+.admin-logout-btn { background: none; border: none; color: #ef4444; text-align: left; padding: 12px 20px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: 0.2s; }
+.admin-logout-btn:hover { background-color: #374151; }
+.admin-main { flex: 1; background-color: #f3f4f6; padding: 30px; overflow-y: auto; }

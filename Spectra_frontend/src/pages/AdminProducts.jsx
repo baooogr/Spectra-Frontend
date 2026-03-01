@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
+import './AdminProducts.css'; // IMPORT FILE CSS VỪA TẠO
 
 export default function AdminProducts() {
   const { user } = useContext(UserContext);
@@ -8,30 +9,26 @@ export default function AdminProducts() {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
+  const [existingImages, setExistingImages] = useState([]); 
 
-  
   const initialForm = {
     frameName: "", brand: "", color: "", material: "", shape: "", size: "",
     lensWidth: 0, bridgeWidth: 0, frameWidth: 0, templeLength: 0,
     basePrice: 0, stockQuantity: 0, reorderLevel: 0, status: "Active"
   };
   const [formData, setFormData] = useState(initialForm);
-
-  
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadMsg, setUploadMsg] = useState("");
 
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
 
- 
   const fetchFrames = async () => {
     setIsLoading(true);
     try {
       const res = await fetch("https://myspectra.runasp.net/api/Frames?page=1&pageSize=100", { headers });
       if (res.ok) {
         const data = await res.json();
-        
         setFrames(data.items || data || []); 
       }
     } catch (err) {
@@ -43,68 +40,71 @@ export default function AdminProducts() {
 
   useEffect(() => { fetchFrames(); }, []);
 
-  
+  const fetchExistingImages = async (frameId) => {
+    try {
+      const res = await fetch(`https://myspectra.runasp.net/api/FrameMedia/frame/${frameId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setExistingImages(data);
+      } else {
+        setExistingImages([]);
+      }
+    } catch (error) {
+      setExistingImages([]);
+    }
+  };
+
   const handleOpenModal = (frame = null) => {
+    setUploadMsg("");
+    setSelectedFiles([]);
+    
     if (frame) {
       setIsEditing(true);
-      setCurrentId(frame.id || frame.frameId);
+      const id = frame.id || frame.frameId;
+      setCurrentId(id);
       setFormData(frame);
+      fetchExistingImages(id);
     } else {
       setIsEditing(false);
       setCurrentId(null);
       setFormData(initialForm);
+      setExistingImages([]);
     }
-    setSelectedFiles([]);
-    setUploadMsg("");
     setShowModal(true);
   };
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === "number" ? Number(value) : value
-    }));
+    setFormData(prev => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
   };
 
- 
   const handleSave = async (e) => {
     e.preventDefault();
     const method = isEditing ? "PUT" : "POST";
-    const url = isEditing 
-      ? `https://myspectra.runasp.net/api/Frames/${currentId}` 
-      : "https://myspectra.runasp.net/api/Frames";
+    const url = isEditing ? `https://myspectra.runasp.net/api/Frames/${currentId}` : "https://myspectra.runasp.net/api/Frames";
     
     try {
       const res = await fetch(url, { method, headers, body: JSON.stringify(formData) });
       if (res.ok || res.status === 201 || res.status === 204) {
         alert(isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!");
         setShowModal(false);
-        fetchFrames(); 
+        fetchFrames();
       } else {
         const error = await res.json();
         alert(`Lỗi: ${error.message || 'Không thể lưu'}`);
       }
-    } catch (err) {
-      alert("Lỗi kết nối server");
-    }
+    } catch (err) { alert("Lỗi kết nối server"); }
   };
 
-  
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa kính này?")) return;
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`, { method: "DELETE", headers });
-      if (res.ok || res.status === 204) {
-        alert("Xóa thành công!");
-        fetchFrames();
-      } else alert("Xóa thất bại!");
-    } catch (err) {
-      alert("Lỗi server");
-    }
+      if (res.ok || res.status === 204) { alert("Xóa thành công!"); fetchFrames(); }
+      else alert("Xóa thất bại!");
+    } catch (err) { alert("Lỗi server"); }
   };
 
-  
   const handleUploadImages = async () => {
     if (selectedFiles.length === 0) return alert("Chưa chọn ảnh!");
     setUploadMsg("⏳ Đang tải ảnh...");
@@ -120,102 +120,112 @@ export default function AdminProducts() {
       if (res.ok) {
         setUploadMsg("✅ Tải ảnh thành công!");
         setSelectedFiles([]);
+        fetchExistingImages(currentId);
       } else {
         setUploadMsg("❌ Tải ảnh thất bại!");
       }
-    } catch (err) {
-      setUploadMsg("❌ Lỗi server!");
+    } catch (err) { setUploadMsg("❌ Lỗi server!"); }
+  };
+
+  const handleDeleteImage = async (mediaId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa tấm ảnh này? Nó sẽ bị xóa khỏi Cloudinary vĩnh viễn.")) return;
+    try {
+      const res = await fetch(`https://myspectra.runasp.net/api/FrameMedia/${mediaId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok || res.status === 204) {
+        alert("Đã xóa ảnh!");
+        fetchExistingImages(currentId);
+      } else {
+        alert("Xóa ảnh thất bại. Có thể do lỗi API.");
+      }
+    } catch (error) {
+      alert("Lỗi kết nối khi xóa ảnh.");
     }
   };
 
   return (
-    <div style={{ paddingBottom: "40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-        <h2 style={{ margin: 0, color: "#111827" }}>👓 Quản Lý Kính (Frames)</h2>
-        <button onClick={() => handleOpenModal()} style={{ padding: "10px 20px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>
+    <div className="admin-products-container">
+      <div className="admin-products-header">
+        <h2 className="admin-products-title">👓 Quản Lý Kính (Frames)</h2>
+        <button onClick={() => handleOpenModal()} className="btn-add">
           + Thêm Kính Mới
         </button>
       </div>
 
-      <div style={{ backgroundColor: "white", borderRadius: "10px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-          <thead style={{ backgroundColor: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+      <div className="table-container">
+        <table className="admin-table">
+          <thead>
             <tr>
-              <th style={{ padding: "15px", color: "#374151" }}>Tên Kính</th>
-              <th style={{ padding: "15px", color: "#374151" }}>Thương Hiệu</th>
-              <th style={{ padding: "15px", color: "#374151" }}>Chất Liệu</th>
-              <th style={{ padding: "15px", color: "#374151" }}>Giá ($)</th>
-              <th style={{ padding: "15px", color: "#374151" }}>Tồn Kho</th>
-              <th style={{ padding: "15px", color: "#374151", textAlign: "center" }}>Hành Động</th>
+              <th>Tên Kính</th>
+              <th>Thương Hiệu</th>
+              <th>Giá ($)</th>
+              <th>Tồn Kho</th>
+              <th className="col-action">Hành Động</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
-              <tr><td colSpan="6" style={{ padding: "20px", textAlign: "center" }}>⏳ Đang tải dữ liệu...</td></tr>
-            ) : frames.length === 0 ? (
-              <tr><td colSpan="6" style={{ padding: "20px", textAlign: "center" }}>Không có sản phẩm nào.</td></tr>
-            ) : (
-              frames.map((frame, index) => (
-                <tr key={index} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                  <td style={{ padding: "15px", fontWeight: "500" }}>{frame.frameName}</td>
-                  <td style={{ padding: "15px", color: "#6b7280" }}>{frame.brand}</td>
-                  <td style={{ padding: "15px", color: "#6b7280" }}>{frame.material}</td>
-                  <td style={{ padding: "15px", color: "#10b981", fontWeight: "bold" }}>${frame.basePrice}</td>
-                  <td style={{ padding: "15px" }}>{frame.stockQuantity}</td>
-                  <td style={{ padding: "15px", textAlign: "center" }}>
-                    <button onClick={() => handleOpenModal(frame)} style={{ padding: "6px 12px", backgroundColor: "#3b82f6", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", marginRight: "10px" }}>Sửa & Up Ảnh</button>
-                    <button onClick={() => handleDelete(frame.id || frame.frameId)} style={{ padding: "6px 12px", backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>Xóa</button>
+            {isLoading ? <tr><td colSpan="5" className="col-action">⏳ Đang tải dữ liệu...</td></tr> : 
+             frames.map((frame, index) => (
+                <tr key={index}>
+                  <td className="col-name">{frame.frameName}</td>
+                  <td className="col-text">{frame.brand}</td>
+                  <td className="col-price">${frame.basePrice}</td>
+                  <td>{frame.stockQuantity}</td>
+                  <td className="col-action">
+                    <button onClick={() => handleOpenModal(frame)} className="btn-edit">Sửa & Quản lý Ảnh</button>
+                    <button onClick={() => handleDelete(frame.id || frame.frameId)} className="btn-delete">Xóa</button>
                   </td>
                 </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
       </div>
 
-      
       {showModal && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
-          <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "10px", width: "90%", maxWidth: "800px", maxHeight: "90vh", overflowY: "auto" }}>
-            <h3 style={{ marginTop: 0, marginBottom: "20px", borderBottom: "1px solid #eee", paddingBottom: "10px" }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">
               {isEditing ? "✏️ Sửa Thông Tin Kính" : "✨ Thêm Kính Mới"}
             </h3>
             
-            <form onSubmit={handleSave} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "20px" }}>
-              <div><label style={labelStyle}>Tên Kính:</label><input type="text" name="frameName" value={formData.frameName} onChange={handleChange} required style={inputStyle} /></div>
-              <div><label style={labelStyle}>Thương Hiệu:</label><input type="text" name="brand" value={formData.brand} onChange={handleChange} required style={inputStyle} /></div>
-              <div><label style={labelStyle}>Màu Sắc:</label><input type="text" name="color" value={formData.color} onChange={handleChange} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Chất Liệu:</label><input type="text" name="material" value={formData.material} onChange={handleChange} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Hình Dáng (Shape):</label><input type="text" name="shape" value={formData.shape} onChange={handleChange} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Kích Cỡ (Size):</label><input type="text" name="size" value={formData.size} onChange={handleChange} style={inputStyle} /></div>
+            <form onSubmit={handleSave} className="form-grid">
+              <div className="form-group"><label>Tên Kính:</label><input type="text" name="frameName" value={formData.frameName} onChange={handleChange} required /></div>
+              <div className="form-group"><label>Thương Hiệu:</label><input type="text" name="brand" value={formData.brand} onChange={handleChange} required /></div>
+              <div className="form-group"><label>Giá Cơ Bản ($):</label><input type="number" name="basePrice" value={formData.basePrice} onChange={handleChange} required /></div>
+              <div className="form-group"><label>Tồn Kho:</label><input type="number" name="stockQuantity" value={formData.stockQuantity} onChange={handleChange} required /></div>
               
-              <div><label style={labelStyle}>Giá Cơ Bản ($):</label><input type="number" name="basePrice" value={formData.basePrice} onChange={handleChange} required style={inputStyle} /></div>
-              <div><label style={labelStyle}>Tồn Kho:</label><input type="number" name="stockQuantity" value={formData.stockQuantity} onChange={handleChange} required style={inputStyle} /></div>
-              
-              <div><label style={labelStyle}>Độ rộng tròng (Lens Width):</label><input type="number" name="lensWidth" value={formData.lensWidth} onChange={handleChange} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Cầu kính (Bridge Width):</label><input type="number" name="bridgeWidth" value={formData.bridgeWidth} onChange={handleChange} style={inputStyle} /></div>
-              <div><label style={labelStyle}>Càng kính (Temple Length):</label><input type="number" name="templeLength" value={formData.templeLength} onChange={handleChange} style={inputStyle} /></div>
-              
-              <div style={{ gridColumn: "span 2", display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
-                <button type="button" onClick={() => setShowModal(false)} style={{ padding: "10px 20px", border: "1px solid #ccc", background: "white", borderRadius: "6px", cursor: "pointer" }}>Hủy</button>
-                <button type="submit" style={{ padding: "10px 20px", background: "#111827", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>Lưu Thông Tin</button>
+              <div className="form-actions">
+                <button type="button" onClick={() => setShowModal(false)} className="btn-cancel">Đóng</button>
+                <button type="submit" className="btn-save">Lưu Thông Tin</button>
               </div>
             </form>
 
-            
             {isEditing && (
-              <div style={{ borderTop: "2px dashed #eee", paddingTop: "20px", marginTop: "20px", backgroundColor: "#f9fafb", padding: "15px", borderRadius: "8px" }}>
-                <h4 style={{ margin: "0 0 15px 0" }}>🖼️ Upload Ảnh Cho Kính Này</h4>
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                  <input type="file" multiple accept="image/*" onChange={(e) => setSelectedFiles(Array.from(e.target.files))} style={{ flex: 1, padding: "8px", border: "1px solid #ccc", borderRadius: "6px", backgroundColor: "white" }} />
-                  <button onClick={handleUploadImages} type="button" style={{ padding: "10px 20px", backgroundColor: "#000", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>Tải Ảnh Lên Cloudinary</button>
+              <div className="image-management">
+                <h4 className="image-title">🖼️ Quản Lý Hình Ảnh</h4>
+                
+                <div className="image-list">
+                  {existingImages.map((img) => (
+                    <div key={img.mediaId} className="image-item">
+                      <img src={img.mediaUrl} alt="Kính" onError={(e) => { e.target.style.opacity = '0.3'; }} />
+                      <button onClick={() => handleDeleteImage(img.mediaId)} title="Xóa ảnh này" className="btn-delete-img">X</button>
+                    </div>
+                  ))}
+                  {existingImages.length === 0 && <p className="empty-msg">Sản phẩm này chưa có ảnh nào.</p>}
                 </div>
-                {uploadMsg && <p style={{ margin: "10px 0 0 0", fontSize: "14px", color: uploadMsg.includes('✅') ? '#15803d' : '#b91c1c' }}>{uploadMsg}</p>}
+
+                <div className="image-upload-area">
+                  <input type="file" multiple accept="image/*" onChange={(e) => setSelectedFiles(Array.from(e.target.files))} />
+                  <button onClick={handleUploadImages} type="button" className="btn-upload">+ Tải Ảnh Lên</button>
+                </div>
+                {uploadMsg && <p className={`upload-msg ${uploadMsg.includes('✅') ? 'success' : 'error'}`}>{uploadMsg}</p>}
               </div>
             )}
             
             {!isEditing && (
-              <div style={{ borderTop: "2px dashed #eee", paddingTop: "15px", marginTop: "15px", fontSize: "14px", color: "#666", textAlign: "center" }}>
+              <div className="info-msg">
                 💡 Vui lòng "Lưu Thông Tin" để tạo sản phẩm trước. Sau đó bấm "Sửa" để có thể tải ảnh lên.
               </div>
             )}
@@ -225,6 +235,3 @@ export default function AdminProducts() {
     </div>
   );
 }
-
-const inputStyle = { width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", marginTop: "5px" };
-const labelStyle = { display: "block", fontSize: "13px", fontWeight: "bold", color: "#4b5563" };

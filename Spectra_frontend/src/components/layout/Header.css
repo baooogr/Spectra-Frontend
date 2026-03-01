@@ -82,11 +82,13 @@
   padding: 14px 40px;
   display: flex;
   gap: 24px;
+  
+  
 }
 
 .header-nav-link {
   text-decoration: none;
-  color: #000;
+  color: #000000f6;
   font-weight: bold;
   font-size: 15px;
 }

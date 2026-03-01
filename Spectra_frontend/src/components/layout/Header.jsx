@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/UserContext'; 
 import './Header.css'; 
@@ -6,13 +6,45 @@ import logo from '../../assets/logo.png';
 
 export default function Header() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   const { user, logout } = useContext(UserContext);
-  
-  // Lấy role từ Context hoặc LocalStorage để kiểm tra Admin
   const currentUser = user || JSON.parse(localStorage.getItem("user"));
-  const isAdmin = currentUser?.role === 'Admin';
+
+  // Cơ chế tự động kiểm tra quyền ngầm
+  useEffect(() => {
+    if (!currentUser || !currentUser.token) {
+      setIsAdmin(false);
+      return;
+    }
+
+    const currentRole = (currentUser.role || "").toLowerCase();
+    
+    // Nếu đã có sẵn chữ manager -> Hiện nút luôn
+    if (currentRole === 'manager' || currentRole === 'admin') {
+      setIsAdmin(true);
+    } 
+    // Nếu chưa có -> Gọi API xin quyền để check lại
+    else if (!currentUser.role) {
+      fetch('https://myspectra.runasp.net/api/Users/me', {
+        headers: { 'Authorization': `Bearer ${currentUser.token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const fetchedRole = (data.role || "").toLowerCase();
+        if (fetchedRole === 'manager' || fetchedRole === 'admin') {
+          setIsAdmin(true);
+          // Cập nhật lại vào máy
+          const updated = { ...currentUser, role: data.role };
+          localStorage.setItem("user", JSON.stringify(updated));
+        }
+      })
+      .catch(() => setIsAdmin(false));
+    } else {
+      setIsAdmin(false);
+    }
+  }, [currentUser]);
 
   const handleSearch = (e) => {
     if (e.key === 'Enter') {
@@ -51,7 +83,7 @@ export default function Header() {
         </div>
 
         <div className="header-actions">
-          {/* ĐIỀU KIỆN QUYẾT ĐỊNH: NẾU KHÔNG PHẢI ADMIN, NÚT NÀY SẼ BỐC HƠI HOÀN TOÀN */}
+          {/* NÚT ADMIN: CHỈ XUẤT HIỆN NẾU LÀ MANAGER HOẶC ADMIN */}
           {isAdmin && (
             <Link to="/admin" className="header-action-btn" style={{ color: '#10b981' }}>
               <span className="icon">⚙️</span>
@@ -70,17 +102,22 @@ export default function Header() {
           </Link>
 
           {currentUser ? (
-            <div className="header-action-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-               <span className="icon">👤</span>
-               {/* Click vào tên để tới trang Profile */}
-               <Link to="/profile" className="text" style={{ textTransform: 'capitalize', textDecoration: 'none', color: '#000', fontWeight: 'bold' }}>
-                 {currentUser.fullName || currentUser.userName || 'Hồ sơ'}
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+               <Link to="/profile" className="header-action-btn" title="Đi đến Hồ sơ cá nhân">
+                 <span className="icon">👤</span>
+                 <span className="text" style={{ textTransform: 'capitalize', fontWeight: 'bold', color: '#000' }}>
+                   {currentUser.fullName || currentUser.userName || 'Hồ sơ'}
+                 </span>
                </Link>
+
                <button 
                  onClick={handleLogout} 
-                 style={{ background: 'none', border: 'none', color: 'red', fontSize: '12px', cursor: 'pointer', padding: 0, marginTop: '2px', textDecoration: 'underline' }}
+                 className="header-action-btn"
+                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                 title="Đăng xuất khỏi hệ thống"
                >
-                 Đăng xuất
+                 <span className="icon" style={{ color: '#ef4444' }}>🚪</span>
+                 <span className="text" style={{ color: '#ef4444' }}>Đăng xuất</span>
                </button>
             </div>
           ) : (

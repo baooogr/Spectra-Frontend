@@ -3,11 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import "./MainPage.css";
 import ProductCard from "../components/product/ProductCard";
 
+// 1. Import ảnh banner từ thư mục assets
+import bannerImg from "../assets/bn.jpg"; 
+
 export default function MainPage() {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
-
- 
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,7 +20,6 @@ export default function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
 
-  
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -28,7 +28,6 @@ export default function MainPage() {
         const response = await fetch("https://myspectra.runasp.net/api/Frames?page=1&pageSize=100");
         if (response.ok) {
           const data = await response.json();
-          
           setProducts(data.items || data || []); 
         } else {
           setError("Không thể tải danh sách sản phẩm.");
@@ -42,7 +41,6 @@ export default function MainPage() {
     fetchProducts();
   }, []);
 
- 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const productName = product.frameName || product.name || "";
@@ -62,7 +60,7 @@ export default function MainPage() {
 
       return searchMatch && shapeMatch && materialMatch && priceMatch;
     });
-  }, [products, selectedShapes, selectedMaterials, selectedPrice, searchQuery]); 
+  }, [products, selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
 
   useEffect(() => { setCurrentPage(1); }, [selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
   useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [currentPage]);
@@ -83,6 +81,16 @@ export default function MainPage() {
 
   return (
     <div className="main-page">
+      
+      {/* 2. Thêm Banner vào đây (Ngay trên main-header) */}
+      <div style={{ width: '100%', marginLeft: '40px', overflow: 'hidden' }}>
+        <img 
+          src={bannerImg} 
+          alt="Khuyến mãi FGlasses" 
+          style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} 
+        />
+      </div>
+
       <div className="main-header">
         <h1>Khám phá bộ sưu tập kính</h1>
         <p>Tìm chiếc kính phù hợp nhất với phong cách của bạn.</p>
@@ -95,6 +103,7 @@ export default function MainPage() {
       </div>
 
       <div className="main-content">
+        {/* ... (Giữ nguyên phần Sidebar và Danh sách sản phẩm như cũ) ... */}
         <aside className="sidebar-filter">
           <h3>Bộ lọc sản phẩm</h3>
           <div className="filter-group">
@@ -127,7 +136,7 @@ export default function MainPage() {
             <>
               <div className="product-grid">
                 {currentProducts.map((product) => (
-                   <ProductCard key={product.id || product.frameId} product={product} />
+                  <ProductCard key={product.id || product.frameId} product={product} />
                 ))}
               </div>
 
