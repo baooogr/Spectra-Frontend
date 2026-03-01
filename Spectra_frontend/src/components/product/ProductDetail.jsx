@@ -1,216 +1,158 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import ImageGallery from "./ImageGallery";
 import Section from "./Section";
 import Tabs from "./Tabs";
 import TabButton from "./TabButton";
-
-import productList from "./data/ProductList";
 import Modal from "../ui/Modal";
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const product = productList.find((p) => p.id === id);
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  
+  // State lưu dữ liệu gọi từ API
+  const [product, setProduct] = useState(null);
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedTab, setSelectedTab] = useState("fit");
-  const { addToCart } = useCart();
-
+  const [selectedTab, setSelectedTab] = useState("description");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  if (!product) return <p>Không tìm thấy sản phẩm</p>;
 
-  const tabContent = product.detail[selectedTab];
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      setIsLoading(true);
+      setError("");
+      try {
+        // 1. Gọi API lấy thông tin chi tiết kính
+        const frameRes = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
+        if (!frameRes.ok) throw new Error("Không tìm thấy sản phẩm này trên hệ thống.");
+        const frameData = await frameRes.json();
+        setProduct(frameData);
+
+        // 2. Gọi API lấy danh sách ảnh của kính này (FrameMedia)
+        const mediaRes = await fetch(`https://myspectra.runasp.net/api/FrameMedia/frame/${id}`);
+        if (mediaRes.ok) {
+          const mediaData = await mediaRes.json();
+          // Lọc mảng chỉ lấy cái link URL
+          const imageUrls = mediaData.map(m => m.mediaUrl);
+          // Nếu kính có ảnh thì hiện, nếu mảng rỗng thì hiện ảnh mặc định
+          setImages(imageUrls.length > 0 ? imageUrls : ["https://via.placeholder.com/600x400?text=Chua+Co+Anh"]);
+        } else {
+          setImages(["https://via.placeholder.com/600x400?text=Chua+Co+Anh"]);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [id]);
 
   const handleAddToCart = () => {
-    addToCart(product, quantity); 
+    // Đóng gói data lại theo format mà Giỏ hàng (CartContext) đang dùng
+    const cartItem = {
+      id: product.id || product.frameId,
+      name: product.frameName,
+      price: product.basePrice,
+      image: [images[0]], // Giỏ hàng đang kì vọng mảng ảnh nên bọc nó lại
+    };
+    addToCart(cartItem, quantity); 
     setIsModalOpen(true); 
   };
 
+  if (isLoading) return <p style={{ textAlign: "center", marginTop: "50px", fontSize: "18px", color: "#666" }}>⏳ Đang tải thông tin sản phẩm...</p>;
+  
+  if (error || !product) return (
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h2 style={{ color: "#d32f2f" }}>❌ {error}</h2>
+      <button onClick={() => navigate("/")} style={{ padding: "10px 20px", marginTop: "15px", cursor: "pointer", background: "#111", color: "white", borderRadius: "6px", border: "none" }}>Quay lại Trang chủ</button>
+    </div>
+  );
+
   return (
     <>
-      {/* MODAL */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: "40px auto",
-          display: "flex",
-          gap: 60,
-        }}
-      >
-        <ImageGallery images={product.image} />
+      <div style={{ maxWidth: 1100, margin: "40px auto", display: "flex", gap: 60, padding: "0 20px" }}>
+        
+        {/* GALERY ẢNH SẢN PHẨM */}
+        <ImageGallery images={images} />
 
+        {/* THÔNG TIN CƠ BẢN */}
         <div style={{ flex: 1 }}>
-          <h2 style={{ marginBottom: 6 }}>
-            {product.name}
-          </h2>
+          <h2 style={{ marginBottom: 6 }}>{product.frameName}</h2>
+          <p style={{ margin: "10px 0 4px", color: "#666" }}>Thương hiệu: <strong>{product.brand}</strong></p>
 
-          <p style={{ margin: "10px 0 4px", color: "#666" }}>
-            Starting at
+          <p style={{ fontSize: 36, fontWeight: "bold", margin: "15px 0 16px", color: "#10b981" }}>
+            ${product.basePrice}
           </p>
 
-          <p
-            style={{
-              fontSize: 36,
-              fontWeight: "bold",
-              margin: "0 0 16px",
-            }}
-          >
-            ${product.price}
-          </p>
-
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              backgroundColor: "#FFF3CD",
-              padding: "6px 12px",
-              borderRadius: 20,
-              fontSize: 14,
-              marginBottom: 24,
-            }}
-          >
-            ⭐ {product.rating}
-            <span style={{ fontWeight: 500 }}>
-              {product.reviews} reviews
-            </span>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, backgroundColor: "#FFF3CD", padding: "6px 12px", borderRadius: 20, fontSize: 14, marginBottom: 24 }}>
+            ⭐ 5.0 <span style={{ fontWeight: 500 }}>Đánh giá</span>
           </div>
 
-          <div style={{ margin: "20px 0" }}>
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>
-              -
-            </button>
-            <span style={{ margin: "0 12px" }}>{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)}>+</button>
+          <div style={{ margin: "10px 0" }}>
+            <p>Trạng thái: <span style={{ color: product.stockQuantity > 0 ? "green" : "red", fontWeight: "bold" }}>
+              {product.stockQuantity > 0 ? `Còn hàng (${product.stockQuantity})` : "Hết hàng"}
+            </span></p>
+          </div>
+
+          <div style={{ margin: "20px 0", display: "flex", alignItems: "center" }}>
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: '34px', height: '34px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', background: '#f3f4f6' }}>-</button>
+            <span style={{ margin: "0 20px", fontSize: "18px", fontWeight: "bold" }}>{quantity}</span>
+            <button onClick={() => setQuantity(quantity + 1)} style={{ width: '34px', height: '34px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc', background: '#f3f4f6' }} disabled={quantity >= product.stockQuantity}>+</button>
           </div>
 
           <button
             onClick={handleAddToCart}
+            disabled={product.stockQuantity <= 0}
             style={{
-              padding: "10px 18px",
-              border: "1px solid #333",
-              background: "white",
-              cursor: "pointer",
+              padding: "14px 24px",
+              backgroundColor: product.stockQuantity > 0 ? "#000" : "#ccc",
+              color: "white",
+              fontWeight: "bold",
+              border: "none",
+              borderRadius: "8px",
+              cursor: product.stockQuantity > 0 ? "pointer" : "not-allowed",
+              width: "100%",
+              fontSize: "16px",
+              marginTop: "10px"
             }}
           >
-            Thêm vào giỏ hàng
+            {product.stockQuantity > 0 ? "🛒 Thêm vào giỏ hàng" : "Hết hàng tạm thời"}
           </button>
         </div>
       </div>
 
-      <div className="product-detail-under-image">
-        <Section title="Product Detail">
+      {/* CHI TIẾT SẢN PHẨM Ở DƯỚI (Dùng Tabs) */}
+      <div className="product-detail-under-image" style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px 50px" }}>
+        <Section title="Chi tiết sản phẩm">
           <Tabs
             button={
               <>
-                <TabButton
-                  isSelected={selectedTab === "fit"}
-                  onClick={() => setSelectedTab("fit")}
-                >
-                  Fit & Size
-                </TabButton>
-
-                <TabButton
-                  isSelected={selectedTab === "features"}
-                  onClick={() => setSelectedTab("features")}
-                >
-                  Features
-                </TabButton>
-
-                <TabButton
-                  isSelected={selectedTab === "description"}
-                  onClick={() => setSelectedTab("description")}
-                >
-                  Description
+                <TabButton isSelected={selectedTab === "description"} onClick={() => setSelectedTab("description")}>
+                  Thông số Kỹ thuật
                 </TabButton>
               </>
             }
           >
-
-            {selectedTab === "fit" && (
-              <div className="fit-3col-layout">
-                <div className="fit-col">
-                  <h3>Prescription requirements</h3>
-                  <ul className="fit-list">
-                    {tabContent.prescription.map((item, index) => (
-                      <li key={index}>
-                        <span className="label">{item.split(":")[0]}</span>
-                        <span className="value">{item.split(":")[1]}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="fit-col">
-                  <h3>Frame Size</h3>
-                  <ul className="fit-list">
-                    {tabContent.frameSize.map((item, index) => (
-                      <li key={index}>
-                        <span className="label">{item.split(":")[0]}</span>
-                        <span className="value">{item.split(":")[1]}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="fit-image">
-                  <img src={tabContent.image} alt="Frame measurements" />
-                </div>
-              </div>
-            )}
-
-            {selectedTab === "features" && (
-              <div className="fit-3col-layout">
-                <div className="fit-col">
-                  <h3>Frame Design</h3>
-                  <ul className="fit-list">
-                    {tabContent.frameDesign.map((item, index) => (
-                      <li key={index}>
-                        <span className="label">{item.split(":")[0]}</span>
-                        <span className="value">{item.split(":")[1]}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="fit-col">
-                  <h3>Lens Compatibility</h3>
-                  <ul className="fit-list">
-                    {tabContent.lensCompatibility.map((item, index) => (
-                      <li key={index}>
-                        <span className="label">{item.split(":")[0]}</span>
-                        <span className="value">{item.split(":")[1]}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="fit-col">
-                  <h3>What makes it special</h3>
-                  <ul className="special-list">
-                    {tabContent.whatMakesItSpecial.map((item, index) => (
-                      <li key={index} className="special-item">
-                        <strong>{item.title}</strong>
-                        <p>{item.desc}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
             {selectedTab === "description" && (
-              <div className="description-section">
-                <div className="description-text">
-                  <p>{tabContent}</p>
-                </div>
-
-                <div className="description-image">
-                  <img src={product.image[0]} alt={product.name} />
+              <div style={{ lineHeight: "1.8", color: "#444", backgroundColor: "#f9fafb", padding: "20px", borderRadius: "10px", border: "1px solid #eee" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <p><strong>Màu sắc:</strong> {product.color || "Không xác định"}</p>
+                  <p><strong>Chất liệu:</strong> {product.material || "Không xác định"}</p>
+                  <p><strong>Hình dáng:</strong> {product.shape || "Không xác định"}</p>
+                  <p><strong>Kích cỡ:</strong> {product.size || "Không xác định"}</p>
+                  <p><strong>Độ rộng tròng kính (Lens Width):</strong> {product.lensWidth} mm</p>
+                  <p><strong>Cầu kính (Bridge Width):</strong> {product.bridgeWidth} mm</p>
+                  <p><strong>Độ rộng gọng (Frame Width):</strong> {product.frameWidth} mm</p>
+                  <p><strong>Càng kính (Temple Length):</strong> {product.templeLength} mm</p>
                 </div>
               </div>
             )}

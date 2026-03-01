@@ -1,10 +1,12 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 
+import AdminProtectedRoute from "./AdminProtectedRoute";
+
 // --- IMPORT CÁC COMPONENT LAYOUT ---
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import AdminLayout from "../components/layout/AdminLayout"; // Nhớ đảm bảo bạn đã tạo file này ở Bước 1 nhé!
+import AdminLayout from "../components/layout/AdminLayout"; 
 
 // --- IMPORT CÁC TRANG KHÁCH HÀNG ---
 import MainPage from "../pages/MainPage";
@@ -19,11 +21,9 @@ import RegisterPage from "../pages/RegisterPage";
 
 
 import AdminDashboard from "../pages/AdminDashboard";
-const AdminProducts = () => <h2>👓 Trang Quản Lý Sản Phẩm (Đang xây dựng)</h2>;
+import AdminProducts from "../pages/AdminProducts";
 const AdminOrders = () => <h2>📦 Trang Quản Lý Đơn Hàng (Đang xây dựng)</h2>;
 const AdminUsers = () => <h2>👥 Trang Quản Lý Người Dùng (Đang xây dựng)</h2>;
-
-
 
 const CustomerLayout = () => {
   return (
@@ -42,19 +42,21 @@ export default function AppRouter() {
     <Router>
       <Routes>
         
-       
-        <Route path="/admin" element={<AdminLayout />}>
-          
-          <Route index element={<AdminDashboard />} /> 
-          
-          
-          <Route path="products" element={<AdminProducts />} />
-          
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="users" element={<AdminUsers />} />
+        {/* ========================================== */}
+        {/* KHU VỰC ADMIN (BỊ KHÓA BỞI PROTECTED ROUTE) */}
+        {/* ========================================== */}
+        <Route element={<AdminProtectedRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} /> 
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="users" element={<AdminUsers />} />
+          </Route>
         </Route>
 
-       
+        {/* ========================================== */}
+        {/* CÁC TRANG KHÁCH HÀNG (Ai cũng vào được) */}
+        {/* ========================================== */}
         <Route element={<CustomerLayout />}>
           <Route path="/" element={<MainPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />

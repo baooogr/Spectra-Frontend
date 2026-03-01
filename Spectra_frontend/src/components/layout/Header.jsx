@@ -8,8 +8,10 @@ export default function Header() {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
-  
   const { user, logout } = useContext(UserContext);
+
+  // Kiểm tra quyền Admin (LƯU Ý: Sửa lại chữ 'role' hoặc 'Role' tùy thuộc vào dữ liệu Backend trả về)
+  const isAdmin = user?.role === 'Admin' || user?.Role === 'Admin';
 
   const handleSearch = (e) => {
     if (e.key === 'Enter') {
@@ -36,7 +38,7 @@ export default function Header() {
 
         <div className="header-search-container">
           <div className="header-search-box">
-            <span className="search-icon"></span>
+            <span className="search-icon">🔍</span>
             <input 
               type="text" 
               placeholder="Search glasses" 
@@ -48,6 +50,14 @@ export default function Header() {
         </div>
 
         <div className="header-actions">
+          {/* NÚT ADMIN: Chỉ render ra UI nếu biến isAdmin là true */}
+          {isAdmin && (
+            <Link to="/admin" className="header-action-btn" style={{ color: '#10b981' }}>
+              <span className="icon">⚙️</span>
+              <span className="text" style={{ fontWeight: 'bold' }}>Admin</span>
+            </Link>
+          )}
+
           <Link to="/orders" className="header-action-btn">
             <span className="icon">📦</span>
             <span className="text">Orders</span>
@@ -58,7 +68,6 @@ export default function Header() {
             <span className="text">Cart</span>
           </Link>
 
-          
           {user ? (
             <div className="header-action-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                <span className="icon">👤</span>
