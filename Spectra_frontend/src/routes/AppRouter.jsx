@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 
 import AdminProtectedRoute from "./AdminProtectedRoute";
-
+import UserProfile from "../pages/UserProfile";
 // --- IMPORT CÁC COMPONENT LAYOUT ---
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
@@ -42,9 +42,7 @@ export default function AppRouter() {
     <Router>
       <Routes>
         
-        {/* ========================================== */}
-        {/* KHU VỰC ADMIN (BỊ KHÓA BỞI PROTECTED ROUTE) */}
-        {/* ========================================== */}
+       
         <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} /> 
@@ -54,9 +52,7 @@ export default function AppRouter() {
           </Route>
         </Route>
 
-        {/* ========================================== */}
-        {/* CÁC TRANG KHÁCH HÀNG (Ai cũng vào được) */}
-        {/* ========================================== */}
+      
         <Route element={<CustomerLayout />}>
           <Route path="/" element={<MainPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
@@ -70,6 +66,7 @@ export default function AppRouter() {
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/profile" element={<UserProfile />} />
         </Route>
 
       </Routes>

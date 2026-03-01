@@ -9,7 +9,7 @@ export default function AdminProducts() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
 
-  // Form mặc định khi thêm mới
+  
   const initialForm = {
     frameName: "", brand: "", color: "", material: "", shape: "", size: "",
     lensWidth: 0, bridgeWidth: 0, frameWidth: 0, templeLength: 0,
@@ -17,21 +17,21 @@ export default function AdminProducts() {
   };
   const [formData, setFormData] = useState(initialForm);
 
-  // State cho việc Upload Ảnh
+  
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadMsg, setUploadMsg] = useState("");
 
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
 
-  // 1. API Lấy danh sách Kính
+ 
   const fetchFrames = async () => {
     setIsLoading(true);
     try {
       const res = await fetch("https://myspectra.runasp.net/api/Frames?page=1&pageSize=100", { headers });
       if (res.ok) {
         const data = await res.json();
-        // BE có thể trả về mảng trực tiếp hoặc bọc trong thuộc tính items
+        
         setFrames(data.items || data || []); 
       }
     } catch (err) {
@@ -43,7 +43,7 @@ export default function AdminProducts() {
 
   useEffect(() => { fetchFrames(); }, []);
 
-  // Mở Form Thêm hoặc Sửa
+  
   const handleOpenModal = (frame = null) => {
     if (frame) {
       setIsEditing(true);
@@ -67,7 +67,7 @@ export default function AdminProducts() {
     }));
   };
 
-  // 2. API Thêm mới / Cập nhật Kính
+ 
   const handleSave = async (e) => {
     e.preventDefault();
     const method = isEditing ? "PUT" : "POST";
@@ -80,7 +80,7 @@ export default function AdminProducts() {
       if (res.ok || res.status === 201 || res.status === 204) {
         alert(isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!");
         setShowModal(false);
-        fetchFrames(); // Tải lại bảng
+        fetchFrames(); 
       } else {
         const error = await res.json();
         alert(`Lỗi: ${error.message || 'Không thể lưu'}`);
@@ -90,7 +90,7 @@ export default function AdminProducts() {
     }
   };
 
-  // 3. API Xóa Kính
+  
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa kính này?")) return;
     try {
@@ -104,7 +104,7 @@ export default function AdminProducts() {
     }
   };
 
-  // 4. API Upload Ảnh lên Cloudinary
+  
   const handleUploadImages = async () => {
     if (selectedFiles.length === 0) return alert("Chưa chọn ảnh!");
     setUploadMsg("⏳ Đang tải ảnh...");
@@ -173,7 +173,7 @@ export default function AdminProducts() {
         </table>
       </div>
 
-      {/* MODAL FORM THÊM / SỬA */}
+      
       {showModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
           <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "10px", width: "90%", maxWidth: "800px", maxHeight: "90vh", overflowY: "auto" }}>
@@ -202,7 +202,7 @@ export default function AdminProducts() {
               </div>
             </form>
 
-            {/* CHỈ HIỆN UPLOAD ẢNH KHI ĐANG Ở CHẾ ĐỘ SỬA (Đã có ID) */}
+            
             {isEditing && (
               <div style={{ borderTop: "2px dashed #eee", paddingTop: "20px", marginTop: "20px", backgroundColor: "#f9fafb", padding: "15px", borderRadius: "8px" }}>
                 <h4 style={{ margin: "0 0 15px 0" }}>🖼️ Upload Ảnh Cho Kính Này</h4>

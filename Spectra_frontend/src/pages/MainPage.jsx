@@ -7,7 +7,7 @@ export default function MainPage() {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
-  // 1. STATE DỮ LIỆU API THẬT
+ 
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,7 +19,7 @@ export default function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
 
-  // 2. GỌI API LẤY KÍNH
+  
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -28,7 +28,7 @@ export default function MainPage() {
         const response = await fetch("https://myspectra.runasp.net/api/Frames?page=1&pageSize=100");
         if (response.ok) {
           const data = await response.json();
-          // BE trả về Object có items hoặc trả trực tiếp Array
+          
           setProducts(data.items || data || []); 
         } else {
           setError("Không thể tải danh sách sản phẩm.");
@@ -42,7 +42,7 @@ export default function MainPage() {
     fetchProducts();
   }, []);
 
-  // 3. LOGIC LỌC DỮ LIỆU THẬT
+ 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const productName = product.frameName || product.name || "";

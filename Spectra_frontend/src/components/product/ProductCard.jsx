@@ -2,12 +2,9 @@ import { useNavigate } from "react-router-dom";
 
 function ProductCard({ product }) {
   const navigate = useNavigate();
-
-  // Link ảnh dự phòng khi lỗi
-  const fallbackImage = "https://via.placeholder.com/230x150?text=Chua+Co+Anh";
   
-  // Lấy link ảnh từ BE (tùy BE thiết kế biến là gì, mình rào sẵn các trường hợp)
-  const initialImage = product.imageUrl || product.image?.[0] || product.mediaUrls?.[0] || fallbackImage;
+  // Lấy link ảnh thật từ dữ liệu API, loại bỏ hoàn toàn fallbackImage
+  const displayImage = product.imageUrl || product.image?.[0] || product.mediaUrls?.[0];
 
   return (
     <div
@@ -24,21 +21,26 @@ function ProductCard({ product }) {
       onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
       onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
     >
-      <img
-        src={initialImage}
-        alt={product.frameName || "Kính"}
-        // ĐÂY LÀ PHÉP MÀU: Bắt lỗi nếu URL ảnh bị hỏng thì tự động thay bằng ảnh dự phòng
-        onError={(e) => {
-          e.target.onerror = null; 
-          e.target.src = fallbackImage; 
-        }}
-        style={{
-          width: "100%",
-          height: "150px",
-          objectFit: "contain",
-          marginBottom: "10px"
-        }}
-      />
+      {/* NẾU CÓ ẢNH THÌ HIỂN THỊ THẺ IMG, KHÔNG THÌ HIỆN KHUNG TRỐNG ĐỂ GIỮ BỐ CỤC */}
+      {displayImage ? (
+        <img
+          src={displayImage}
+          alt={product.frameName || "Kính"}
+          // Nếu link ảnh có tồn tại nhưng bị chết (lỗi 404), tự động ẩn luôn thẻ img đi
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+          style={{
+            width: "100%",
+            height: "150px",
+            objectFit: "contain",
+            marginBottom: "10px"
+          }}
+        />
+      ) : (
+        // Khung trống giữ form cho thẻ kính không bị lùn xuống
+        <div style={{ width: "100%", height: "150px", backgroundColor: "#f9fafb", marginBottom: "10px", borderRadius: "8px" }} />
+      )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
         <span style={{ fontSize: "20px", fontWeight: "bold" }}>

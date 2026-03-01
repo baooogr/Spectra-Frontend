@@ -9,9 +9,10 @@ export default function Header() {
   const navigate = useNavigate();
 
   const { user, logout } = useContext(UserContext);
-
-  // Kiểm tra quyền Admin (LƯU Ý: Sửa lại chữ 'role' hoặc 'Role' tùy thuộc vào dữ liệu Backend trả về)
-  const isAdmin = user?.role === 'Admin' || user?.Role === 'Admin';
+  
+  // Lấy role từ Context hoặc LocalStorage để kiểm tra Admin
+  const currentUser = user || JSON.parse(localStorage.getItem("user"));
+  const isAdmin = currentUser?.role === 'Admin';
 
   const handleSearch = (e) => {
     if (e.key === 'Enter') {
@@ -41,7 +42,7 @@ export default function Header() {
             <span className="search-icon">🔍</span>
             <input 
               type="text" 
-              placeholder="Search glasses" 
+              placeholder="Tìm kiếm kính..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleSearch} 
@@ -50,7 +51,7 @@ export default function Header() {
         </div>
 
         <div className="header-actions">
-          {/* NÚT ADMIN: Chỉ render ra UI nếu biến isAdmin là true */}
+          {/* ĐIỀU KIỆN QUYẾT ĐỊNH: NẾU KHÔNG PHẢI ADMIN, NÚT NÀY SẼ BỐC HƠI HOÀN TOÀN */}
           {isAdmin && (
             <Link to="/admin" className="header-action-btn" style={{ color: '#10b981' }}>
               <span className="icon">⚙️</span>
@@ -68,24 +69,16 @@ export default function Header() {
             <span className="text">Cart</span>
           </Link>
 
-          {user ? (
+          {currentUser ? (
             <div className="header-action-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                <span className="icon">👤</span>
-               <span className="text" style={{ textTransform: 'capitalize' }}>
-                 {user.fullName || user.userName || 'User'}
-               </span>
+               {/* Click vào tên để tới trang Profile */}
+               <Link to="/profile" className="text" style={{ textTransform: 'capitalize', textDecoration: 'none', color: '#000', fontWeight: 'bold' }}>
+                 {currentUser.fullName || currentUser.userName || 'Hồ sơ'}
+               </Link>
                <button 
                  onClick={handleLogout} 
-                 style={{ 
-                   background: 'none', 
-                   border: 'none', 
-                   color: 'red', 
-                   fontSize: '12px', 
-                   cursor: 'pointer',
-                   padding: 0,
-                   marginTop: '2px',
-                   textDecoration: 'underline'
-                 }}
+                 style={{ background: 'none', border: 'none', color: 'red', fontSize: '12px', cursor: 'pointer', padding: 0, marginTop: '2px', textDecoration: 'underline' }}
                >
                  Đăng xuất
                </button>

@@ -12,7 +12,7 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   
-  // State lưu dữ liệu gọi từ API
+  
   const [product, setProduct] = useState(null);
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,19 +27,19 @@ export default function ProductDetail() {
       setIsLoading(true);
       setError("");
       try {
-        // 1. Gọi API lấy thông tin chi tiết kính
+        
         const frameRes = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
         if (!frameRes.ok) throw new Error("Không tìm thấy sản phẩm này trên hệ thống.");
         const frameData = await frameRes.json();
         setProduct(frameData);
 
-        // 2. Gọi API lấy danh sách ảnh của kính này (FrameMedia)
+       
         const mediaRes = await fetch(`https://myspectra.runasp.net/api/FrameMedia/frame/${id}`);
         if (mediaRes.ok) {
           const mediaData = await mediaRes.json();
-          // Lọc mảng chỉ lấy cái link URL
+          
           const imageUrls = mediaData.map(m => m.mediaUrl);
-          // Nếu kính có ảnh thì hiện, nếu mảng rỗng thì hiện ảnh mặc định
+          
           setImages(imageUrls.length > 0 ? imageUrls : ["https://via.placeholder.com/600x400?text=Chua+Co+Anh"]);
         } else {
           setImages(["https://via.placeholder.com/600x400?text=Chua+Co+Anh"]);
@@ -55,12 +55,12 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleAddToCart = () => {
-    // Đóng gói data lại theo format mà Giỏ hàng (CartContext) đang dùng
+    
     const cartItem = {
       id: product.id || product.frameId,
       name: product.frameName,
       price: product.basePrice,
-      image: [images[0]], // Giỏ hàng đang kì vọng mảng ảnh nên bọc nó lại
+      image: [images[0]], 
     };
     addToCart(cartItem, quantity); 
     setIsModalOpen(true); 
@@ -81,10 +81,10 @@ export default function ProductDetail() {
 
       <div style={{ maxWidth: 1100, margin: "40px auto", display: "flex", gap: 60, padding: "0 20px" }}>
         
-        {/* GALERY ẢNH SẢN PHẨM */}
+       
         <ImageGallery images={images} />
 
-        {/* THÔNG TIN CƠ BẢN */}
+        
         <div style={{ flex: 1 }}>
           <h2 style={{ marginBottom: 6 }}>{product.frameName}</h2>
           <p style={{ margin: "10px 0 4px", color: "#666" }}>Thương hiệu: <strong>{product.brand}</strong></p>
@@ -130,7 +130,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* CHI TIẾT SẢN PHẨM Ở DƯỚI (Dùng Tabs) */}
+      
       <div className="product-detail-under-image" style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px 50px" }}>
         <Section title="Chi tiết sản phẩm">
           <Tabs
