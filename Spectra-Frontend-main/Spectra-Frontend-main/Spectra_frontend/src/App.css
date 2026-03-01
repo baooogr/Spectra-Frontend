@@ -1,0 +1,22 @@
+/* Reset cơ bản */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Root container */
+#root {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;   /* căn giữa ngang */
+  align-items: flex-start;   /* giữ profile không dính giữa dọc */
+  background: #1e1e1e;       /* nền tối giống hình bạn */
+  padding-top: 60px;         /* đẩy xuống chút cho đẹp */
+  font-family: Arial, sans-serif;
+}
+
+/* Optional: style nút Create Prescription */
+button {
+  cursor: pointer;
+}

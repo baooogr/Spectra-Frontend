@@ -1,0 +1,77 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-container {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 450px;
+}
+
+.modal-title {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.eye-section {
+  margin-bottom: 20px;
+}
+
+.eye-section h4 {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+
+.input-row input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.upload-section {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.image-preview img {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 8px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.btn-submit {
+  background: #28a745;
+  color: white;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: #dc3545;
+  color: white;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
