@@ -19,7 +19,7 @@ import ProductDetail from "../components/product/ProductDetail";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 
-
+import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 const AdminOrders = () => <h2>📦 Trang Quản Lý Đơn Hàng (Đang xây dựng)</h2>;
@@ -47,6 +47,7 @@ export default function AppRouter() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} /> 
             <Route path="products" element={<AdminProducts />} />
+            <Route path="lenstypes" element={<AdminLensTypes />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
           </Route>
