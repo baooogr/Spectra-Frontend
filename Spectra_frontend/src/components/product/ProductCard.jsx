@@ -1,10 +1,40 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 function ProductCard({ product }) {
   const navigate = useNavigate();
   
-  // Lấy link ảnh thật từ dữ liệu API, loại bỏ hoàn toàn fallbackImage
-  const displayImage = product.imageUrl || product.image?.[0] || product.mediaUrls?.[0];
+
+  const [thumbnailUrl, setThumbnailUrl] = useState(
+    product.imageUrl || product.image?.[0] || product.mediaUrls?.[0] || null
+  );
+
+  
+  useEffect(() => {
+   
+    if (thumbnailUrl) return;
+
+    const fetchThumbnail = async () => {
+      try {
+        const id = product.id || product.frameId;
+        if (!id) return;
+        
+       
+        const res = await fetch(`https://myspectra.runasp.net/api/FrameMedia/frame/${id}`);
+        if (res.ok) {
+          const mediaData = await res.json();
+          if (mediaData && mediaData.length > 0) {
+            
+            setThumbnailUrl(mediaData[0].mediaUrl); 
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi lấy ảnh đại diện", error);
+      }
+    };
+
+    fetchThumbnail();
+  }, [product, thumbnailUrl]);
 
   return (
     <div
@@ -21,14 +51,12 @@ function ProductCard({ product }) {
       onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-5px)"}
       onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
     >
-      {/* NẾU CÓ ẢNH THÌ HIỂN THỊ THẺ IMG, KHÔNG THÌ HIỆN KHUNG TRỐNG ĐỂ GIỮ BỐ CỤC */}
-      {displayImage ? (
+      {thumbnailUrl ? (
         <img
-          src={displayImage}
+          src={thumbnailUrl}
           alt={product.frameName || "Kính"}
-          // Nếu link ảnh có tồn tại nhưng bị chết (lỗi 404), tự động ẩn luôn thẻ img đi
           onError={(e) => {
-            e.target.style.display = 'none';
+            e.target.style.display = 'none'; 
           }}
           style={{
             width: "100%",
@@ -38,8 +66,9 @@ function ProductCard({ product }) {
           }}
         />
       ) : (
-        // Khung trống giữ form cho thẻ kính không bị lùn xuống
-        <div style={{ width: "100%", height: "150px", backgroundColor: "#f9fafb", marginBottom: "10px", borderRadius: "8px" }} />
+        <div style={{ width: "100%", height: "150px", backgroundColor: "#f9fafb", marginBottom: "10px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#ccc", fontSize: "12px" }}>
+          Đang tải ảnh...
+        </div>
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>

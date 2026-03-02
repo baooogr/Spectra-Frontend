@@ -11,7 +11,16 @@
 
 .auth-title { text-align: center; margin-bottom: 20px; }
 
-.auth-msg { padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-size: 14px; }
+.auth-msg { 
+  padding: 10px 15px; /* Giữ padding vừa phải, không quá dày */
+  border-radius: 6px; 
+  margin: 0 0 15px 0; /* Khoảng cách phía dưới */
+  text-align: center; 
+  font-size: 14px; 
+  line-height: 1.4; /* Giữ dòng chữ gọn gàng */
+  width: 100%; /* Đảm bảo bằng chiều rộng với form */
+  box-sizing: border-box; /* Đảm bảo padding không làm phình chiều rộng */
+}
 .auth-msg.error { background-color: #fee2e2; color: #b91c1c; }
 .auth-msg.success { background-color: #dcfce7; color: #15803d; }
 
