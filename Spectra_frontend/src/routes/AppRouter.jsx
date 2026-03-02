@@ -19,6 +19,7 @@ import ProductDetail from "../components/product/ProductDetail";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 
+import AdminLensFeatures from "../pages/AdminLensFeatures";
 import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
@@ -48,6 +49,7 @@ export default function AppRouter() {
             <Route index element={<AdminDashboard />} /> 
             <Route path="products" element={<AdminProducts />} />
             <Route path="lenstypes" element={<AdminLensTypes />} />
+            <Route path="lensfeatures" element={<AdminLensFeatures />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
           </Route>

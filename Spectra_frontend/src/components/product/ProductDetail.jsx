@@ -5,8 +5,9 @@ import ImageGallery from "./ImageGallery";
 import Section from "./Section";
 import Tabs from "./Tabs";
 import TabButton from "./TabButton";
+import LensSelectionModal from "../ui/LensSelectionModal";
 import Modal from "../ui/Modal";
-import './ProductDetail.css'; // IMPORT CSS
+import './ProductDetail.css'; 
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -20,7 +21,10 @@ export default function ProductDetail() {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedTab, setSelectedTab] = useState("description");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  
+  const [isLensModalOpen, setIsLensModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   const fallbackImage = "https://via.placeholder.com/600x400?text=Chua+Co+Anh";
 
@@ -30,31 +34,55 @@ export default function ProductDetail() {
       try {
         const frameRes = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
         if (!frameRes.ok) throw new Error("Không tìm thấy sản phẩm này trên hệ thống.");
-        setProduct(await frameRes.json());
+        const productData = await frameRes.json();
+        setProduct(productData);
 
         const mediaRes = await fetch(`https://myspectra.runasp.net/api/FrameMedia/frame/${id}`);
         if (mediaRes.ok) {
           const mediaData = await mediaRes.json();
           const imageUrls = mediaData.map(m => m.mediaUrl);
           const validImages = [];
+          
           for (let url of imageUrls) {
             try {
                const check = await fetch(url, { method: 'HEAD' });
                if(check.ok) validImages.push(url);
-            } catch (e) { /* Bỏ qua ảnh lỗi */ }
+            } catch (e) {
+               
+            }
           }
           setImages(validImages.length > 0 ? validImages : [fallbackImage]);
-        } else setImages([fallbackImage]);
-      } catch (err) { setError(err.message); } 
-      finally { setIsLoading(false); }
+        } else {
+          setImages([fallbackImage]);
+        }
+      } catch (err) { 
+        setError(err.message); 
+      } finally { 
+        setIsLoading(false); 
+      }
     };
     fetchProductDetails();
   }, [id]);
 
-  const handleAddToCart = () => {
-    const cartItem = { id: product.id || product.frameId, name: product.frameName, price: product.basePrice, image: [images[0]] };
+  
+  const handleOpenLensSelection = () => {
+    setIsLensModalOpen(true);
+  };
+
+  
+  const handleConfirmAddToCart = (cartDataOptions) => {
+    const cartItem = { 
+      id: product.id || product.frameId, 
+      name: product.frameName, 
+      price: cartDataOptions.finalPrice, 
+      image: [images[0]],
+      lensInfo: cartDataOptions.lensIncluded ? cartDataOptions.lensDetails : null 
+    };
+    
     addToCart(cartItem, quantity); 
-    setIsModalOpen(true); 
+    
+    setIsLensModalOpen(false); 
+    setIsSuccessModalOpen(true); 
   };
 
   if (isLoading) return <p className="center-msg" style={{color: "#666"}}>⏳ Đang tải thông tin sản phẩm...</p>;
@@ -69,7 +97,16 @@ export default function ProductDetail() {
 
   return (
     <>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    
+      <LensSelectionModal 
+        isOpen={isLensModalOpen} 
+        onClose={() => setIsLensModalOpen(false)}
+        product={product}
+        onConfirmAddToCart={handleConfirmAddToCart}
+      />
+
+      
+      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} />
 
       <div className="product-detail-layout">
         <ImageGallery images={images} />
@@ -93,7 +130,11 @@ export default function ProductDetail() {
             <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={quantity >= product.stockQuantity}>+</button>
           </div>
 
-          <button onClick={handleAddToCart} disabled={!inStock} className={`btn-add-cart ${inStock ? "active" : "disabled"}`}>
+          <button 
+            onClick={handleOpenLensSelection} 
+            disabled={!inStock} 
+            className={`btn-add-cart ${inStock ? "active" : "disabled"}`}
+          >
             {inStock ? "🛒 Thêm vào giỏ hàng" : "Hết hàng tạm thời"}
           </button>
         </div>
