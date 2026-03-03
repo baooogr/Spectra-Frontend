@@ -11,18 +11,34 @@
 
 .auth-title { text-align: center; margin-bottom: 20px; }
 
-.auth-msg { 
-  padding: 10px 15px; /* Giữ padding vừa phải, không quá dày */
-  border-radius: 6px; 
-  margin: 0 0 15px 0; /* Khoảng cách phía dưới */
+/* --- CSS CHO Ô THÔNG BÁO ĐĂNG NHẬP --- */
+
+/* Class dùng chung để định hình kích thước (cả lỗi và thành công đều dùng cái này) */
+.auth-msg {
+  width: 100%; /* ⚡ Cứ thả 100% là tự động khít khìn khịt với form */
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 8px; 
   text-align: center; 
-  font-size: 14px; 
-  line-height: 1.4; /* Giữ dòng chữ gọn gàng */
-  width: 100%; /* Đảm bảo bằng chiều rộng với form */
-  box-sizing: border-box; /* Đảm bảo padding không làm phình chiều rộng */
+  font-weight: bold;
+  font-size: 14px;
+  box-sizing: border-box; 
+  word-wrap: break-word; /* ⚡ Nếu tên khách hàng quá dài thì tự động xuống dòng chứ không kéo dài viền */
 }
-.auth-msg.error { background-color: #fee2e2; color: #b91c1c; }
-.auth-msg.success { background-color: #dcfce7; color: #15803d; }
+
+/* Kiểu dáng cho thông báo LỖI (Màu đỏ) */
+.auth-msg.error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #f87171;
+}
+
+/* Kiểu dáng cho thông báo THÀNH CÔNG (Màu xanh lá) */
+.auth-msg.success {
+  background-color: #ecfdf5; /* Nền xanh lá nhạt */
+  color: #059669; /* Chữ xanh lá đậm */
+  border: 1px solid #34d399; /* Viền xanh lá */
+}
 
 .auth-form { display: flex; flex-direction: column; gap: 16px; }
 

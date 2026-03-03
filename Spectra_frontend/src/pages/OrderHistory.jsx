@@ -68,7 +68,7 @@ export default function OrderHistory() {
       {error && (
         <div style={{textAlign: 'center', padding: '20px', backgroundColor: '#fee2e2', borderRadius: '8px', color: '#b91c1c', marginBottom: '20px'}}>
           <p><b>{error}</b></p>
-          <p style={{fontSize: '14px', marginTop: '10px'}}>Gợi ý: Hãy thử đăng xuất và đăng nhập lại bằng một tài khoản Khách hàng (Customer).</p>
+          
         </div>
       )}
 

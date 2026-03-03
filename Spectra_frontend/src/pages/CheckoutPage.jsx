@@ -122,7 +122,7 @@ export default function CheckoutPage() {
   return (
     <div className="checkout">
       <div className="checkout__header">
-        <h1 className="checkout__main-title">Thanh Toán An Toàn</h1>
+        <h1 className="checkout__main-title">Thanh Toán</h1>
         <button className="btn btn--ghost" onClick={() => navigate("/cart")}>← Quay lại giỏ hàng</button>
       </div>
 

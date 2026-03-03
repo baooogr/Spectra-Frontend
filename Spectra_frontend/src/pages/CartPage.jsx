@@ -41,7 +41,11 @@ export default function CartPage() {
               <ul className="cart__list">
                 {cartItems.map((item, idx) => (
                   <li key={idx} className="cart__item" style={{display: "flex", alignItems: "center", padding: "15px", borderBottom: "1px solid #eee"}}>
-                    <img src={item.image[0]} alt={item.name} style={{width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", marginRight: "15px"}} />
+                    <img 
+  src={Array.isArray(item.image) ? item.image[0] : (item.image || "https://via.placeholder.com/80?text=No+Image")} 
+  alt={item.name} 
+  style={{width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", marginRight: "15px"}} 
+/>
                     <div className="item__info" style={{flex: 1}}>
                       <h3 style={{margin: "0 0 5px 0", fontSize: "16px"}}>{item.name}</h3>
                       {/* Hiển thị kèm Tròng kính nếu có */}

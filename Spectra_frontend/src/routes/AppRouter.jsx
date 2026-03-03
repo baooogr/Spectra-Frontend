@@ -23,7 +23,7 @@ import AdminLensFeatures from "../pages/AdminLensFeatures";
 import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
-const AdminOrders = () => <h2>📦 Trang Quản Lý Đơn Hàng (Đang xây dựng)</h2>;
+import AdminOrders from "../pages/AdminOrders";
 const AdminUsers = () => <h2>👥 Trang Quản Lý Người Dùng (Đang xây dựng)</h2>;
 
 const CustomerLayout = () => {
