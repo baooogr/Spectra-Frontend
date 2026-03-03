@@ -19,12 +19,13 @@ import ProductDetail from "../components/product/ProductDetail";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 
+import AdminUsers from "../pages/AdminUsers";
 import AdminLensFeatures from "../pages/AdminLensFeatures";
 import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
-const AdminUsers = () => <h2>👥 Trang Quản Lý Người Dùng (Đang xây dựng)</h2>;
+
 
 const CustomerLayout = () => {
   return (

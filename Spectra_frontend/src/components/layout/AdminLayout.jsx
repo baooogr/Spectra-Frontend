@@ -20,7 +20,8 @@ export default function AdminLayout() {
           <Link to="/admin/lenstypes" className="admin-link">Quản lý Tròng Kính</Link> 
           <Link to="/admin/lensfeatures" className="admin-link">Quản lý Tính Năng Tròng</Link>
           <Link to="/admin/orders" className="admin-link">Đơn hàng</Link>
-          <Link to="/admin/users" className="admin-link">Người dùng</Link>
+          <Link to="/admin/users" className="admin-link">Quản lý Người Dùng</Link>
+
         </nav>
 
         <button onClick={handleLogout} className="admin-logout-btn">

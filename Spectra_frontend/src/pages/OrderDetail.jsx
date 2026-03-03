@@ -22,7 +22,10 @@ export default function OrderDetail() {
     const fetchOrderDetail = async () => {
       try {
         const res = await fetch(`https://myspectra.runasp.net/api/Orders/${id}`, {
-          headers: { "Authorization": `Bearer ${token}` }
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          }
         });
         
         if (res.ok) {
@@ -44,18 +47,27 @@ export default function OrderDetail() {
   }, [id, user, navigate]);
 
   if (isLoading) return <div style={{textAlign: 'center', padding: '50px', color: '#666'}}>⏳ Đang tải chi tiết đơn hàng...</div>;
-  
-  if (error || !order) {
-    return (
-      <div className="order-detail-container" style={{textAlign: 'center', padding: '50px'}}>
-        <h2 style={{color: 'red'}}>❌ {error}</h2>
-        <Link to="/orders" style={{color: '#3b82f6', textDecoration: 'underline'}}>← Quay lại lịch sử đơn hàng</Link>
-      </div>
-    );
-  }
+  if (error || !order) return <div className="order-detail-container" style={{textAlign: 'center', padding: '50px'}}><h2 style={{color: 'red'}}>❌ {error}</h2><Link to="/orders" style={{color: '#3b82f6', textDecoration: 'underline'}}>← Quay lại lịch sử đơn hàng</Link></div>;
 
-  
-  const itemsList = order.orderDetails || order.items || [];
+  const itemsList = order.orderDetails || order.orderItems || order.items || order.products || [];
+  const formatUSD = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n || 0);
+
+  // ⚡ BẮT DỮ LIỆU GIAO HÀNG ĐÃ NHẬP Ở CHECKOUT (Bao lô cả viết hoa và viết thường của C#)
+  const customerName = order.receiverName || order.ReceiverName || order.customerName || order.CustomerName || order.fullName || order.user?.fullName || 'Khách hàng';
+  const customerPhone = order.phoneNumber || order.PhoneNumber || order.phone || order.Phone || order.user?.phone || 'Chưa cập nhật';
+  const customerAddress = order.shippingAddress || order.ShippingAddress || order.address || order.Address || order.user?.address || 'Chưa cập nhật';
+  const orderNote = order.note || order.Note || 'Không có'; // Bổ sung Ghi chú
+
+  const getStatusBadge = (status) => {
+    const s = status?.toLowerCase() || '';
+    if (s === 'pending') return <span style={{color: '#d97706', fontWeight: 'bold'}}>Chờ xác nhận</span>;
+    if (s === 'confirmed') return <span style={{color: '#059669', fontWeight: 'bold'}}>Đã xác nhận</span>;
+    if (s === 'processing') return <span style={{color: '#4338ca', fontWeight: 'bold'}}>Đang xử lý</span>;
+    if (s === 'shipped') return <span style={{color: '#7e22ce', fontWeight: 'bold'}}>Đang giao</span>;
+    if (s === 'delivered' || s === 'completed') return <span style={{color: '#059669', fontWeight: 'bold'}}>Hoàn thành</span>;
+    if (s === 'cancelled') return <span style={{color: '#dc2626', fontWeight: 'bold'}}>Đã hủy</span>;
+    return <span>{status || 'Chưa rõ'}</span>;
+  };
 
   return (
     <div className="order-detail-container" style={{maxWidth: '800px', margin: '40px auto', padding: '20px'}}>
@@ -69,48 +81,79 @@ export default function OrderDetail() {
         <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', marginTop: '20px'}}>
           <div style={{backgroundColor: '#f9fafb', padding: '15px', borderRadius: '8px'}}>
             <h4 style={{marginTop: 0, color: '#4b5563'}}>Thông tin chung</h4>
-            <p><b>Trạng thái:</b> <span style={{color: '#f59e0b', fontWeight: 'bold'}}>{order.status || 'Đang xử lý'}</span></p>
+            <p><b>Trạng thái:</b> {getStatusBadge(order.status)}</p>
             <p><b>Ngày đặt:</b> {new Date(order.orderDate || order.createdAt).toLocaleString('vi-VN')}</p>
-            <p><b>Thanh toán:</b> {order.paymentMethod || 'Tiền mặt (COD)'}</p>
+            <p><b>Thanh toán:</b> {order.paymentMethod === 'COD' ? 'Tiền mặt (COD)' : order.paymentMethod}</p>
           </div>
           
+          {/* ⚡ CỘT THÔNG TIN GIAO HÀNG ĐƯỢC CẬP NHẬT */}
           <div style={{backgroundColor: '#f9fafb', padding: '15px', borderRadius: '8px'}}>
             <h4 style={{marginTop: 0, color: '#4b5563'}}>Thông tin Giao hàng</h4>
-            <p><b>Người nhận:</b> {order.receiverName || order.customerName || 'Không có tên'}</p>
-            <p><b>Số điện thoại:</b> {order.phoneNumber || order.phone || 'Chưa cập nhật'}</p>
-            <p><b>Địa chỉ:</b> {order.shippingAddress || order.address || 'Chưa cập nhật'}</p>
+            <p style={{marginBottom: '5px'}}><b>Người nhận:</b> {customerName}</p>
+            <p style={{marginBottom: '5px'}}><b>Số điện thoại:</b> {customerPhone}</p>
+            <p style={{marginBottom: '5px'}}><b>Địa chỉ:</b> {customerAddress}</p>
+            <p style={{marginBottom: '0'}}><b>Ghi chú:</b> {orderNote}</p>
           </div>
         </div>
 
         <h3 style={{borderBottom: '1px solid #f3f4f6', paddingBottom: '10px'}}>Sản phẩm đã mua</h3>
         <div style={{marginBottom: '30px'}}>
-          {itemsList.map((item, index) => (
-            <div key={index} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderBottom: '1px dashed #eee'}}>
-              <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
-                <div style={{width: '60px', height: '60px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px'}}>
-                  👓
+          {itemsList.length === 0 ? (
+            <p style={{textAlign: 'center', color: '#666', fontStyle: 'italic'}}>Không có chi tiết sản phẩm.</p>
+          ) : (
+            itemsList.map((item, index) => {
+              const frameName = item.frameName || item.productName || item.frame?.frameName || 'Gọng kính';
+              const lensType = item.lensTypeName || item.lensType?.lensSpecification || null;
+              const lensFeature = item.lensFeatureName || item.lensFeature?.featureSpecification || null;
+              const frameImage = item.frameImage || item.imageUrl || item.frame?.imageUrl || item.image || null;
+              const prescriptionImageUrl = item.prescriptionUrl || item.prescriptionImage || item.prescriptionFile;
+
+              return (
+                <div key={index} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '15px 0', borderBottom: '1px dashed #eee'}}>
+                  <div style={{display: 'flex', gap: '15px', alignItems: 'flex-start'}}>
+                    
+                    <div style={{width: '70px', height: '70px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', flexShrink: 0}}>
+                      {frameImage ? (
+                        <img src={frameImage} alt={frameName} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                      ) : (
+                        <span style={{fontSize: '24px'}}>👓</span>
+                      )}
+                    </div>
+
+                    <div>
+                      <p style={{margin: '0 0 5px 0', fontWeight: 'bold', fontSize: '16px'}}>{frameName}</p>
+                      
+                      {(lensType || lensFeature) && (
+                        <div style={{backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginTop: '8px'}}>
+                          <p style={{margin: 0, fontSize: '13px', color: '#4338ca', fontWeight: '500'}}>
+                            🔍 Tròng: {lensType} {lensFeature ? `- ${lensFeature}` : ''}
+                          </p>
+                        </div>
+                      )}
+
+                      {prescriptionImageUrl && (
+                        <div style={{marginTop: '10px'}}>
+                          <p style={{fontSize: '12px', color: '#b91c1c', fontWeight: 'bold', margin: '0 0 5px 0'}}>⚠️ Toa thuốc đính kèm:</p>
+                          <a href={prescriptionImageUrl} target="_blank" rel="noreferrer">
+                            <img src={prescriptionImageUrl} alt="Toa thuốc" style={{height: '60px', borderRadius: '4px', border: '1px solid #fca5a5', objectFit: 'cover', cursor: 'pointer'}} title="Bấm để xem ảnh lớn"/>
+                          </a>
+                        </div>
+                      )}
+
+                      <p style={{margin: '8px 0 0 0', fontSize: '14px'}}>Số lượng: <b>x{item.quantity || item.qty || 1}</b></p>
+                    </div>
+                  </div>
+                  <div style={{fontWeight: 'bold', fontSize: '16px', color: '#10b981'}}>
+                    {formatUSD((item.unitPrice || item.price || 0) * (item.quantity || 1))}
+                  </div>
                 </div>
-                <div>
-                  <p style={{margin: '0 0 5px 0', fontWeight: 'bold'}}>{item.frameName || item.productName || 'Kính mắt'}</p>
-                  
-                 
-                  {(item.lensTypeName || item.lensFeatureName) && (
-                    <p style={{margin: 0, fontSize: '13px', color: '#6b7280'}}>
-                      Tròng: {item.lensTypeName} - {item.lensFeatureName}
-                    </p>
-                  )}
-                  <p style={{margin: '5px 0 0 0', fontSize: '14px'}}>Số lượng: <b>x{item.quantity || item.qty || 1}</b></p>
-                </div>
-              </div>
-              <div style={{fontWeight: 'bold', fontSize: '16px'}}>
-                ${item.unitPrice || item.price || 0}
-              </div>
-            </div>
-          ))}
+              );
+            })
+          )}
         </div>
 
         <div style={{textAlign: 'right', fontSize: '20px', backgroundColor: '#f0fdf4', padding: '15px', borderRadius: '8px', border: '1px solid #bbf7d0'}}>
-          Tổng cộng: <strong style={{color: '#15803d', fontSize: '24px'}}>${order.totalAmount || order.totalPrice || 0}</strong>
+          Tổng cộng: <strong style={{color: '#15803d', fontSize: '24px'}}>{formatUSD(order.totalAmount || order.totalPrice || 0)}</strong>
         </div>
       </div>
     </div>
