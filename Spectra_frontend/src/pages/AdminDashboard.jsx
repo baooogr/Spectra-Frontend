@@ -109,7 +109,7 @@ export default function AdminDashboard() {
       </div>
 
       {error && <div className="dashboard-msg msg-error">❌ {error}</div>}
-      {isLoading && <div className="dashboard-msg msg-loading">⏳ Đang tải dữ liệu báo cáo...</div>}
+      {isLoading && <div className="dashboard-msg msg-loading">Đang tải dữ liệu báo cáo...</div>}
 
       {!isLoading && !error && stats && (
         <>
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
             {/* CỘT TRÁI - BIỂU ĐỒ LỚN */}
             <div className="main-left-column">
               <div className="chart-card">
-                <h3 className="chart-title">📈 Doanh Thu Theo Ngày</h3>
+                <h3 className="chart-title">Doanh Thu Theo Ngày</h3>
                 {dailyRevenue.length > 0 ? (
                   <div className="chart-wrapper">
                     <ResponsiveContainer width="100%" height="100%">
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="chart-card">
-                <h3 className="chart-title">📊 Doanh Thu Theo Tháng (Năm {selectedYear})</h3>
+                <h3 className="chart-title">Doanh Thu Theo Tháng (Năm {selectedYear})</h3>
                 {monthlyRevenue.length > 0 ? (
                   <div className="chart-wrapper">
                     <ResponsiveContainer width="100%" height="100%">
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
             {/* CỘT PHẢI - THÔNG TIN CHI TIẾT */}
             <div className="main-right-column">
               <div className="chart-card">
-                <h3 className="chart-title">🔥 Top 10 Bán Chạy</h3>
+                <h3 className="chart-title">Top 10 Bán Chạy</h3>
                 {popularFrames.length > 0 ? (
                   <div className="top-list">
                     {popularFrames.map((frame, index) => (
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="chart-card">
-                <h3 className="chart-title">📦 Trạng Thái Đơn Hàng</h3>
+                <h3 className="chart-title">Trạng Thái Đơn Hàng</h3>
                 {orderSummary.length > 0 ? (
                   <div className="pie-wrapper">
                     <ResponsiveContainer width="100%" height="100%">

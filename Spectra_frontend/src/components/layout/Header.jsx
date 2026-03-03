@@ -71,7 +71,7 @@ export default function Header() {
 
         <div className="header-search-container">
           <div className="header-search-box">
-            <span className="search-icon">🔍</span>
+            <span className="search-icon"></span>
             <input 
               type="text" 
               placeholder="Tìm kiếm kính..." 
@@ -86,25 +86,25 @@ export default function Header() {
           {/* NÚT ADMIN: CHỈ XUẤT HIỆN NẾU LÀ MANAGER HOẶC ADMIN */}
           {isAdmin && (
             <Link to="/admin" className="header-action-btn" style={{ color: '#10b981' }}>
-              <span className="icon">⚙️</span>
+              <span className="icon"></span>
               <span className="text" style={{ fontWeight: 'bold' }}>Admin</span>
             </Link>
           )}
 
           <Link to="/orders" className="header-action-btn">
-            <span className="icon">📦</span>
+            <span className="icon"></span>
             <span className="text">Orders</span>
           </Link>
           
           <Link to="/cart" className="header-action-btn">
-            <span className="icon">🛒</span>
+            <span className="icon"></span>
             <span className="text">Cart</span>
           </Link>
 
           {currentUser ? (
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                <Link to="/profile" className="header-action-btn" title="Đi đến Hồ sơ cá nhân">
-                 <span className="icon">👤</span>
+                 <span className="icon"></span>
                  <span className="text" style={{ textTransform: 'capitalize', fontWeight: 'bold', color: '#000' }}>
                    {currentUser.fullName || currentUser.userName || 'Hồ sơ'}
                  </span>
@@ -116,13 +116,13 @@ export default function Header() {
                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                  title="Đăng xuất khỏi hệ thống"
                >
-                 <span className="icon" style={{ color: '#ef4444' }}>🚪</span>
+                 <span className="icon" style={{ color: '#ef4444' }}></span>
                  <span className="text" style={{ color: '#ef4444' }}>Đăng xuất</span>
                </button>
             </div>
           ) : (
             <Link to="/login" className="header-action-btn">
-              <span className="icon">👤</span>
+              <span className="icon"></span>
               <span className="text">Login</span>
             </Link>
           )}

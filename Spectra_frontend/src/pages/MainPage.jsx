@@ -93,7 +93,7 @@ export default function MainPage() {
 
       <div className="main-header">
         <h1>Khám phá bộ sưu tập kính</h1>
-        <p>Tìm chiếc kính phù hợp nhất với phong cách của bạn.</p>
+          
         
         {searchQuery && (
           <p style={{ marginTop: '10px', fontSize: '18px', fontWeight: 'bold' }}>
