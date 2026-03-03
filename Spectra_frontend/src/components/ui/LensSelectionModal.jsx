@@ -8,22 +8,28 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
   const [lensTypes, setLensTypes] = useState([]);
   const [lensFeatures, setLensFeatures] = useState([]);
   
- 
+  // States cho sự lựa chọn của khách
   const [selectedLensType, setSelectedLensType] = useState("");
   const [selectedLensFeature, setSelectedLensFeature] = useState("");
   
+  // States cho Toa Thuốc (Prescription)
+  const [prescriptionFile, setPrescriptionFile] = useState(null);
+  const [prescriptionPreview, setPrescriptionPreview] = useState(null);
   
+  // State tính tiền
   const [calculatedPrice, setCalculatedPrice] = useState(null);
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
 
-  
+  // Fetch dữ liệu khi mở Modal
   useEffect(() => {
     if (isOpen) {
       fetchLensTypes();
       fetchLensFeatures();
-      
+      // Reset state mỗi lần mở lại
       setSelectedLensType("");
       setSelectedLensFeature("");
+      setPrescriptionFile(null);
+      setPrescriptionPreview(null);
       setCalculatedPrice(null);
     }
   }, [isOpen]);
@@ -48,7 +54,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     } catch (err) { console.error("Lỗi tải LensFeature", err); }
   };
 
-  
+  // Hàm gọi API TÍNH TIỀN
   const calculateTotalPrice = async (typeId, featureId) => {
     if (!typeId || !featureId || !product) return;
     
@@ -66,7 +72,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
       
       if (res.ok) {
         const data = await res.json();
-        setCalculatedPrice(data); 
+        setCalculatedPrice(data);
       }
     } catch (error) {
       console.error("Lỗi tính tiền", error);
@@ -82,17 +88,31 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     }
   }, [selectedLensType, selectedLensFeature]);
 
+  
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPrescriptionFile(file);
+      setPrescriptionPreview(URL.createObjectURL(file)); 
+    }
+  };
 
  
+  const selectedTypeData = lensTypes.find(t => (t.id || t.lensTypeId) === selectedLensType);
+  const requiresPrescription = selectedTypeData?.requiresPrescription || false;
+
+  
+  const isAddToCartDisabled = !selectedLensType || !selectedLensFeature || (requiresPrescription && !prescriptionFile);
+
+  
   const handleAddToCart = (withLens) => {
     if (withLens) {
-     
-      if (!selectedLensType || !selectedLensFeature) {
-        alert("Vui lòng chọn đầy đủ Loại tròng và Tính năng tròng!");
+      
+      if (isAddToCartDisabled) {
+        alert("Vui lòng hoàn thiện các tùy chọn tròng kính (bao gồm cả Toa thuốc nếu có yêu cầu)!");
         return;
       }
       
-      const selectedTypeData = lensTypes.find(t => (t.id || t.lensTypeId) === selectedLensType);
       const selectedFeatureData = lensFeatures.find(f => (f.id || f.lensFeatureId) === selectedLensFeature);
 
       onConfirmAddToCart({
@@ -102,7 +122,9 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
           type: selectedTypeData?.lensSpecification,
           feature: selectedFeatureData?.featureSpecification,
           index: selectedFeatureData?.lensIndex,
-          requiresPrescription: selectedTypeData?.requiresPrescription
+          requiresPrescription: requiresPrescription,
+          prescriptionFile: prescriptionFile, 
+          prescriptionPreview: prescriptionPreview
         }
       });
     } else {
@@ -119,7 +141,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '600px', textAlign: 'left'}}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '600px', textAlign: 'left', maxHeight: '90vh', overflowY: 'auto'}}>
         <h3 className="modal-title" style={{marginTop: 0, borderBottom: '1px solid #eee', paddingBottom: '10px'}}>
           👓 Tùy Chọn Tròng Kính
         </h3>
@@ -127,18 +149,18 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
           Bạn đang chọn gọng <strong>{product?.frameName}</strong> (${product?.basePrice}). Bạn có muốn lắp thêm tròng kính không?
         </p>
 
-        
+      
         <div style={{marginBottom: '15px'}}>
           <label style={{display: 'block', fontWeight: 'bold', marginBottom: '8px'}}>1. Chọn Loại Tròng:</label>
           <select 
-            style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc'}}
+            style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}}
             value={selectedLensType}
             onChange={(e) => setSelectedLensType(e.target.value)}
           >
             <option value="">-- Vui lòng chọn --</option>
             {lensTypes.map((type, idx) => (
               <option key={idx} value={type.id || type.lensTypeId}>
-                {type.lensSpecification} (+${type.extraPrice}) {type.requiresPrescription ? '[Cần Toa]' : ''}
+                {type.lensSpecification} (+${type.extraPrice}) {type.requiresPrescription ? '[⚠️ Cần Toa]' : ''}
               </option>
             ))}
           </select>
@@ -148,7 +170,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
         <div style={{marginBottom: '20px'}}>
           <label style={{display: 'block', fontWeight: 'bold', marginBottom: '8px'}}>2. Chọn Tính Năng / Chiết Suất:</label>
           <select 
-            style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc'}}
+            style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}}
             value={selectedLensFeature}
             onChange={(e) => setSelectedLensFeature(e.target.value)}
           >
@@ -160,6 +182,29 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
             ))}
           </select>
         </div>
+
+        
+        {requiresPrescription && (
+          <div style={{marginBottom: '20px', padding: '15px', backgroundColor: '#fef2f2', borderRadius: '8px', border: '1px dashed #ef4444'}}>
+            <label style={{display: 'block', fontWeight: 'bold', color: '#b91c1c', marginBottom: '8px'}}>
+              ⚠️ Bắt Buộc: Tải lên Toa Thuốc (Cận/Viễn/Loạn)
+            </label>
+            <p style={{fontSize: '12px', color: '#7f1d1d', marginTop: 0, marginBottom: '10px'}}>
+              Loại tròng bạn chọn yêu cầu phải có toa thuốc đo mắt để kỹ thuật viên cắt chính xác.
+            </p>
+            <input 
+              type="file" 
+              accept="image/*,application/pdf" 
+              onChange={handleFileChange} 
+              style={{display: 'block', width: '100%', marginBottom: '10px'}} 
+            />
+            {prescriptionPreview && (
+              <div style={{marginTop: '10px'}}>
+                <img src={prescriptionPreview} alt="Toa thuốc của bạn" style={{height: '100px', borderRadius: '6px', border: '1px solid #fca5a5', objectFit: 'cover'}} />
+              </div>
+            )}
+          </div>
+        )}
 
        
         <div style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
@@ -190,16 +235,16 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
           <button 
             className="modal-btn modal-btn--outline" 
             onClick={() => handleAddToCart(false)} 
-            style={{flex: 1}}
+            style={{flex: 1, padding: '12px', fontWeight: 'bold'}}
           >
-            Không Cần Tròng (Mua Gọng Không)
+            Mua Gọng Không Tròng
           </button>
           
           <button 
             className="modal-btn modal-btn--primary" 
             onClick={() => handleAddToCart(true)} 
-            disabled={!selectedLensType || !selectedLensFeature}
-            style={{flex: 1, backgroundColor: (!selectedLensType || !selectedLensFeature) ? '#ccc' : '#111827', cursor: (!selectedLensType || !selectedLensFeature) ? 'not-allowed' : 'pointer'}}
+            disabled={isAddToCartDisabled}
+            style={{flex: 1, padding: '12px', fontWeight: 'bold', backgroundColor: isAddToCartDisabled ? '#9ca3af' : '#111827', cursor: isAddToCartDisabled ? 'not-allowed' : 'pointer'}}
           >
             Thêm Vào Giỏ Hàng
           </button>
