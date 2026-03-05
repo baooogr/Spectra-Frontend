@@ -56,7 +56,6 @@ export default function CheckoutPage() {
         if (item.lensInfo && item.lensInfo.typeId && item.lensInfo.featureId) {
           detail.lensTypeId = String(item.lensInfo.typeId);
           detail.lensFeatureId = String(item.lensInfo.featureId);
-          
           detail.prescriptionId = item.lensInfo.prescriptionId || null; 
           detail.prescriptionUrl = item.lensInfo.prescriptionUrl || null;
           detail.prescriptionImage = item.lensInfo.prescriptionUrl || null;
@@ -82,6 +81,7 @@ export default function CheckoutPage() {
         orderDetails: formattedItems
       };
 
+      
       const res = await fetch("https://myspectra.runasp.net/api/Orders", {
         method: "POST",
         headers: {
@@ -95,7 +95,7 @@ export default function CheckoutPage() {
         const result = await res.json();
         const newOrderId = result.id || result.orderId;
         
-        // ⚡ NẾU THANH TOÁN VNPAY THÌ GỌI TIẾP API THANH TOÁN
+        
         if (form.paymentMethod === "VNPAY") {
           try {
             const paymentRes = await fetch("https://myspectra.runasp.net/api/Payments", {
@@ -108,10 +108,11 @@ export default function CheckoutPage() {
               const paymentData = await paymentRes.json();
               if (paymentData.paymentUrl) {
                 clearCart(); 
-                window.location.href = paymentData.paymentUrl; 
+                
+                window.location.href = paymentData.paymentUrl;
                 return; 
               } else { alert("Lỗi: Backend không trả về Link VNPay!"); }
-            } else { alert("Lỗi kết nối VNPay!"); }
+            } else { alert("Lỗi kết nối tạo VNPay!"); }
           } catch (err) { alert("Lỗi mạng khi tạo thanh toán VNPay"); }
         }
 

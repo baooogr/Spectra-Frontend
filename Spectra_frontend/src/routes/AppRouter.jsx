@@ -26,6 +26,9 @@ import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
 
+// VNPay
+import VNPayReturnPage from "../pages/VNPayReturnPage";
+
 
 const CustomerLayout = () => {
   return (
@@ -67,6 +70,7 @@ export default function AppRouter() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
+          <Route path="/vnpay-return" element={<VNPayReturnPage />} />
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
