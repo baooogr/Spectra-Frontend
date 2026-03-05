@@ -52,11 +52,11 @@ export default function OrderDetail() {
   const itemsList = order.orderDetails || order.orderItems || order.items || order.products || [];
   const formatUSD = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n || 0);
 
-  // ⚡ BẮT DỮ LIỆU GIAO HÀNG ĐÃ NHẬP Ở CHECKOUT (Bao lô cả viết hoa và viết thường của C#)
+  // Bắt dữ liệu giao hàng
   const customerName = order.receiverName || order.ReceiverName || order.customerName || order.CustomerName || order.fullName || order.user?.fullName || 'Khách hàng';
-  const customerPhone = order.phoneNumber || order.PhoneNumber || order.phone || order.Phone || order.user?.phone || 'Chưa cập nhật';
+  const customerPhone = order.receiverPhone || order.ReceiverPhone || order.phoneNumber || order.PhoneNumber || order.phone || order.Phone || order.user?.phone || 'Chưa cập nhật';
   const customerAddress = order.shippingAddress || order.ShippingAddress || order.address || order.Address || order.user?.address || 'Chưa cập nhật';
-  const orderNote = order.note || order.Note || 'Không có'; // Bổ sung Ghi chú
+  const orderNote = order.note || order.Note || 'Không có'; 
 
   const getStatusBadge = (status) => {
     const s = status?.toLowerCase() || '';
@@ -86,7 +86,6 @@ export default function OrderDetail() {
             <p><b>Thanh toán:</b> {order.paymentMethod === 'COD' ? 'Tiền mặt (COD)' : order.paymentMethod}</p>
           </div>
           
-          {/* ⚡ CỘT THÔNG TIN GIAO HÀNG ĐƯỢC CẬP NHẬT */}
           <div style={{backgroundColor: '#f9fafb', padding: '15px', borderRadius: '8px'}}>
             <h4 style={{marginTop: 0, color: '#4b5563'}}>Thông tin Giao hàng</h4>
             <p style={{marginBottom: '5px'}}><b>Người nhận:</b> {customerName}</p>
@@ -105,44 +104,32 @@ export default function OrderDetail() {
               const frameName = item.frameName || item.productName || item.frame?.frameName || 'Gọng kính';
               const lensType = item.lensTypeName || item.lensType?.lensSpecification || null;
               const lensFeature = item.lensFeatureName || item.lensFeature?.featureSpecification || null;
-              const frameImage = item.frameImage || item.imageUrl || item.frame?.imageUrl || item.image || null;
               const prescriptionImageUrl = item.prescriptionUrl || item.prescriptionImage || item.prescriptionFile;
 
               return (
-                <div key={index} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '15px 0', borderBottom: '1px dashed #eee'}}>
-                  <div style={{display: 'flex', gap: '15px', alignItems: 'flex-start'}}>
+                <div key={index} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderBottom: '1px dashed #eee'}}>
+                  <div>
+                    <p style={{margin: '0 0 5px 0', fontWeight: 'bold', fontSize: '16px'}}>{frameName}</p>
                     
-                    <div style={{width: '70px', height: '70px', backgroundColor: '#f3f4f6', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', flexShrink: 0}}>
-                      {frameImage ? (
-                        <img src={frameImage} alt={frameName} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                      ) : (
-                        <span style={{fontSize: '24px'}}>👓</span>
-                      )}
-                    </div>
+                    {(lensType || lensFeature) && (
+                      <div style={{backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginTop: '8px', marginBottom: '8px', display: 'inline-block'}}>
+                        <p style={{margin: 0, fontSize: '13px', color: '#4338ca', fontWeight: '500'}}>
+                          🔍 Tròng: {lensType} {lensFeature ? `- ${lensFeature}` : ''}
+                        </p>
+                      </div>
+                    )}
 
-                    <div>
-                      <p style={{margin: '0 0 5px 0', fontWeight: 'bold', fontSize: '16px'}}>{frameName}</p>
-                      
-                      {(lensType || lensFeature) && (
-                        <div style={{backgroundColor: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', marginTop: '8px'}}>
-                          <p style={{margin: 0, fontSize: '13px', color: '#4338ca', fontWeight: '500'}}>
-                            🔍 Tròng: {lensType} {lensFeature ? `- ${lensFeature}` : ''}
-                          </p>
-                        </div>
-                      )}
+                    <p style={{margin: '0', fontSize: '14px', color: '#666'}}>Số lượng: <b>x{item.quantity || item.qty || 1}</b></p>
 
-                      {prescriptionImageUrl && (
-                        <div style={{marginTop: '10px'}}>
-                          <p style={{fontSize: '12px', color: '#b91c1c', fontWeight: 'bold', margin: '0 0 5px 0'}}>⚠️ Toa thuốc đính kèm:</p>
-                          <a href={prescriptionImageUrl} target="_blank" rel="noreferrer">
-                            <img src={prescriptionImageUrl} alt="Toa thuốc" style={{height: '60px', borderRadius: '4px', border: '1px solid #fca5a5', objectFit: 'cover', cursor: 'pointer'}} title="Bấm để xem ảnh lớn"/>
-                          </a>
-                        </div>
-                      )}
-
-                      <p style={{margin: '8px 0 0 0', fontSize: '14px'}}>Số lượng: <b>x{item.quantity || item.qty || 1}</b></p>
-                    </div>
+                    {prescriptionImageUrl && (
+                      <div style={{marginTop: '8px'}}>
+                        <a href={prescriptionImageUrl} target="_blank" rel="noreferrer" style={{fontSize: '13px', color: '#b91c1c', fontWeight: 'bold', textDecoration: 'underline'}}>
+                          ⚠️ Xem Toa thuốc đính kèm
+                        </a>
+                      </div>
+                    )}
                   </div>
+                  
                   <div style={{fontWeight: 'bold', fontSize: '16px', color: '#10b981'}}>
                     {formatUSD((item.unitPrice || item.price || 0) * (item.quantity || 1))}
                   </div>
@@ -153,7 +140,7 @@ export default function OrderDetail() {
         </div>
 
         <div style={{textAlign: 'right', fontSize: '20px', backgroundColor: '#f0fdf4', padding: '15px', borderRadius: '8px', border: '1px solid #bbf7d0'}}>
-          Tổng cộng: <strong style={{color: '#15803d', fontSize: '24px'}}>{formatUSD(order.totalAmount || order.totalPrice || 0)}</strong>
+          Tổng cộng: <strong style={{color: '#000000', fontSize: '24px'}}>{formatUSD(order.totalAmount || order.totalPrice || 0)}</strong>
         </div>
       </div>
     </div>

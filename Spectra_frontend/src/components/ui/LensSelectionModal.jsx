@@ -7,13 +7,20 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
   
   const [lensTypes, setLensTypes] = useState([]);
   const [lensFeatures, setLensFeatures] = useState([]);
-  
   const [selectedLensType, setSelectedLensType] = useState("");
   const [selectedLensFeature, setSelectedLensFeature] = useState("");
   
-  const [prescriptionFile, setPrescriptionFile] = useState(null);
-  const [prescriptionPreview, setPrescriptionPreview] = useState(null);
-  
+  const [savedPrescriptions, setSavedPrescriptions] = useState([]);
+  const [selectedPrescriptionId, setSelectedPrescriptionId] = useState("");
+  const [inputMode, setInputMode] = useState("saved"); 
+
+  const [prescriptionForm, setPrescriptionForm] = useState({
+    sphereRight: 0, cylinderRight: 0, axisRight: 0, addRight: 0,
+    sphereLeft: 0, cylinderLeft: 0, axisLeft: 0, addLeft: 0,
+    pupillaryDistance: 60, doctorName: "", clinicName: ""
+  });
+  const [isSavingNew, setIsSavingNew] = useState(false);
+
   const [calculatedPrice, setCalculatedPrice] = useState(null);
   const [isLoadingPrice, setIsLoadingPrice] = useState(false);
 
@@ -21,10 +28,12 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     if (isOpen) {
       fetchLensTypes();
       fetchLensFeatures();
+      fetchMyPrescriptions();
+      
       setSelectedLensType("");
       setSelectedLensFeature("");
-      setPrescriptionFile(null);
-      setPrescriptionPreview(null);
+      setSelectedPrescriptionId("");
+      setInputMode("saved");
       setCalculatedPrice(null);
     }
   }, [isOpen]);
@@ -43,9 +52,24 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     } catch (err) { console.error("Lỗi", err); }
   };
 
+  const fetchMyPrescriptions = async () => {
+    const token = JSON.parse(localStorage.getItem("user"))?.token;
+    if (!token) return;
+    try {
+      const res = await fetch("https://myspectra.runasp.net/api/Prescriptions/my/valid", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSavedPrescriptions(data || []);
+        if (data.length > 0) setSelectedPrescriptionId(data[0].prescriptionId);
+      }
+    } catch (err) {}
+  };
+
   
   const calculateTotalPrice = async (typeId, featureId) => {
-    if (!typeId || !featureId || !product) return;
+    if (!typeId || !featureId || !product || typeId.length < 30 || featureId.length < 30) return;
     
     setIsLoadingPrice(true);
     try {
@@ -54,16 +78,11 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           basePrice: Number(product.basePrice),
-          lensTypeId: String(typeId),      
-          lensFeatureId: String(featureId) 
+          lensTypeId: String(typeId),
+          lensFeatureId: String(featureId)
         })
       });
-      
-      if (res.ok) {
-        setCalculatedPrice(await res.json());
-      } else {
-        console.error("Lỗi 400: Dữ liệu tính tiền sai cấu trúc", await res.text());
-      }
+      if (res.ok) setCalculatedPrice(await res.json());
     } catch (error) { console.error("Lỗi tính tiền", error); } 
     finally { setIsLoadingPrice(false); }
   };
@@ -74,36 +93,74 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     }
   }, [selectedLensType, selectedLensFeature]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPrescriptionFile(file);
-      setPrescriptionPreview(URL.createObjectURL(file)); 
-    }
+  const handleSaveNewPrescription = async () => {
+    const token = JSON.parse(localStorage.getItem("user"))?.token;
+    if (!token) { alert("Vui lòng đăng nhập để lưu toa thuốc!"); return; }
+
+    setIsSavingNew(true);
+    const expiryDate = new Date();
+    expiryDate.setMonth(expiryDate.getMonth() + 6); 
+
+    
+    const payload = {
+      sphereRight: prescriptionForm.sphereRight ? Number(prescriptionForm.sphereRight) : null,
+      cylinderRight: prescriptionForm.cylinderRight ? Number(prescriptionForm.cylinderRight) : null,
+      axisRight: prescriptionForm.axisRight ? Number(prescriptionForm.axisRight) : null,
+      addRight: prescriptionForm.addRight ? Number(prescriptionForm.addRight) : null,
+      
+      sphereLeft: prescriptionForm.sphereLeft ? Number(prescriptionForm.sphereLeft) : null,
+      cylinderLeft: prescriptionForm.cylinderLeft ? Number(prescriptionForm.cylinderLeft) : null,
+      axisLeft: prescriptionForm.axisLeft ? Number(prescriptionForm.axisLeft) : null,
+      addLeft: prescriptionForm.addLeft ? Number(prescriptionForm.addLeft) : null,
+      
+      pupillaryDistance: prescriptionForm.pupillaryDistance ? Number(prescriptionForm.pupillaryDistance) : 60,
+      doctorName: prescriptionForm.doctorName || "Khách tự nhập",
+      clinicName: prescriptionForm.clinicName || "Khách tự nhập",
+      expirationDate: expiryDate.toISOString()
+    };
+
+    try {
+      const res = await fetch("https://myspectra.runasp.net/api/Prescriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        const newData = await res.json();
+        alert("Đã lưu toa thuốc mới thành công!");
+        await fetchMyPrescriptions(); 
+        setSelectedPrescriptionId(newData.prescriptionId);
+        setInputMode("saved");
+      } else {
+        const err = await res.json();
+        alert("Lỗi nhập liệu: " + (err.message || "Vui lòng kiểm tra lại thông số."));
+      }
+    } catch (err) { alert("Lỗi kết nối mạng."); } 
+    finally { setIsSavingNew(false); }
   };
 
   const selectedTypeData = lensTypes.find(t => (t.id || t.lensTypeId)?.toString() === selectedLensType.toString());
   const selectedFeatureData = lensFeatures.find(f => (f.id || f.lensFeatureId)?.toString() === selectedLensFeature.toString());
   const requiresPrescription = selectedTypeData?.requiresPrescription || false;
-  const isAddToCartDisabled = !selectedLensType || !selectedLensFeature || (requiresPrescription && !prescriptionFile);
+  
+  const isAddToCartDisabled = !selectedLensType || !selectedLensFeature || (requiresPrescription && !selectedPrescriptionId) || isSavingNew;
 
   const handleAddToCart = (withLens) => {
     if (withLens) {
-      if (isAddToCartDisabled) {
-        alert("Vui lòng hoàn thiện tùy chọn tròng kính!"); return;
-      }
+      if (isAddToCartDisabled) return;
       onConfirmAddToCart({
         lensIncluded: true,
         finalPrice: calculatedPrice?.totalPrice || product.basePrice,
         lensDetails: {
-          typeId: String(selectedLensType),       
-          featureId: String(selectedLensFeature), 
+          typeId: String(selectedLensType),
+          featureId: String(selectedLensFeature),
           type: selectedTypeData?.lensSpecification,
           feature: selectedFeatureData?.featureSpecification,
           index: selectedFeatureData?.lensIndex,
           requiresPrescription: requiresPrescription,
-          prescriptionFile: prescriptionFile, 
-          prescriptionPreview: prescriptionPreview 
+          prescriptionId: selectedPrescriptionId || null, 
+          prescriptionUrl: null 
         }
       });
     } else {
@@ -115,39 +172,100 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '600px', textAlign: 'left', maxHeight: '90vh', overflowY: 'auto'}}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px', textAlign: 'left', maxHeight: '90vh', overflowY: 'auto'}}>
         <h3 className="modal-title" style={{marginTop: 0, borderBottom: '1px solid #eee', paddingBottom: '10px'}}>👓 Tùy Chọn Tròng Kính</h3>
-        <p style={{ color: "#666", marginBottom: '20px' }}>Bạn đang chọn gọng <strong>{product?.frameName}</strong> (${product?.basePrice}). Bạn có muốn lắp thêm tròng kính không?</p>
+        <p style={{ color: "#666", marginBottom: '20px' }}>Bạn đang chọn gọng <strong>{product?.frameName}</strong> (${product?.basePrice}).</p>
 
-        <div style={{marginBottom: '15px'}}>
-          <label style={{display: 'block', fontWeight: 'bold', marginBottom: '8px'}}>1. Chọn Loại Tròng:</label>
-          <select style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}} value={selectedLensType} onChange={(e) => setSelectedLensType(e.target.value)}>
-            <option value="">-- Vui lòng chọn --</option>
-            {lensTypes.map((type, idx) => (
-              <option key={idx} value={type.id || type.lensTypeId}>
-                {type.lensSpecification} (+${type.extraPrice}) {type.requiresPrescription ? '[⚠️ Cần Toa]' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px'}}>
+          <div>
+            <label style={{display: 'block', fontWeight: 'bold', marginBottom: '8px'}}>1. Chọn Loại Tròng:</label>
+            <select style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}} value={selectedLensType} onChange={(e) => setSelectedLensType(e.target.value)}>
+              <option value="">-- Vui lòng chọn --</option>
+              {lensTypes.map((type, idx) => (
+                <option key={idx} value={type.id || type.lensTypeId}>
+                  {type.lensSpecification} (+${type.extraPrice}) {type.requiresPrescription ? '[⚠️ Cần Toa]' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div style={{marginBottom: '20px'}}>
-          <label style={{display: 'block', fontWeight: 'bold', marginBottom: '8px'}}>2. Chọn Tính Năng / Chiết Suất:</label>
-          <select style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}} value={selectedLensFeature} onChange={(e) => setSelectedLensFeature(e.target.value)}>
-            <option value="">-- Vui lòng chọn --</option>
-            {[...lensFeatures].sort((a,b) => a.lensIndex - b.lensIndex).map((feat, idx) => (
-              <option key={idx} value={feat.id || feat.lensFeatureId}>
-                Chiết suất {feat.lensIndex} - {feat.featureSpecification} (+${feat.extraPrice})
-              </option>
-            ))}
-          </select>
+          <div>
+            <label style={{display: 'block', fontWeight: 'bold', marginBottom: '8px'}}>2. Chiết Suất/Tính Năng:</label>
+            <select style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}} value={selectedLensFeature} onChange={(e) => setSelectedLensFeature(e.target.value)}>
+              <option value="">-- Vui lòng chọn --</option>
+              {[...lensFeatures].sort((a,b) => a.lensIndex - b.lensIndex).map((feat, idx) => (
+                <option key={idx} value={feat.id || feat.lensFeatureId}>
+                  Chiết suất {feat.lensIndex} - {feat.featureSpecification} (+${feat.extraPrice})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {requiresPrescription && (
           <div style={{marginBottom: '20px', padding: '15px', backgroundColor: '#fef2f2', borderRadius: '8px', border: '1px dashed #ef4444'}}>
-            <label style={{display: 'block', fontWeight: 'bold', color: '#b91c1c', marginBottom: '8px'}}>⚠️ Bắt Buộc: Tải lên Toa Thuốc</label>
-            <input type="file" accept="image/*,application/pdf" onChange={handleFileChange} style={{display: 'block', width: '100%', marginBottom: '10px'}} />
-            {prescriptionPreview && <img src={prescriptionPreview} alt="Toa" style={{height: '100px', borderRadius: '6px', border: '1px solid #fca5a5', objectFit: 'cover'}} />}
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #fca5a5', paddingBottom: '10px'}}>
+              <label style={{fontWeight: 'bold', color: '#b91c1c', margin: 0}}>Yêu Cầu Thông Số Mắt</label>
+              <div style={{display: 'flex', gap: '10px'}}>
+                <button onClick={() => setInputMode("saved")} style={{padding: '5px 10px', fontSize: '12px', cursor: 'pointer', backgroundColor: inputMode === 'saved' ? '#111827' : '#fff', color: inputMode === 'saved' ? 'white' : '#111827', border: '1px solid #111827', borderRadius: '4px'}}>Dùng toa đã lưu</button>
+                <button onClick={() => setInputMode("new")} style={{padding: '5px 10px', fontSize: '12px', cursor: 'pointer', backgroundColor: inputMode === 'new' ? '#111827' : '#fff', color: inputMode === 'new' ? 'white' : '#111827', border: '1px solid #111827', borderRadius: '4px'}}>+ Nhập toa mới</button>
+              </div>
+            </div>
+
+            {inputMode === "saved" ? (
+              <div>
+                {savedPrescriptions.length > 0 ? (
+                  <select 
+                    style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}}
+                    value={selectedPrescriptionId}
+                    onChange={e => setSelectedPrescriptionId(e.target.value)}
+                  >
+                    <option value="">-- Chọn toa thuốc hợp lệ của bạn --</option>
+                    {savedPrescriptions.map(p => (
+                      <option key={p.prescriptionId} value={p.prescriptionId}>
+                        Khai báo ngày {new Date(p.createdAt).toLocaleDateString('vi-VN')} (S:{p.sphereRight}/${p.sphereLeft})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p style={{fontSize: '14px', color: '#dc2626'}}>Bạn chưa có toa thuốc nào còn hạn trong hồ sơ. Vui lòng bấm "Nhập toa mới".</p>
+                )}
+              </div>
+            ) : (
+              <div style={{backgroundColor: 'white', padding: '15px', borderRadius: '6px', border: '1px solid #e5e7eb'}}>
+                <p style={{fontSize: '12px', color: '#666', marginTop: 0, marginBottom: '10px'}}>Nhập các thông số theo giấy khám của bạn (Âm là Cận, Dương là Viễn).</p>
+                
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
+                  <div style={{border: '1px solid #fca5a5', padding: '10px', borderRadius: '6px'}}>
+                    <h5 style={{color: '#dc2626', margin: '0 0 10px 0'}}>Mắt Phải (OD)</h5>
+                    <div style={{display: 'flex', gap: '5px', marginBottom: '5px'}}>
+                      <div style={{flex: 1}}><label style={{fontSize: '11px'}}>SPH</label><input type="number" step="0.25" value={prescriptionForm.sphereRight} onChange={e => setPrescriptionForm({...prescriptionForm, sphereRight: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
+                      <div style={{flex: 1}}><label style={{fontSize: '11px'}}>CYL</label><input type="number" step="0.25" value={prescriptionForm.cylinderRight} onChange={e => setPrescriptionForm({...prescriptionForm, cylinderRight: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
+                      <div style={{flex: 1}}><label style={{fontSize: '11px'}}>AXIS</label><input type="number" value={prescriptionForm.axisRight} onChange={e => setPrescriptionForm({...prescriptionForm, axisRight: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
+                    </div>
+                  </div>
+
+                  <div style={{border: '1px solid #93c5fd', padding: '10px', borderRadius: '6px'}}>
+                    <h5 style={{color: '#2563eb', margin: '0 0 10px 0'}}>Mắt Trái (OS)</h5>
+                    <div style={{display: 'flex', gap: '5px', marginBottom: '5px'}}>
+                      <div style={{flex: 1}}><label style={{fontSize: '11px'}}>SPH</label><input type="number" step="0.25" value={prescriptionForm.sphereLeft} onChange={e => setPrescriptionForm({...prescriptionForm, sphereLeft: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
+                      <div style={{flex: 1}}><label style={{fontSize: '11px'}}>CYL</label><input type="number" step="0.25" value={prescriptionForm.cylinderLeft} onChange={e => setPrescriptionForm({...prescriptionForm, cylinderLeft: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
+                      <div style={{flex: 1}}><label style={{fontSize: '11px'}}>AXIS</label><input type="number" value={prescriptionForm.axisLeft} onChange={e => setPrescriptionForm({...prescriptionForm, axisLeft: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{display: 'flex', gap: '15px', alignItems: 'center', marginTop: '15px'}}>
+                  <div style={{width: '120px'}}>
+                    <label style={{fontSize: '12px', fontWeight: 'bold'}}>PD (mm):</label>
+                    <input type="number" value={prescriptionForm.pupillaryDistance} onChange={e => setPrescriptionForm({...prescriptionForm, pupillaryDistance: e.target.value})} style={{width: '100%', padding: '6px'}} />
+                  </div>
+                  <button type="button" onClick={handleSaveNewPrescription} disabled={isSavingNew} style={{padding: '8px 15px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', height: 'fit-content', marginTop: '15px'}}>
+                    {isSavingNew ? "Đang lưu..." : "Lưu & Chọn toa này"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -168,12 +286,13 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
               </div>
             </>
           )}
-          {isLoadingPrice && <div style={{textAlign: 'center', color: '#8b5cf6', fontSize: '14px', marginTop: '10px'}}>⏳ Đang tính toán giá...</div>}
         </div>
 
         <div className="modal-actions" style={{display: 'flex', gap: '10px', justifyContent: 'space-between'}}>
           <button className="modal-btn modal-btn--outline" onClick={() => handleAddToCart(false)} style={{flex: 1, padding: '12px', fontWeight: 'bold'}}>Mua Gọng Không</button>
-          <button className="modal-btn modal-btn--primary" onClick={() => handleAddToCart(true)} disabled={isAddToCartDisabled} style={{flex: 1, padding: '12px', fontWeight: 'bold', backgroundColor: isAddToCartDisabled ? '#9ca3af' : '#111827', cursor: isAddToCartDisabled ? 'not-allowed' : 'pointer'}}>Thêm Vào Giỏ Hàng</button>
+          <button className="modal-btn modal-btn--primary" onClick={() => handleAddToCart(true)} disabled={isAddToCartDisabled} style={{flex: 1, padding: '12px', fontWeight: 'bold', backgroundColor: isAddToCartDisabled ? '#9ca3af' : '#111827', cursor: isAddToCartDisabled ? 'not-allowed' : 'pointer'}}>
+            {isSavingNew ? "Đang lưu toa..." : "Thêm Vào Giỏ Hàng"}
+          </button>
         </div>
       </div>
     </div>

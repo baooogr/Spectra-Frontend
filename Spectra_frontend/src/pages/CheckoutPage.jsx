@@ -1,71 +1,65 @@
-import React, { useMemo, useState, useContext } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useContext, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 import { useCart } from "../context/CartContext";
-import { UserContext } from "../context/UserContext"; 
 import "./CheckoutPage.css";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useContext(UserContext);
-  const { clearCart } = useCart();
-
-  const initialCart = location.state?.cartItems ?? [];
-  const [cartItems] = useState(initialCart);
+  const { cartItems, clearCart } = useCart();
+  const location = useLocation();
+  const items = location.state?.cartItems || cartItems;
 
   const [form, setForm] = useState({
-    fullName: "", phone: "", email: "", address: "", note: "", paymentMethod: "COD"
+    fullName: user?.fullName || "",
+    phone: user?.phone || "",
+    email: user?.email || "",
+    address: user?.address || "",
+    note: "",
+    paymentMethod: "COD"
   });
 
-  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const shippingFee = 0; 
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const subtotal = useMemo(() => {
-    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  }, [cartItems]);
-
-  const total = subtotal + (cartItems.length ? shippingFee : 0);
-
-  const formatUSD = (n) => 
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n);
+  const shippingFee = 0;
+  const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
+  const total = subtotal + shippingFee;
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const validateForm = () => {
-    let err = {};
-    if (!form.fullName.trim()) err.fullName = "Vui lòng nhập họ tên.";
-    if (!form.phone.trim()) err.phone = "Vui lòng nhập số điện thoại.";
-    if (!form.address.trim()) err.address = "Vui lòng nhập địa chỉ giao hàng.";
-    setErrors(err);
-    return Object.keys(err).length === 0;
-  };
+  const formatUSD = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n);
 
-  
   const placeOrder = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    if (cartItems.length === 0) { alert("Giỏ hàng trống."); return; }
+    setIsSubmitting(true);
+    setErrorMsg("");
 
     const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
-    if (!token) { alert("Bạn cần đăng nhập để đặt hàng."); navigate("/login"); return; }
-
-    setIsSubmitting(true);
+    if (!token) {
+      alert("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
+      navigate("/login");
+      return;
+    }
 
     try {
-     
-      const formattedItems = cartItems.map(item => {
+      const formattedItems = items.map(item => {
         const detail = {
           frameId: String(item.id), 
           quantity: Number(item.quantity),
-          unitPrice: Number(item.price)
+          unitPrice: Number(item.price),
+          color: item.color || "Default", 
+          frameColor: item.color || "Default"
         };
-        
         
         if (item.lensInfo && item.lensInfo.typeId && item.lensInfo.featureId) {
           detail.lensTypeId = String(item.lensInfo.typeId);
           detail.lensFeatureId = String(item.lensInfo.featureId);
+          
+          detail.prescriptionId = item.lensInfo.prescriptionId || null; 
+          detail.prescriptionUrl = item.lensInfo.prescriptionUrl || null;
+          detail.prescriptionImage = item.lensInfo.prescriptionUrl || null;
         } else {
           detail.lensTypeId = null;
           detail.lensFeatureId = null;
@@ -76,15 +70,16 @@ export default function CheckoutPage() {
 
       const orderPayload = {
         receiverName: form.fullName,
-        customerName: form.fullName, 
+        customerName: form.fullName,
+        receiverPhone: form.phone, 
         phoneNumber: form.phone,
-        phone: form.phone,           
+        phone: form.phone,
         shippingAddress: form.address,
-        address: form.address,       
+        address: form.address,
         note: form.note,
         paymentMethod: form.paymentMethod,
-        items: formattedItems,           
-        orderDetails: formattedItems     
+        items: formattedItems,
+        orderDetails: formattedItems
       };
 
       const res = await fetch("https://myspectra.runasp.net/api/Orders", {
@@ -98,97 +93,126 @@ export default function CheckoutPage() {
 
       if (res.ok) {
         const result = await res.json();
+        const newOrderId = result.id || result.orderId;
+        
+        // ⚡ NẾU THANH TOÁN VNPAY THÌ GỌI TIẾP API THANH TOÁN
+        if (form.paymentMethod === "VNPAY") {
+          try {
+            const paymentRes = await fetch("https://myspectra.runasp.net/api/Payments", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+              body: JSON.stringify({ orderId: newOrderId, paymentMethod: "VNPAY" })
+            });
+
+            if (paymentRes.ok) {
+              const paymentData = await paymentRes.json();
+              if (paymentData.paymentUrl) {
+                clearCart(); 
+                window.location.href = paymentData.paymentUrl; 
+                return; 
+              } else { alert("Lỗi: Backend không trả về Link VNPay!"); }
+            } else { alert("Lỗi kết nối VNPay!"); }
+          } catch (err) { alert("Lỗi mạng khi tạo thanh toán VNPay"); }
+        }
+
+        
         clearCart(); 
         navigate("/checkout-success", {
           state: {
-            orderId: result.id || result.orderId || "Mới",
+            orderId: newOrderId,
             customer: { fullName: form.fullName, phone: form.phone, email: form.email, address: form.address },
             total: total
           }
         });
       } else {
-        
-        const errorText = await res.text();
-        console.error("Lỗi 400 từ Backend:", errorText);
-        alert("Có lỗi từ Server: " + errorText);
+        const errData = await res.json();
+        setErrorMsg(errData.message || "Lỗi tạo đơn hàng từ Server.");
       }
     } catch (err) {
-      alert("Lỗi mạng: Không thể kết nối đến máy chủ.");
+      setErrorMsg("Lỗi mạng! Không thể kết nối tới Server.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (items.length === 0) {
+    return <div style={{textAlign: "center", padding: "50px"}}>Giỏ hàng trống. Không thể thanh toán.</div>;
+  }
+
   return (
     <div className="checkout">
-      <div className="checkout__header">
-        <h1 className="checkout__main-title">Thanh Toán</h1>
-        <button className="btn btn--ghost" onClick={() => navigate("/cart")}>← Quay lại giỏ hàng</button>
-      </div>
+      <div className="checkout__container">
+        <h1 className="checkout__title">Thanh Toán</h1>
+        
+        <form className="checkout__grid" onSubmit={placeOrder}>
+          <div className="checkout__form">
+            <h2>Thông tin giao hàng</h2>
+            
+            {errorMsg && <div style={{color: 'red', backgroundColor: '#fee2e2', padding: '10px', borderRadius: '5px', marginBottom: '15px'}}>{errorMsg}</div>}
 
-      <div className="checkout__grid">
-        <form className="card" onSubmit={placeOrder}>
-          <h2 className="card__title">Thông tin nhận hàng</h2>
-          
-          <div className="field">
-            <label>Họ và tên *</label>
-            <input name="fullName" value={form.fullName} onChange={onChange} className={errors.fullName ? "input-error" : ""} />
-            {errors.fullName && <span className="error-text">{errors.fullName}</span>}
+            <div className="form-row">
+              <div className="form-group">
+                <label>Họ và tên <span className="req">*</span></label>
+                <input type="text" name="fullName" value={form.fullName} onChange={onChange} required />
+              </div>
+              <div className="form-group">
+                <label>Số điện thoại <span className="req">*</span></label>
+                <input type="tel" name="phone" value={form.phone} onChange={onChange} required />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label>Email liên hệ</label>
+              <input type="email" name="email" value={form.email} onChange={onChange} />
+            </div>
+
+            <div className="form-group">
+              <label>Địa chỉ giao hàng <span className="req">*</span></label>
+              <input type="text" name="address" value={form.address} onChange={onChange} required />
+            </div>
+            
+            <div className="form-group">
+              <label>Ghi chú đơn hàng (Tùy chọn)</label>
+              <textarea name="note" rows="3" value={form.note} onChange={onChange} placeholder="Giao giờ hành chính, gọi trước khi giao..."></textarea>
+            </div>
+
+            <div className="form-group" style={{marginTop: '20px'}}>
+              <label style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', display: 'block'}}>Phương thức thanh toán <span className="req">*</span></label>
+              <select name="paymentMethod" value={form.paymentMethod} onChange={onChange} style={{width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', backgroundColor: '#f9fafb', fontSize: '15px'}}>
+                <option value="COD">💵 Thanh toán tiền mặt (COD)</option>
+                <option value="VNPAY">💳 Thanh toán qua VNPay (Quét mã QR / Thẻ ATM)</option>
+              </select>
+            </div>
           </div>
 
-          <div className="field">
-            <label>Số điện thoại *</label>
-            <input name="phone" value={form.phone} onChange={onChange} className={errors.phone ? "input-error" : ""} />
-            {errors.phone && <span className="error-text">{errors.phone}</span>}
-          </div>
-
-          <div className="field">
-            <label>Địa chỉ giao hàng *</label>
-            <input name="address" value={form.address} onChange={onChange} className={errors.address ? "input-error" : ""} />
-            {errors.address && <span className="error-text">{errors.address}</span>}
-          </div>
-
-          <div className="field">
-            <label>Ghi chú đơn hàng (Tùy chọn)</label>
-            <textarea name="note" value={form.note} onChange={onChange} rows="3" />
-          </div>
-
-          <div className="field">
-            <label>Phương thức thanh toán</label>
-            <select name="paymentMethod" value={form.paymentMethod} onChange={onChange} style={{width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none'}}>
-              <option value="COD">💵 Thanh toán khi nhận hàng (COD)</option>
-              <option value="BANK_TRANSFER">💳 Chuyển khoản ngân hàng</option>
-            </select>
-          </div>
-          
-          <button type="submit" className="btn btn--primary checkout-btn" disabled={isSubmitting} style={{marginTop: '25px', padding: '15px', fontSize: '18px', width: '100%', borderRadius: '8px', border: 'none', backgroundColor: '#111827', color: 'white', fontWeight: 'bold', cursor: 'pointer'}}>
-            {isSubmitting ? "⏳ Đang kết nối Server..." : "Xác Nhận Đặt Hàng"}
-          </button>
-        </form>
-
-        <div className="card summary-card" style={{height: 'fit-content'}}>
-          <h2 className="card__title">Đơn hàng của bạn ({cartItems.length})</h2>
-          <ul className="summary-list">
-            {cartItems.map((item, idx) => (
-              <li key={idx} className="summary-item" style={{display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px dashed #eee'}}>
-                <div style={{flex: 1}}>
-                  <span style={{fontWeight: 'bold', color: '#1f2937'}}>{item.name}</span>
-                  <span className="summary-qty" style={{color: '#6b7280', marginLeft: '5px'}}>x {item.quantity}</span>
-                  {item.lensInfo && (
-                    <div style={{fontSize: '12px', color: '#6b7280', marginTop: '4px'}}>
-                      + {item.lensInfo.type}
-                    </div>
-                  )}
+          <div className="checkout__summary">
+            <h2>Đơn hàng của bạn</h2>
+            <div className="summary__items">
+              {items.map((item, idx) => (
+                <div className="summary__item" key={idx} style={{display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px'}}>
+                  <div>
+                    <div className="item__name" style={{fontWeight: 'bold'}}>{item.name}</div>
+                    {item.lensInfo && <div style={{fontSize: '12px', color: '#666'}}>+ {item.lensInfo.type} / {item.lensInfo.feature}</div>}
+                    <div className="item__qty" style={{fontSize: '13px'}}>SL: {item.quantity} | Màu: {item.color || "Mặc định"}</div>
+                  </div>
+                  <div className="item__price" style={{fontWeight: 'bold', color: '#10b981'}}>
+                    {formatUSD(item.price * item.quantity)}
+                  </div>
                 </div>
-                <span className="summary-price" style={{fontWeight: 'bold', color: '#10b981'}}>{formatUSD(item.price * item.quantity)}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="summary-total" style={{display: 'flex', justifyContent: 'space-between', marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #e5e7eb', fontSize: '20px', fontWeight: 'bold'}}>
-            <span>Tổng cộng</span>
-            <span style={{color: '#10b981'}}>{formatUSD(total)}</span>
+              ))}
+            </div>
+            
+            <div className="summary__row"><span>Tạm tính</span><span>{formatUSD(subtotal)}</span></div>
+            <div className="summary__row"><span>Phí giao hàng</span><span>{shippingFee === 0 ? "Miễn phí" : formatUSD(shippingFee)}</span></div>
+            <div className="summary__row summary__total" style={{fontSize: '20px', marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #ccc'}}>
+              <span>Tổng thanh toán</span><span style={{color: '#10b981'}}>{formatUSD(total)}</span>
+            </div>
+
+            <button type="submit" disabled={isSubmitting} className="checkout__btn" style={{width: '100%', padding: '15px', backgroundColor: isSubmitting ? '#9ca3af' : '#111827', color: 'white', fontWeight: 'bold', border: 'none', borderRadius: '8px', marginTop: '20px', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontSize: '16px'}}>
+              {isSubmitting ? "Đang xử lý..." : `Xác Nhận Đặt Hàng (${formatUSD(total)})`}
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

@@ -76,6 +76,7 @@ export default function ProductDetail() {
       name: product.frameName, 
       price: cartDataOptions.finalPrice, 
       image: [images[0]],
+      color: product.color || "Default",
       lensInfo: cartDataOptions.lensIncluded ? cartDataOptions.lensDetails : null 
     };
     

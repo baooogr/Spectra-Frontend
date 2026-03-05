@@ -99,7 +99,7 @@ export default function OrderHistory() {
 
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <div>
-                <p style={{margin: '0 0 5px 0'}}>Tổng tiền: <strong style={{color: '#10b981', fontSize: '18px'}}>${order.totalAmount || order.totalPrice || 0}</strong></p>
+                <p style={{margin: '0 0 5px 0'}}>Tổng tiền: <strong style={{color: '#000000', fontSize: '18px'}}>${order.totalAmount || order.totalPrice || 0}</strong></p>
                 <p style={{margin: 0, fontSize: '14px', color: '#666'}}>Số lượng sản phẩm: <b>{totalItemsCount}</b></p>
               </div>
               <Link to={`/orders/${order.id || order.orderId}`} style={{padding: '8px 16px', border: '1px solid #d1d5db', borderRadius: '5px', textDecoration: 'none', color: '#111827', fontWeight: '500', transition: '0.2s'}} onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'} onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}>
