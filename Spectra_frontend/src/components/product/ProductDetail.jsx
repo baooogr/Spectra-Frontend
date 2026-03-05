@@ -1,13 +1,50 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
-import ImageGallery from "./ImageGallery";
-import Section from "./Section";
-import Tabs from "./Tabs";
-import TabButton from "./TabButton";
 import LensSelectionModal from "../ui/LensSelectionModal";
 import Modal from "../ui/Modal";
-import './ProductDetail.css'; 
+import "./ProductDetail.css";
+
+const fallbackImage = "https://via.placeholder.com/600x400?text=No+Image";
+
+const ImageGallery = ({ images }) => {
+  const [mainImg, setMainImg] = useState(images[0] || fallbackImage);
+  const [isZoomed, setIsZoomed] = useState(false); 
+  
+  
+  useEffect(() => {
+    setMainImg(images[0] || fallbackImage);
+  }, [images]);
+
+  return (
+    <div className="product-gallery">
+      <div className="main-image-container" onClick={() => setIsZoomed(true)}>
+        <img src={mainImg} alt="Main Product" className="main-image" />
+        
+      </div>
+      
+      <div className="thumbnail-row">
+        {images.map((img, idx) => (
+          <div 
+            key={idx} 
+            className={`thumbnail-wrapper ${mainImg === img ? "active" : ""}`}
+            onClick={() => setMainImg(img)}
+          >
+            <img src={img} alt={`Thumb ${idx}`} className="thumbnail" />
+          </div>
+        ))}
+      </div>
+
+      
+      {isZoomed && (
+        <div className="image-zoom-overlay" onClick={() => setIsZoomed(false)}>
+          <button className="close-zoom-btn" onClick={() => setIsZoomed(false)}>✕</button>
+          <img src={mainImg} alt="Zoomed Product" className="zoomed-image" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -15,43 +52,36 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   
   const [product, setProduct] = useState(null);
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([fallbackImage]);
+  const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [quantity, setQuantity] = useState(1);
-  const [selectedTab, setSelectedTab] = useState("description");
-  
-  
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-
-  const fallbackImage = "https://via.placeholder.com/600x400?text=Chua+Co+Anh";
+  const [isPreordering, setIsPreordering] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
-      setIsLoading(true); setError("");
       try {
-        const frameRes = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
-        if (!frameRes.ok) throw new Error("Không tìm thấy sản phẩm này trên hệ thống.");
-        const productData = await frameRes.json();
-        setProduct(productData);
-
-        const mediaRes = await fetch(`https://myspectra.runasp.net/api/FrameMedia/frame/${id}`);
-        if (mediaRes.ok) {
-          const mediaData = await mediaRes.json();
-          const imageUrls = mediaData.map(m => m.mediaUrl);
-          const validImages = [];
-          
-          for (let url of imageUrls) {
-            try {
-               const check = await fetch(url, { method: 'HEAD' });
-               if(check.ok) validImages.push(url);
-            } catch (e) {
-               
-            }
-          }
-          setImages(validImages.length > 0 ? validImages : [fallbackImage]);
+        const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
+        if (!res.ok) throw new Error("Không thể tải thông tin sản phẩm");
+        const data = await res.json();
+        setProduct(data);
+        
+        let fetchedImages = [];
+        if (data.mediaUrl) {
+          fetchedImages.push(data.mediaUrl);
+        } else if (data.imageUrl) {
+          fetchedImages.push(data.imageUrl);
+        } else if (data.imageUrls && data.imageUrls.length > 0) {
+          fetchedImages = data.imageUrls;
+        } else if (data.frameMedia && data.frameMedia.length > 0) {
+          fetchedImages = data.frameMedia.map(m => m.mediaUrl).filter(Boolean);
+        }
+        
+        if (fetchedImages.length > 0) {
+          setImages(fetchedImages);
         } else {
           setImages([fallbackImage]);
         }
@@ -64,12 +94,16 @@ export default function ProductDetail() {
     fetchProductDetails();
   }, [id]);
 
-  
   const handleOpenLensSelection = () => {
+    setIsPreordering(false);
     setIsLensModalOpen(true);
   };
 
-  
+  const handleOpenPreorderSelection = () => {
+    setIsPreordering(true);
+    setIsLensModalOpen(true);
+  };
+
   const handleConfirmAddToCart = (cartDataOptions) => {
     const cartItem = { 
       id: product.id || product.frameId, 
@@ -77,7 +111,8 @@ export default function ProductDetail() {
       price: cartDataOptions.finalPrice, 
       image: [images[0]],
       color: product.color || "Default",
-      lensInfo: cartDataOptions.lensIncluded ? cartDataOptions.lensDetails : null 
+      lensInfo: cartDataOptions.lensIncluded ? cartDataOptions.lensDetails : null,
+      isPreorder: isPreordering 
     };
     
     addToCart(cartItem, quantity); 
@@ -86,11 +121,11 @@ export default function ProductDetail() {
     setIsSuccessModalOpen(true); 
   };
 
-  if (isLoading) return <p className="center-msg" style={{color: "#666"}}>⏳ Đang tải thông tin sản phẩm...</p>;
+  if (isLoading) return <p className="center-msg" style={{color: "#666", textAlign: "center", padding: "50px"}}>⏳ Đang tải thông tin sản phẩm...</p>;
   if (error || !product) return (
-    <div className="center-msg">
-      <h2 className="error-text">❌ {error}</h2>
-      <button onClick={() => navigate("/")} className="btn-back-home">Quay lại Trang chủ</button>
+    <div className="center-msg" style={{textAlign: "center", padding: "50px"}}>
+      <h2 className="error-text" style={{color: "red"}}>❌ {error}</h2>
+      <button onClick={() => navigate("/")} className="btn-back-home" style={{padding: "10px 20px", marginTop: "20px"}}>Quay lại Trang chủ</button>
     </div>
   );
 
@@ -98,7 +133,6 @@ export default function ProductDetail() {
 
   return (
     <>
-    
       <LensSelectionModal 
         isOpen={isLensModalOpen} 
         onClose={() => setIsLensModalOpen(false)}
@@ -106,10 +140,10 @@ export default function ProductDetail() {
         onConfirmAddToCart={handleConfirmAddToCart}
       />
 
-      
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} />
 
-      <div className="product-detail-layout">
+      
+      <div className="product-detail-container">
         <ImageGallery images={images} />
 
         <div className="product-info-col">
@@ -117,49 +151,46 @@ export default function ProductDetail() {
           <p className="product-brand">Thương hiệu: <strong>{product.brand}</strong></p>
           <p className="product-price">${product.basePrice}</p>
 
-          <div className="product-rating">⭐ 5.0 <span>Đánh giá</span></div>
+          <div className="product-rating">⭐ 5.0 <span>(Đánh giá)</span></div>
 
           <div className="product-status">
             Trạng thái: <span className={inStock ? "status-in-stock" : "status-out-stock"}>
-              {inStock ? `Còn hàng (${product.stockQuantity})` : "Hết hàng"}
+              {inStock ? `Còn hàng (${product.stockQuantity})` : "Hết hàng (Hỗ trợ Đặt trước)"}
             </span>
           </div>
 
           <div className="quantity-wrapper">
             <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty">-</button>
             <span className="qty-value">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={quantity >= product.stockQuantity}>+</button>
+            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={inStock && quantity >= product.stockQuantity}>+</button>
           </div>
 
-          <button 
-            onClick={handleOpenLensSelection} 
-            disabled={!inStock} 
-            className={`btn-add-cart ${inStock ? "active" : "disabled"}`}
-          >
-            {inStock ? "🛒 Thêm vào giỏ hàng" : "Hết hàng tạm thời"}
-          </button>
-        </div>
-      </div>
+          {inStock ? (
+             <button onClick={handleOpenLensSelection} className="btn-add-cart active">
+               🛒 Thêm vào giỏ hàng
+             </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
+              <button disabled className="btn-add-cart disabled" style={{ opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#9ca3af' }}>
+                Out of Stock
+              </button>
+              <button onClick={handleOpenPreorderSelection} className="btn-add-cart active" style={{ backgroundColor: '#2563eb' }}>
+                Đặt Trước (Pre-Order)
+              </button>
+            </div>
+          )}
 
-      <div className="specs-container">
-        <Section title="Chi tiết sản phẩm">
-          <Tabs button={<TabButton isSelected={selectedTab === "description"} onClick={() => setSelectedTab("description")}>Thông số Kỹ thuật</TabButton>}>
-            {selectedTab === "description" && (
-              <div className="specs-box">
-                <div className="specs-grid">
-                  <p><strong>Màu sắc:</strong> {product.color || "Không xác định"}</p>
-                  <p><strong>Chất liệu:</strong> {product.material || "Không xác định"}</p>
-                  <p><strong>Hình dáng:</strong> {product.shape || "Không xác định"}</p>
-                  <p><strong>Kích cỡ:</strong> {product.size || "Không xác định"}</p>
-                  <p><strong>Độ rộng tròng kính:</strong> {product.lensWidth} mm</p>
-                  <p><strong>Cầu kính:</strong> {product.bridgeWidth} mm</p>
-                  <p><strong>Độ rộng gọng:</strong> {product.frameWidth} mm</p>
-                  <p><strong>Càng kính:</strong> {product.templeLength} mm</p>
-                </div>
-              </div>
-            )}
-          </Tabs>
-        </Section>
+          
+          <div className="product-description-box">
+            <h3>Chi tiết sản phẩm</h3>
+            <ul>
+              <li><strong>Chất liệu:</strong> {product.material || "Chưa cập nhật"}</li>
+              <li><strong>Màu sắc:</strong> {product.color || "Chưa cập nhật"}</li>
+              <li><strong>Kích thước (Rộng - Cầu - Càng):</strong> {product.lensWidth} - {product.bridgeWidth} - {product.templeLength} mm</li>
+              <li><strong>Kiểu dáng:</strong> {product.shape || "Chưa cập nhật"}</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </>
   );

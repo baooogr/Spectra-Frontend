@@ -50,7 +50,8 @@ export default function CheckoutPage() {
           quantity: Number(item.quantity),
           unitPrice: Number(item.price),
           color: item.color || "Default", 
-          frameColor: item.color || "Default"
+          frameColor: item.color || "Default",
+          selectedColor: item.color || "Default" // Bổ sung cho Preorder API
         };
         
         if (item.lensInfo && item.lensInfo.typeId && item.lensInfo.featureId) {
@@ -63,52 +64,73 @@ export default function CheckoutPage() {
           detail.lensTypeId = null;
           detail.lensFeatureId = null;
         }
-        
         return detail;
       });
 
-      const orderPayload = {
-        receiverName: form.fullName,
-        customerName: form.fullName,
-        receiverPhone: form.phone, 
-        phoneNumber: form.phone,
-        phone: form.phone,
-        shippingAddress: form.address,
-        address: form.address,
-        note: form.note,
-        paymentMethod: form.paymentMethod,
-        items: formattedItems,
-        orderDetails: formattedItems
-      };
+      // ⚡ KIỂM TRA XEM CÓ MÓN HÀNG NÀO LÀ PRE-ORDER KHÔNG
+      const isHasPreorderItem = items.some(item => item.isPreorder === true);
 
-      
-      const res = await fetch("https://myspectra.runasp.net/api/Orders", {
+      let payload = {};
+      let apiUrl = "https://myspectra.runasp.net/api/Orders";
+
+      // Đóng gói data tùy theo Order hay Preorder
+      if (isHasPreorderItem) {
+        apiUrl = "https://myspectra.runasp.net/api/Preorders";
+        const expectedDate = new Date();
+        expectedDate.setDate(expectedDate.getDate() + 30); // Tạm tính hàng về sau 30 ngày
+        payload = {
+          shippingAddress: form.address,
+          expectedDate: expectedDate.toISOString(),
+          items: formattedItems
+        };
+      } else {
+        payload = {
+          receiverName: form.fullName,
+          customerName: form.fullName,
+          receiverPhone: form.phone, 
+          phoneNumber: form.phone,
+          phone: form.phone,
+          shippingAddress: form.address,
+          address: form.address,
+          note: form.note,
+          paymentMethod: form.paymentMethod,
+          items: formattedItems,
+          orderDetails: formattedItems
+        };
+      }
+
+      const res = await fetch(apiUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(orderPayload)
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
         const result = await res.json();
-        const newOrderId = result.id || result.orderId;
         
+        // C# API có thể trả về orderId cho đơn thường, hoặc preorderId cho đặt trước
+        const createdId = result.id || result.orderId || result.preorderId;
         
         if (form.paymentMethod === "VNPAY") {
           try {
+            // Chuẩn bị payload thanh toán VNPay
+            const paymentPayload = { paymentMethod: "VNPAY" };
+            if (isHasPreorderItem) {
+              paymentPayload.preorderId = createdId;
+            } else {
+              paymentPayload.orderId = createdId;
+            }
+
             const paymentRes = await fetch("https://myspectra.runasp.net/api/Payments", {
               method: "POST",
               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-              body: JSON.stringify({ orderId: newOrderId, paymentMethod: "VNPAY" })
+              body: JSON.stringify(paymentPayload)
             });
 
             if (paymentRes.ok) {
               const paymentData = await paymentRes.json();
               if (paymentData.paymentUrl) {
                 clearCart(); 
-                
                 window.location.href = paymentData.paymentUrl;
                 return; 
               } else { alert("Lỗi: Backend không trả về Link VNPay!"); }
@@ -116,11 +138,11 @@ export default function CheckoutPage() {
           } catch (err) { alert("Lỗi mạng khi tạo thanh toán VNPay"); }
         }
 
-        
+        // Dành cho COD
         clearCart(); 
         navigate("/checkout-success", {
           state: {
-            orderId: newOrderId,
+            orderId: createdId,
             customer: { fullName: form.fullName, phone: form.phone, email: form.email, address: form.address },
             total: total
           }
@@ -140,11 +162,20 @@ export default function CheckoutPage() {
     return <div style={{textAlign: "center", padding: "50px"}}>Giỏ hàng trống. Không thể thanh toán.</div>;
   }
 
+  // ⚡ Thêm Cảnh báo nếu trong giỏ có Pre-Order
+  const hasPreorder = items.some(item => item.isPreorder);
+
   return (
     <div className="checkout">
       <div className="checkout__container">
         <h1 className="checkout__title">Thanh Toán</h1>
         
+        {hasPreorder && (
+          <div style={{backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '15px', borderRadius: '8px', marginBottom: '20px', color: '#1e3a8a'}}>
+            <strong>🚀 Chú ý:</strong> Bạn đang có sản phẩm <strong>Đặt Trước (Pre-order)</strong> trong giỏ hàng. Thời gian giao hàng dự kiến sẽ lâu hơn bình thường.
+          </div>
+        )}
+
         <form className="checkout__grid" onSubmit={placeOrder}>
           <div className="checkout__form">
             <h2>Thông tin giao hàng</h2>
@@ -192,7 +223,10 @@ export default function CheckoutPage() {
               {items.map((item, idx) => (
                 <div className="summary__item" key={idx} style={{display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px'}}>
                   <div>
-                    <div className="item__name" style={{fontWeight: 'bold'}}>{item.name}</div>
+                    <div className="item__name" style={{fontWeight: 'bold'}}>
+                      {item.name} 
+                      {item.isPreorder && <span style={{marginLeft: '8px', fontSize: '11px', backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '2px 6px', borderRadius: '4px'}}>Pre-order</span>}
+                    </div>
                     {item.lensInfo && <div style={{fontSize: '12px', color: '#666'}}>+ {item.lensInfo.type} / {item.lensInfo.feature}</div>}
                     <div className="item__qty" style={{fontSize: '13px'}}>SL: {item.quantity} | Màu: {item.color || "Mặc định"}</div>
                   </div>
