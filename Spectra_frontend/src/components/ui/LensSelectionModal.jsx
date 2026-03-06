@@ -21,9 +21,6 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
   });
   const [isSavingNew, setIsSavingNew] = useState(false);
 
-  const [calculatedPrice, setCalculatedPrice] = useState(null);
-  const [isLoadingPrice, setIsLoadingPrice] = useState(false);
-
   useEffect(() => {
     if (isOpen) {
       fetchLensTypes();
@@ -34,7 +31,6 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
       setSelectedLensFeature("");
       setSelectedPrescriptionId("");
       setInputMode("saved");
-      setCalculatedPrice(null);
     }
   }, [isOpen]);
 
@@ -67,48 +63,6 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     } catch (err) {}
   };
 
-  
- const calculateTotalPrice = async (typeId, featureId) => {
-    if (!product || product.basePrice === undefined) return;
-
-    const strTypeId = String(typeId || "");
-    const strFeatureId = String(featureId || "");
-
-    // Phải dài đúng 36 ký tự mới là GUID hợp lệ của C#
-    if (strTypeId.length !== 36 || strFeatureId.length !== 36) {
-      setCalculatedPrice(null);
-      return; 
-    }
-
-    const payload = {
-      basePrice: Number(product.basePrice) || 0, 
-      lensTypeId: strTypeId,
-      lensFeatureId: strFeatureId
-    };
-
-    setIsLoadingPrice(true);
-    try {
-      const res = await fetch("https://myspectra.runasp.net/api/LensFeatures/calculate-price", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        setCalculatedPrice(data);
-      } else {
-        setCalculatedPrice(null);
-      }
-    } catch (error) { 
-      console.error("Lỗi tính tiền:", error); 
-    } finally { 
-      setIsLoadingPrice(false); 
-    }
-  };
-
   const handleSaveNewPrescription = async () => {
     const token = JSON.parse(localStorage.getItem("user"))?.token;
     if (!token) { alert("Vui lòng đăng nhập để lưu toa thuốc!"); return; }
@@ -117,18 +71,15 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + 6); 
 
-    
     const payload = {
-      sphereRight: prescriptionForm.sphereRight ? Number(prescriptionForm.sphereRight) : null,
-      cylinderRight: prescriptionForm.cylinderRight ? Number(prescriptionForm.cylinderRight) : null,
-      axisRight: prescriptionForm.axisRight ? Number(prescriptionForm.axisRight) : null,
-      addRight: prescriptionForm.addRight ? Number(prescriptionForm.addRight) : null,
-      
-      sphereLeft: prescriptionForm.sphereLeft ? Number(prescriptionForm.sphereLeft) : null,
-      cylinderLeft: prescriptionForm.cylinderLeft ? Number(prescriptionForm.cylinderLeft) : null,
-      axisLeft: prescriptionForm.axisLeft ? Number(prescriptionForm.axisLeft) : null,
-      addLeft: prescriptionForm.addLeft ? Number(prescriptionForm.addLeft) : null,
-      
+      sphereRight: prescriptionForm.sphereRight ? Number(prescriptionForm.sphereRight) : 0,
+      cylinderRight: prescriptionForm.cylinderRight ? Number(prescriptionForm.cylinderRight) : 0,
+      axisRight: prescriptionForm.axisRight ? Number(prescriptionForm.axisRight) : 0,
+      addRight: prescriptionForm.addRight ? Number(prescriptionForm.addRight) : 0,
+      sphereLeft: prescriptionForm.sphereLeft ? Number(prescriptionForm.sphereLeft) : 0,
+      cylinderLeft: prescriptionForm.cylinderLeft ? Number(prescriptionForm.cylinderLeft) : 0,
+      axisLeft: prescriptionForm.axisLeft ? Number(prescriptionForm.axisLeft) : 0,
+      addLeft: prescriptionForm.addLeft ? Number(prescriptionForm.addLeft) : 0,
       pupillaryDistance: prescriptionForm.pupillaryDistance ? Number(prescriptionForm.pupillaryDistance) : 60,
       doctorName: prescriptionForm.doctorName || "Khách tự nhập",
       clinicName: prescriptionForm.clinicName || "Khách tự nhập",
@@ -156,18 +107,30 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     finally { setIsSavingNew(false); }
   };
 
-  const selectedTypeData = lensTypes.find(t => (t.id || t.lensTypeId)?.toString() === selectedLensType.toString());
-  const selectedFeatureData = lensFeatures.find(f => (f.id || f.lensFeatureId)?.toString() === selectedLensFeature.toString());
+  // ⚡ TÍNH GIÁ TRỰC TIẾP TRÊN FRONTEND (Bypass gọi API tính tiền để không bị delay)
+  const selectedTypeData = lensTypes.find(t => (t.id || t.lensTypeId || t.typeId)?.toString() === selectedLensType.toString());
+  const selectedFeatureData = lensFeatures.find(f => (f.id || f.lensFeatureId || f.featureId)?.toString() === selectedLensFeature.toString());
+  
   const requiresPrescription = selectedTypeData?.requiresPrescription || false;
   
+  // Lấy giá trị tiền
+  const basePrice = Number(product?.basePrice) || 0;
+  const lensTypeExtraPrice = Number(selectedTypeData?.extraPrice) || 0;
+  const featureExtraPrice = Number(selectedFeatureData?.extraPrice) || 0;
+  
+  // TỔNG TIỀN CHÍNH XÁC NHẤT
+  const currentTotalPrice = basePrice + lensTypeExtraPrice + featureExtraPrice;
+
   const isAddToCartDisabled = !selectedLensType || !selectedLensFeature || (requiresPrescription && !selectedPrescriptionId) || isSavingNew;
 
   const handleAddToCart = (withLens) => {
     if (withLens) {
       if (isAddToCartDisabled) return;
+      
+      // Đẩy giá trị vừa tính trực tiếp vào Giỏ Hàng
       onConfirmAddToCart({
         lensIncluded: true,
-        finalPrice: calculatedPrice?.totalPrice || product.basePrice,
+        finalPrice: currentTotalPrice, // ⚡ TIỀN ĐÃ ĐƯỢC CỘNG ĐẦY ĐỦ
         lensDetails: {
           typeId: String(selectedLensType),
           featureId: String(selectedLensFeature),
@@ -180,7 +143,8 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
         }
       });
     } else {
-      onConfirmAddToCart({ lensIncluded: false, finalPrice: product.basePrice, lensDetails: null });
+      // Nếu chỉ mua gọng, lấy giá basePrice
+      onConfirmAddToCart({ lensIncluded: false, finalPrice: basePrice, lensDetails: null });
     }
   };
 
@@ -190,7 +154,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px', textAlign: 'left', maxHeight: '90vh', overflowY: 'auto'}}>
         <h3 className="modal-title" style={{marginTop: 0, borderBottom: '1px solid #eee', paddingBottom: '10px'}}>👓 Tùy Chọn Tròng Kính</h3>
-        <p style={{ color: "#666", marginBottom: '20px' }}>Bạn đang chọn gọng <strong>{product?.frameName}</strong> (${product?.basePrice}).</p>
+        <p style={{ color: "#666", marginBottom: '20px' }}>Bạn đang chọn gọng <strong>{product?.frameName}</strong> (${basePrice}).</p>
 
         <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px'}}>
           <div>
@@ -198,7 +162,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
             <select style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}} value={selectedLensType} onChange={(e) => setSelectedLensType(e.target.value)}>
               <option value="">-- Vui lòng chọn --</option>
               {lensTypes.map((type, idx) => (
-                <option key={idx} value={type.id || type.lensTypeId}>
+                <option key={idx} value={type.id || type.lensTypeId || type.typeId}>
                   {type.lensSpecification} (+${type.extraPrice}) {type.requiresPrescription ? '[⚠️ Cần Toa]' : ''}
                 </option>
               ))}
@@ -210,7 +174,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
             <select style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none'}} value={selectedLensFeature} onChange={(e) => setSelectedLensFeature(e.target.value)}>
               <option value="">-- Vui lòng chọn --</option>
               {[...lensFeatures].sort((a,b) => a.lensIndex - b.lensIndex).map((feat, idx) => (
-                <option key={idx} value={feat.id || feat.lensFeatureId}>
+                <option key={idx} value={feat.id || feat.lensFeatureId || feat.featureId}>
                   Chiết suất {feat.lensIndex} - {feat.featureSpecification} (+${feat.extraPrice})
                 </option>
               ))}
@@ -221,7 +185,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
         {requiresPrescription && (
           <div style={{marginBottom: '20px', padding: '15px', backgroundColor: '#fef2f2', borderRadius: '8px', border: '1px dashed #ef4444'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #fca5a5', paddingBottom: '10px'}}>
-              <label style={{fontWeight: 'bold', color: '#b91c1c', margin: 0}}>Yêu Cầu Thông Số Mắt</label>
+              <label style={{fontWeight: 'bold', color: '#b91c1c', margin: 0}}>⚠️ Yêu Cầu Thông Số Mắt</label>
               <div style={{display: 'flex', gap: '10px'}}>
                 <button onClick={() => setInputMode("saved")} style={{padding: '5px 10px', fontSize: '12px', cursor: 'pointer', backgroundColor: inputMode === 'saved' ? '#111827' : '#fff', color: inputMode === 'saved' ? 'white' : '#111827', border: '1px solid #111827', borderRadius: '4px'}}>Dùng toa đã lưu</button>
                 <button onClick={() => setInputMode("new")} style={{padding: '5px 10px', fontSize: '12px', cursor: 'pointer', backgroundColor: inputMode === 'new' ? '#111827' : '#fff', color: inputMode === 'new' ? 'white' : '#111827', border: '1px solid #111827', borderRadius: '4px'}}>+ Nhập toa mới</button>
@@ -253,7 +217,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
                 
                 <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
                   <div style={{border: '1px solid #fca5a5', padding: '10px', borderRadius: '6px'}}>
-                    <h5 style={{color: '#dc2626', margin: '0 0 10px 0'}}>Mắt Phải (OD)</h5>
+                    <h5 style={{color: '#dc2626', margin: '0 0 10px 0'}}>👁️ Mắt Phải (OD)</h5>
                     <div style={{display: 'flex', gap: '5px', marginBottom: '5px'}}>
                       <div style={{flex: 1}}><label style={{fontSize: '11px'}}>SPH</label><input type="number" step="0.25" value={prescriptionForm.sphereRight} onChange={e => setPrescriptionForm({...prescriptionForm, sphereRight: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
                       <div style={{flex: 1}}><label style={{fontSize: '11px'}}>CYL</label><input type="number" step="0.25" value={prescriptionForm.cylinderRight} onChange={e => setPrescriptionForm({...prescriptionForm, cylinderRight: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
@@ -262,7 +226,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
                   </div>
 
                   <div style={{border: '1px solid #93c5fd', padding: '10px', borderRadius: '6px'}}>
-                    <h5 style={{color: '#2563eb', margin: '0 0 10px 0'}}>Mắt Trái (OS)</h5>
+                    <h5 style={{color: '#2563eb', margin: '0 0 10px 0'}}>👁️ Mắt Trái (OS)</h5>
                     <div style={{display: 'flex', gap: '5px', marginBottom: '5px'}}>
                       <div style={{flex: 1}}><label style={{fontSize: '11px'}}>SPH</label><input type="number" step="0.25" value={prescriptionForm.sphereLeft} onChange={e => setPrescriptionForm({...prescriptionForm, sphereLeft: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
                       <div style={{flex: 1}}><label style={{fontSize: '11px'}}>CYL</label><input type="number" step="0.25" value={prescriptionForm.cylinderLeft} onChange={e => setPrescriptionForm({...prescriptionForm, cylinderLeft: e.target.value})} style={{width: '100%', padding: '5px'}} /></div>
@@ -285,23 +249,24 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
           </div>
         )}
 
+        {/* BẢNG HIỂN THỊ GIÁ TIỀN CHÍNH XÁC */}
         <div style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-            <span>Giá Gọng Kính:</span><strong>${product?.basePrice}</strong>
+            <span>Giá Gọng Kính:</span><strong>${basePrice}</strong>
           </div>
-          {calculatedPrice && (
+          {(selectedLensType || selectedLensFeature) && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', color: '#6b7280' }}>
-                <span>Phụ phí Loại Tròng:</span><span>+${calculatedPrice.lensTypeExtraPrice}</span>
+                <span>Phụ phí Loại Tròng:</span><span>+${lensTypeExtraPrice}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: '#6b7280', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px' }}>
-                <span>Phụ phí Tính năng Tròng:</span><span>+${calculatedPrice.featureExtraPrice}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px' }}>
-                <strong>Tổng Tiền (Dự kiến):</strong><strong style={{ color: '#10b981' }}>${calculatedPrice.totalPrice}</strong>
+                <span>Phụ phí Tính năng Tròng:</span><span>+${featureExtraPrice}</span>
               </div>
             </>
           )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', marginTop: '10px' }}>
+            <strong>Tổng Tiền (Dự kiến):</strong><strong style={{ color: '#10b981' }}>${currentTotalPrice}</strong>
+          </div>
         </div>
 
         <div className="modal-actions" style={{display: 'flex', gap: '10px', justifyContent: 'space-between'}}>

@@ -188,13 +188,49 @@ export default function OrderHistory() {
     );
   };
 
-  // Render một card đơn đặt trước
+  // Render một card đơn đặt trước (PRE-ORDER)
   const PreorderCard = ({ order }) => {
     const statusObj = translateStatus(order.status);
     const itemsList = order.preorderDetails || order.items || [];
     const totalQty = itemsList.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    const totalAmount = order.totalAmount || order.totalPrice ||
-      itemsList.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
+    
+    // State lưu tổng tiền để có thể update bất đồng bộ
+    const [finalAmount, setFinalAmount] = useState(
+      order.totalAmount || order.totalPrice ||
+      itemsList.reduce((sum, item) => {
+        const itemPrice = item.unitPrice || item.price || 0;
+        const itemQty = item.quantity || item.qty || 1;
+        return sum + (itemPrice * itemQty);
+      }, 0)
+    );
+
+    // ⚡ FIX: Nếu tổng tiền vẫn bằng 0 (do BE thiếu data), gọi API Payment để lấy số tiền đã trả
+    useEffect(() => {
+      const fetchPaymentAmount = async () => {
+        if (finalAmount === 0 || !finalAmount) {
+          try {
+            const token = JSON.parse(localStorage.getItem("user"))?.token;
+            const preId = order.id || order.preorderId;
+            const res = await fetch(`https://myspectra.runasp.net/api/Payments/preorder/${preId}`, {
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              // API có thể trả về 1 mảng các payment hoặc 1 object, ta lấy amount
+              if (data && data.length > 0 && data[0].amount) {
+                setFinalAmount(data[0].amount);
+              } else if (data && data.amount) {
+                setFinalAmount(data.amount);
+              }
+            }
+          } catch (err) {
+            console.error("Lỗi lấy thông tin Payment:", err);
+          }
+        }
+      };
+
+      fetchPaymentAmount();
+    }, [order, finalAmount]);
 
     return (
       <div
@@ -220,7 +256,7 @@ export default function OrderHistory() {
               letterSpacing: "0.5px",
             }}
           >
-            🕐 PRE-ORDER
+            🚀 PRE-ORDER
           </span>
         </div>
 
@@ -267,8 +303,9 @@ export default function OrderHistory() {
           <div>
             <p style={{ margin: "0 0 4px 0" }}>
               Tổng tiền:{" "}
+              {/* Hiển thị giá lấy được từ Payment hoặc tính toán */}
               <strong style={{ color: "#1e40af", fontSize: "18px" }}>
-                ${totalAmount}
+                ${finalAmount}
               </strong>
             </p>
             {totalQty > 0 && (
@@ -277,9 +314,10 @@ export default function OrderHistory() {
               </p>
             )}
           </div>
-          <Link
-            to={`/preorders/${order.id || order.preorderId}`}
-            style={{
+          
+          <button 
+             onClick={() => alert("Chức năng xem chi tiết Preorder đang được cập nhật!")}
+             style={{
               padding: "8px 18px",
               border: "1px solid #93c5fd",
               borderRadius: "6px",
@@ -288,10 +326,11 @@ export default function OrderHistory() {
               fontWeight: "500",
               fontSize: "14px",
               backgroundColor: "white",
+              cursor: "pointer"
             }}
           >
             Xem chi tiết →
-          </Link>
+          </button>
         </div>
       </div>
     );
