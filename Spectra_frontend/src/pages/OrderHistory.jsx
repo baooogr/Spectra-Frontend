@@ -315,8 +315,8 @@ export default function OrderHistory() {
             )}
           </div>
           
-          <button 
-             onClick={() => alert("Chức năng xem chi tiết Preorder đang được cập nhật!")}
+         <Link 
+             to={`/preorders/${order.id || order.preorderId}`}
              style={{
               padding: "8px 18px",
               border: "1px solid #93c5fd",
@@ -326,11 +326,12 @@ export default function OrderHistory() {
               fontWeight: "500",
               fontSize: "14px",
               backgroundColor: "white",
-              cursor: "pointer"
+              cursor: "pointer",
+              display: "inline-block" // Giúp link giữ đúng kích thước nút
             }}
           >
             Xem chi tiết →
-          </button>
+          </Link>
         </div>
       </div>
     );
