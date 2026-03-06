@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useCart } from "../context/CartContext";
@@ -11,14 +11,41 @@ export default function CheckoutPage() {
   const location = useLocation();
   const items = location.state?.cartItems || cartItems;
 
+  const currentUser = user || JSON.parse(localStorage.getItem("user")) || {};
+
   const [form, setForm] = useState({
-    fullName: user?.fullName || "",
-    phone: user?.phone || "",
-    email: user?.email || "",
-    address: user?.address || "",
+    fullName: currentUser.fullName || "",
+    phone: "", // Sẽ được tự động điền từ API
+    email: currentUser.email || "",
+    address: "", // Sẽ được tự động điền từ API
     note: "",
     paymentMethod: "COD"
   });
+
+  // ⚡ GỌI API LẤY THÔNG TIN USER (GỒM CẢ SĐT VÀ ĐỊA CHỈ)
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = currentUser.token;
+      if (!token) return;
+      try {
+        const res = await fetch("https://myspectra.runasp.net/api/Users/me", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setForm(prev => ({
+            ...prev,
+            phone: data.phone || "",
+            address: data.address || "",
+            fullName: data.fullName || prev.fullName
+          }));
+        }
+      } catch (err) {
+        console.error("Lỗi tải thông tin cá nhân:", err);
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -35,10 +62,16 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     setErrorMsg("");
 
-    const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+    const token = currentUser.token;
     if (!token) {
       alert("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
       navigate("/login");
+      return;
+    }
+
+    if (!form.phone) {
+      alert("Số điện thoại không được để trống. Vui lòng cập nhật SĐT trong phần hồ sơ cá nhân.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -61,13 +94,13 @@ export default function CheckoutPage() {
       });
 
       const payload = {
-        receiverName: form.fullName,
-        customerName: form.fullName,
-        receiverPhone: form.phone, 
+        receiverName: form.fullName.trim(),
+        customerName: form.fullName.trim(),
+        receiverPhone: form.phone, // Lấy SĐT chuẩn từ state
         phoneNumber: form.phone,
         phone: form.phone,
-        shippingAddress: form.address,
-        address: form.address,
+        shippingAddress: form.address.trim(),
+        address: form.address.trim(),
         note: form.note,
         paymentMethod: form.paymentMethod,
         items: formattedItems,
@@ -89,7 +122,7 @@ export default function CheckoutPage() {
             const paymentRes = await fetch("https://myspectra.runasp.net/api/Payments", {
               method: "POST",
               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-              body: JSON.stringify({ paymentMethod: "VNPAY", orderId: createdId }) // Chỉ gửi orderId
+              body: JSON.stringify({ paymentMethod: "VNPAY", orderId: createdId })
             });
 
             if (paymentRes.ok) {
@@ -121,7 +154,6 @@ export default function CheckoutPage() {
   if (items.length === 0) return <div style={{textAlign: "center", padding: "50px"}}>Giỏ hàng trống. Không thể thanh toán.</div>;
 
   return (
-    // ... Phần JSX Render ở dưới giữ nguyên như giao diện ban đầu (có mục chọn COD/VNPAY)
     <div className="checkout">
       <div className="checkout__container">
         <h1 className="checkout__title">Thanh Toán</h1>
@@ -138,8 +170,17 @@ export default function CheckoutPage() {
                 <input type="text" name="fullName" value={form.fullName} onChange={onChange} required />
               </div>
               <div className="form-group">
-                <label>Số điện thoại <span className="req">*</span></label>
-                <input type="tel" name="phone" value={form.phone} onChange={onChange} required />
+                <label>Số điện thoại (Cố định)</label>
+                {/* ⚡ KHÓA Ô SỐ ĐIỆN THOẠI NHƯNG VẪN HIỂN THỊ */}
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value={form.phone} 
+                  readOnly 
+                  style={{ backgroundColor: '#e5e7eb', color: '#6b7280', cursor: 'not-allowed', outline: 'none' }}
+                  title="Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
+                  placeholder={form.phone ? "" : "Đang tải SĐT..."}
+                />
               </div>
             </div>
             
