@@ -8,7 +8,6 @@ export default function AdminProtectedRoute() {
     const checkRole = async () => {
       const currentUser = JSON.parse(localStorage.getItem("user"));
       
-      // 1. Nếu không có token -> Chắc chắn chưa đăng nhập
       if (!currentUser || !currentUser.token) {
         setIsAuthorized(false);
         return;
@@ -16,13 +15,13 @@ export default function AdminProtectedRoute() {
 
       const role = (currentUser.role || "").toLowerCase();
       
-      // 2. Nếu trong máy đã lưu sẵn là manager -> Cho vào luôn
-      if (role === 'manager' || role === 'admin') {
+      // ⚡ NỚI LỎNG CỬA VÀO: Cho phép Admin, Manager hoặc Staff đi vào
+      if (role === 'admin' || role === 'manager' || role === 'staff') {
         setIsAuthorized(true);
         return;
       }
 
-      // 3. NẾU THIẾU QUYỀN -> Bí mật gọi API /me để lấy quyền thật sự
+      // ⚡ NẾU THIẾU QUYỀN (ví dụ user mới đăng nhập chưa kịp cập nhật role) -> Gọi API check
       try {
         const res = await fetch('https://myspectra.runasp.net/api/Users/me', {
           headers: { 'Authorization': `Bearer ${currentUser.token}` }
@@ -30,15 +29,16 @@ export default function AdminProtectedRoute() {
         
         if (res.ok) {
           const data = await res.json();
-          // Lưu bổ sung quyền vào máy tính để lần sau không cần gọi lại API
           const updatedUser = { ...currentUser, role: data.role, fullName: data.fullName };
           localStorage.setItem("user", JSON.stringify(updatedUser));
 
           const realRole = (data.role || "").toLowerCase();
-          if (realRole === 'manager' || realRole === 'admin') {
+          
+          // Kiểm tra lại lần nữa với role chuẩn từ API
+          if (realRole === 'admin' || realRole === 'manager' || realRole === 'staff') {
             setIsAuthorized(true);
           } else {
-            setIsAuthorized(false); // Không phải manager -> Đuổi về
+            setIsAuthorized(false); // Chỉ là Customer -> Đuổi về trang chủ
           }
         } else {
           setIsAuthorized(false);
@@ -51,12 +51,8 @@ export default function AdminProtectedRoute() {
     checkRole();
   }, []);
 
-  // Đang đợi API trả kết quả thì hiện chữ Loading
   if (isAuthorized === null) return <div style={{ textAlign: "center", marginTop: "50px", fontSize: "18px" }}>⏳ Đang xác thực quyền quản trị...</div>;
-  
-  // Nếu bị từ chối -> Đá văng ra trang chủ
   if (isAuthorized === false) return <Navigate to="/" replace />;
   
-  // Thành công -> Mở cửa
   return <Outlet />;
 }

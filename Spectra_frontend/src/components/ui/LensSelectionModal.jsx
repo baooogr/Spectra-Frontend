@@ -68,30 +68,46 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
   };
 
   
-  const calculateTotalPrice = async (typeId, featureId) => {
-    if (!typeId || !featureId || !product || typeId.length < 30 || featureId.length < 30) return;
-    
+ const calculateTotalPrice = async (typeId, featureId) => {
+    if (!product || product.basePrice === undefined) return;
+
+    const strTypeId = String(typeId || "");
+    const strFeatureId = String(featureId || "");
+
+    // Phải dài đúng 36 ký tự mới là GUID hợp lệ của C#
+    if (strTypeId.length !== 36 || strFeatureId.length !== 36) {
+      setCalculatedPrice(null);
+      return; 
+    }
+
+    const payload = {
+      basePrice: Number(product.basePrice) || 0, 
+      lensTypeId: strTypeId,
+      lensFeatureId: strFeatureId
+    };
+
     setIsLoadingPrice(true);
     try {
       const res = await fetch("https://myspectra.runasp.net/api/LensFeatures/calculate-price", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          basePrice: Number(product.basePrice),
-          lensTypeId: String(typeId),
-          lensFeatureId: String(featureId)
-        })
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(payload)
       });
-      if (res.ok) setCalculatedPrice(await res.json());
-    } catch (error) { console.error("Lỗi tính tiền", error); } 
-    finally { setIsLoadingPrice(false); }
-  };
-
-  useEffect(() => {
-    if (selectedLensType && selectedLensFeature) {
-      calculateTotalPrice(selectedLensType, selectedLensFeature);
+      
+      if (res.ok) {
+        const data = await res.json();
+        setCalculatedPrice(data);
+      } else {
+        setCalculatedPrice(null);
+      }
+    } catch (error) { 
+      console.error("Lỗi tính tiền:", error); 
+    } finally { 
+      setIsLoadingPrice(false); 
     }
-  }, [selectedLensType, selectedLensFeature]);
+  };
 
   const handleSaveNewPrescription = async () => {
     const token = JSON.parse(localStorage.getItem("user"))?.token;

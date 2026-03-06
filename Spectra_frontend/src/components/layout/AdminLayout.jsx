@@ -1,13 +1,21 @@
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import './AdminLayout.css'; // Gọi file CSS
+import './AdminLayout.css'; 
 
 export default function AdminLayout() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    localStorage.removeItem("user"); // Xóa token khi thoát
     navigate("/login");
   };
+
+  // ⚡ LẤY QUYỀN CỦA TÀI KHOẢN ĐANG ĐĂNG NHẬP
+  const currentUser = JSON.parse(localStorage.getItem("user")) || {};
+  const role = (currentUser.role || "").toLowerCase();
+  
+  // ⚡ Kiểm tra xem có phải là Admin/Manager đích thực không (được toàn quyền)
+  const isSuperAdmin = role === 'admin' || role === 'manager';
 
   return (
     <div className="admin-layout">
@@ -20,7 +28,11 @@ export default function AdminLayout() {
           <Link to="/admin/lenstypes" className="admin-link">Quản lý Tròng Kính</Link> 
           <Link to="/admin/lensfeatures" className="admin-link">Quản lý Tính Năng Tròng</Link>
           <Link to="/admin/orders" className="admin-link">Đơn hàng</Link>
-          <Link to="/admin/users" className="admin-link">Quản lý Người Dùng</Link>
+
+          {/* ⚡ ĐIỀU KIỆN CHẶN STAFF: Chỉ có Admin/Manager mới thấy mục Quản lý người dùng */}
+          {isSuperAdmin && (
+            <Link to="/admin/users" className="admin-link">Quản lý Người Dùng</Link>
+          )}
 
         </nav>
 

@@ -5,12 +5,11 @@ import LensSelectionModal from "../ui/LensSelectionModal";
 import Modal from "../ui/Modal";
 import "./ProductDetail.css";
 
-const fallbackImage = "https://via.placeholder.com/600x400?text=No+Image";
+const fallbackImage = "https://placehold.co/600x400/eeeeee/999999?text=No+Image";
 
 const ImageGallery = ({ images }) => {
   const [mainImg, setMainImg] = useState(images[0] || fallbackImage);
   const [isZoomed, setIsZoomed] = useState(false); 
-  
   
   useEffect(() => {
     setMainImg(images[0] || fallbackImage);
@@ -20,7 +19,7 @@ const ImageGallery = ({ images }) => {
     <div className="product-gallery">
       <div className="main-image-container" onClick={() => setIsZoomed(true)}>
         <img src={mainImg} alt="Main Product" className="main-image" />
-        
+        <div className="zoom-hint">🔍 Nhấp để phóng to</div>
       </div>
       
       <div className="thumbnail-row">
@@ -35,7 +34,6 @@ const ImageGallery = ({ images }) => {
         ))}
       </div>
 
-      
       {isZoomed && (
         <div className="image-zoom-overlay" onClick={() => setIsZoomed(false)}>
           <button className="close-zoom-btn" onClick={() => setIsZoomed(false)}>✕</button>
@@ -59,6 +57,8 @@ export default function ProductDetail() {
 
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  
+  // ⚡ BIẾN QUẢN LÝ TRẠNG THÁI KHÁCH BẤM NÚT NÀO
   const [isPreordering, setIsPreordering] = useState(false);
 
   useEffect(() => {
@@ -95,30 +95,47 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleOpenLensSelection = () => {
-    setIsPreordering(false);
+    setIsPreordering(false); // ⚡ KHÔNG PHẢI PREORDER
     setIsLensModalOpen(true);
   };
 
   const handleOpenPreorderSelection = () => {
-    setIsPreordering(true);
+    setIsPreordering(true); // ⚡ LÀ PREORDER
     setIsLensModalOpen(true);
   };
 
-  const handleConfirmAddToCart = (cartDataOptions) => {
-    const cartItem = { 
+ const handleConfirmAddToCart = (cartDataOptions) => {
+    const itemData = { 
       id: product.id || product.frameId, 
       name: product.frameName, 
       price: cartDataOptions.finalPrice, 
       image: [images[0]],
       color: product.color || "Default",
-      lensInfo: cartDataOptions.lensIncluded ? cartDataOptions.lensDetails : null,
-      isPreorder: isPreordering 
+      quantity: quantity,
+      lensInfo: cartDataOptions.lensIncluded ? cartDataOptions.lensDetails : null
     };
-    
-    addToCart(cartItem, quantity); 
-    
-    setIsLensModalOpen(false); 
-    setIsSuccessModalOpen(true); 
+
+    if (isPreordering) {
+      // Đóng modal
+      setIsLensModalOpen(false); 
+      
+      // KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI CHO ĐI TỚI PREORDER
+      const token = JSON.parse(localStorage.getItem("user"))?.token;
+      if (!token) {
+        alert("Bạn cần đăng nhập để thực hiện Đặt Trước (Pre-order).");
+        navigate("/login");
+        return;
+      }
+
+      // ĐIỀU HƯỚNG THẲNG SANG TRANG THANH TOÁN PRE-ORDER VÀ TRUYỀN DỮ LIỆU SẢN PHẨM QUA STATE
+      navigate("/checkout-preorder", { state: { preorderItem: itemData } });
+
+    } else {
+      // NẾU MUA THƯỜNG -> BỎ VÀO GIỎ HÀNG
+      addToCart(itemData, quantity); 
+      setIsLensModalOpen(false); 
+      setIsSuccessModalOpen(true); 
+    }
   };
 
   if (isLoading) return <p className="center-msg" style={{color: "#666", textAlign: "center", padding: "50px"}}>⏳ Đang tải thông tin sản phẩm...</p>;
@@ -142,7 +159,6 @@ export default function ProductDetail() {
 
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} />
 
-      
       <div className="product-detail-container">
         <ImageGallery images={images} />
 
@@ -172,15 +188,14 @@ export default function ProductDetail() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
               <button disabled className="btn-add-cart disabled" style={{ opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#9ca3af' }}>
-                Out of Stock
+                🚫 Out of Stock
               </button>
               <button onClick={handleOpenPreorderSelection} className="btn-add-cart active" style={{ backgroundColor: '#2563eb' }}>
-                Đặt Trước (Pre-Order)
+                🚀 Đặt Trước (Pre-Order)
               </button>
             </div>
           )}
 
-          
           <div className="product-description-box">
             <h3>Chi tiết sản phẩm</h3>
             <ul>

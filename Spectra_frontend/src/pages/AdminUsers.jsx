@@ -7,7 +7,11 @@ export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+ 
+  const currentUser = JSON.parse(localStorage.getItem("user")) || {};
+  const myRole = (currentUser.role || "").toLowerCase();
+
+  const token = user?.token || currentUser?.token;
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
 
   const fetchUsers = async () => {
@@ -27,115 +31,164 @@ export default function AdminUsers() {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { 
+    if (myRole === 'admin' || myRole === 'manager') {
+      fetchUsers(); 
+    }
+  }, [myRole]);
 
-  // ⚡ API CẬP NHẬT ROLE (QUYỀN)
+  
+  if (myRole !== 'admin' && myRole !== 'manager') {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', color: '#dc2626' }}>
+        <h2>⛔ Bạn không có quyền truy cập chức năng này!</h2>
+        <p>Chức năng phân quyền chỉ dành riêng cho Admin.</p>
+      </div>
+    );
+  }
+
+  
   const handleRoleChange = async (userId, newRole) => {
     if (!window.confirm(`Bạn có chắc chắn muốn đổi quyền của người dùng này thành ${newRole}?`)) return;
+    
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Users/${userId}/role`, {
-        method: "PUT",
-        headers: headers,
+        method: "PUT", 
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
         body: JSON.stringify({ role: newRole })
       });
+      
       if (res.ok) {
         alert("Cập nhật quyền thành công!");
-        fetchUsers(); // Tải lại danh sách
+        fetchUsers(); 
+      } else if (res.status === 403) {
+        alert("Lỗi 403: Tài khoản Admin của bạn không có đủ quyền tối cao trên Server để đổi quyền người khác!");
       } else {
-        const text = await res.text();
-        alert("Lỗi khi cập nhật quyền: " + text);
+        try {
+          const errorData = await res.json();
+          alert("Lỗi khi cập nhật quyền: " + (errorData.message || "Kiểm tra lại Backend"));
+        } catch(e) {
+           alert("Lỗi khi cập nhật quyền: Server trả về lỗi " + res.status);
+        }
       }
-    } catch (err) { alert("Lỗi kết nối mạng."); }
+    } catch (err) { 
+      alert("Lỗi kết nối mạng: Không thể chạm tới Server."); 
+    }
   };
 
-  // ⚡ API CẬP NHẬT STATUS (TRẠNG THÁI)
+  
   const handleStatusChange = async (userId, newStatus) => {
     if (!window.confirm(`Bạn có chắc chắn muốn đổi trạng thái thành ${newStatus}?`)) return;
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Users/${userId}/status`, {
         method: "PUT",
-        headers: headers,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
         body: JSON.stringify({ status: newStatus })
       });
+      
       if (res.ok) {
         alert("Cập nhật trạng thái thành công!");
         fetchUsers();
+      } else if (res.status === 403) {
+        alert("Lỗi 403: Backend từ chối hành động đổi trạng thái này!");
       } else {
-        const text = await res.text();
-        alert("Lỗi khi cập nhật trạng thái: " + text);
+        try {
+          const errorData = await res.json();
+          alert("Lỗi khi cập nhật trạng thái: " + (errorData.message || "Kiểm tra lại Backend"));
+        } catch(e) {
+           alert("Lỗi khi cập nhật trạng thái: Server trả về lỗi " + res.status);
+        }
       }
-    } catch (err) { alert("Lỗi kết nối mạng."); }
+    } catch (err) { 
+      alert("Lỗi kết nối mạng: Không thể chạm tới Server."); 
+    }
   };
 
   return (
-    <div className="admin-users-container">
-      <div className="admin-users-header">
-        <h2 className="admin-users-title">👥 Quản Lý Người Dùng</h2>
-        <button className="btn-refresh" onClick={fetchUsers}>🔄 Làm mới</button>
+    <div className="admin-users-container" style={{ padding: '20px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+      <div className="admin-users-header" style={{ borderBottom: '2px solid #f3f4f6', paddingBottom: '15px', marginBottom: '20px' }}>
+        <h2 style={{ marginTop: 0 }}>👥 Quản Lý Người Dùng & Phân Quyền</h2>
+        <p style={{ color: '#6b7280', margin: 0 }}>Cấp quyền Admin/Staff cho nhân viên hoặc khóa tài khoản khách hàng vi phạm.</p>
       </div>
 
-      <div className="table-container">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Người dùng</th>
-              <th>Số điện thoại</th>
-              <th>Ngày tham gia</th>
-              <th>Phân quyền (Role)</th>
-              <th>Trạng thái (Status)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? <tr><td colSpan="5" style={{textAlign: 'center', padding: '40px'}}>⏳ Đang tải dữ liệu...</td></tr> : 
-             users.length === 0 ? <tr><td colSpan="5" style={{textAlign: 'center', padding: '40px'}}>Không có tài khoản nào.</td></tr> :
-             users.map((u, index) => {
-               const roleClass = u.role?.toLowerCase() === 'admin' ? 'admin' : 'customer';
-               const statusClass = u.status?.toLowerCase() || 'active';
-               
-               return (
-                <tr key={index}>
-                  <td>
-                    <div className="user-info">
-                      <div className="user-avatar">{u.fullName?.charAt(0)?.toUpperCase() || 'U'}</div>
-                      <div>
-                        <p className="user-name">{u.fullName || 'Chưa cập nhật'}</p>
-                        <p className="user-email">{u.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{u.phone || '---'}</td>
-                  <td>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</td>
+      {isLoading ? (
+        <div style={{ textAlign: 'center', padding: '50px' }}>⏳ Đang tải dữ liệu...</div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                <th style={{ padding: '12px', color: '#374151' }}>Họ và Tên</th>
+                <th style={{ padding: '12px', color: '#374151' }}>Email</th>
+                <th style={{ padding: '12px', color: '#374151' }}>Ngày tham gia</th>
+                <th style={{ padding: '12px', color: '#374151' }}>Vai trò (Role)</th>
+                <th style={{ padding: '12px', color: '#374151' }}>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.userId || u.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                  <td style={{ padding: '12px', fontWeight: 'bold' }}>{u.fullName || "Chưa cập nhật"}</td>
+                  <td style={{ padding: '12px' }}>{u.email}</td>
+                  <td style={{ padding: '12px' }}>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</td>
                   
-                  {/* DROPDOWN CHỌN ROLE */}
-                  <td>
+                  {/* CỘT PHÂN QUYỀN */}
+                  <td style={{ padding: '12px' }}>
                     <select 
-                      className={`select-control select-role ${roleClass}`} 
-                      value={u.role || 'Customer'}
+                      value={u.role || "Customer"} 
                       onChange={(e) => handleRoleChange(u.userId || u.id, e.target.value)}
+                      disabled={u.userId === currentUser.userId} 
+                      style={{ 
+                        padding: '6px 10px', 
+                        borderRadius: '4px', 
+                        border: '1px solid #d1d5db',
+                        outline: 'none',
+                        cursor: u.userId === currentUser.userId ? 'not-allowed' : 'pointer',
+                        backgroundColor: u.role === 'Admin' ? '#fee2e2' : u.role === 'Staff' ? '#dbeafe' : '#f3f4f6',
+                        color: u.role === 'Admin' ? '#991b1b' : u.role === 'Staff' ? '#1e40af' : '#374151',
+                        fontWeight: 'bold'
+                      }}
                     >
-                      <option value="Customer">Customer</option>
-                      <option value="Admin">Admin</option>
+                      <option value="Customer">Khách hàng (Customer)</option>
+                      <option value="Staff">Nhân viên (Staff)</option>
+                      <option value="Admin">Quản trị viên (Admin)</option>
                     </select>
                   </td>
 
-                  {/* DROPDOWN CHỌN STATUS */}
-                  <td>
+                  {/* CỘT TRẠNG THÁI */}
+                  <td style={{ padding: '12px' }}>
                     <select 
-                      className={`select-control select-status ${statusClass}`} 
-                      value={u.status || 'Active'}
+                      value={u.status || "Active"} 
                       onChange={(e) => handleStatusChange(u.userId || u.id, e.target.value)}
+                      disabled={u.userId === currentUser.userId}
+                      style={{ 
+                        padding: '6px 10px', 
+                        borderRadius: '4px', 
+                        border: '1px solid #d1d5db',
+                        outline: 'none',
+                        cursor: u.userId === currentUser.userId ? 'not-allowed' : 'pointer',
+                        backgroundColor: u.status === 'Active' ? '#d1fae5' : '#fee2e2',
+                        color: u.status === 'Active' ? '#065f46' : '#991b1b',
+                        fontWeight: 'bold'
+                      }}
                     >
-                      <option value="Active">🟢 Active (Hoạt động)</option>
-                      <option value="Inactive">🔴 Inactive (Vô hiệu hóa)</option>
-                      <option value="Banned">⚫ Banned (Bị cấm)</option>
+                      <option value="Active">🟢 Đang hoạt động</option>
+                      <option value="Inactive">🔴 Đã khóa (Banned)</option>
                     </select>
                   </td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

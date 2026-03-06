@@ -13,6 +13,8 @@ import MainPage from "../pages/MainPage";
 import OrderHistory from "../pages/OrderHistory";
 import OrderDetail from "../pages/OrderDetail";
 import CartPage from "../pages/CartPage";
+
+import CheckoutPreorderPage from "../pages/CheckoutPreorderPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import CheckoutSuccess from "../pages/CheckoutSuccess";
 import ProductDetail from "../components/product/ProductDetail";
@@ -47,7 +49,7 @@ export default function AppRouter() {
     <Router>
       <Routes>
         
-       
+        {/* --- ROUTES DÀNH CHO ADMIN & STAFF --- */}
         <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} /> 
@@ -59,7 +61,7 @@ export default function AppRouter() {
           </Route>
         </Route>
 
-      
+        {/* --- ROUTES DÀNH CHO KHÁCH HÀNG CHUNG --- */}
         <Route element={<CustomerLayout />}>
           <Route path="/" element={<MainPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
@@ -69,8 +71,12 @@ export default function AppRouter() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          
+          {/* ⚡ BỔ SUNG ROUTE MỚI CHO TRANG THANH TOÁN PRE-ORDER Ở ĐÂY */}
+          <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
+
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
-          <Route path="/vnpay-return" element={<VNPayReturnPage />} />
+          <Route path="/payment/return" element={<VNPayReturnPage />} />
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
