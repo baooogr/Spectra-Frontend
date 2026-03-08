@@ -259,8 +259,715 @@ const ProductList = [
                 "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
         },
     },
+
+    {
+        id: "GM005",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM006",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM007",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM008",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM009",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM010",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM011",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM012",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM013",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM014",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM015",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
+    {
+        id: "GM016",
+        name: "Clear Square Glasses",
+        price: 15.95,
+        rating: 4.5,
+        image: [pic11, pic12, pic13],
+        reviews: 590,
+        
+        detail: {
+            fit: {
+                prescription: [
+                    "Rx Range: -20.00 ~ +12.00",
+                    "PD Range: 54 - 79 mm",
+                    "Progressive: Yes",
+                    "Bifocal: Yes",
+                ],
+                frameSize: [
+                    "Size: Medium",
+                    "Frame Width: 126 mm / 5 in",
+                    "Bridge Width: 18 mm / 0.7 in",
+                    "Lens Width: 51 mm / 2 in",
+                    "Lens Height: 42 mm / 1.7 in",
+                    "Temple Length: 145 mm / 5.7 in",
+                ],
+                image: pic17,
+            },
+
+            features: {
+                frameDesign: [
+                    "Shape: Square",
+                    "Rim: Full Rim",
+                    "Material: Plastic",
+                    "Weight: Lightweight(12 grams / 0.4 ounces)",
+                ],
+                lensCompatibility: [
+                    "Sunglasses",
+                    "Transitions",
+                    "Blue-light blocking",
+                ],
+                whatMakesItSpecial: [
+                    {
+                        title: "Made for all faces",
+                        desc: "Designed to accommodate many face shapes and sizes.",
+                    },
+                    {
+                        title: "Smart Value",
+                        desc: "Advanced plastic materials deliver trendy styles and reliable durability at accessible prices.",
+                    },
+                    {
+                        title: "All-day ease",
+                        desc: "Lightweight frames make all-day wear easy, no slipping or digging.",
+                    },
+                ],
+            },
+
+            description:
+                "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
+        },
+    },
 ];
-
-
 
 export default ProductList;

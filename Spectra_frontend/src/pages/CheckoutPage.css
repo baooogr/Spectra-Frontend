@@ -163,4 +163,24 @@
   .checkout__grid {
     grid-template-columns: 1fr;
   }
+
+}
+
+.input-error {
+  border-color: #d32f2f !important; 
+  background-color: #fffafa; 
+}
+
+.error-text {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+
 }

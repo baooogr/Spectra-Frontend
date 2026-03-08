@@ -1,206 +1,242 @@
-import React, { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+
+import React, { useState, useEffect, useContext, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
+import { useCart } from "../context/CartContext";
 import "./CheckoutPage.css";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
+  const { cartItems, clearCart } = useCart();
   const location = useLocation();
+  const items = location.state?.cartItems || cartItems;
 
-  // Nếu truyền từ CartPage: navigate("/checkout", { state: { cartItems } })
-  // thì lấy được cartItems ở đây. Nếu không có thì dùng demo.
-  const initialCart =
-    location.state?.cartItems ??
-    [
-      {
-        id: 1,
-        name: "Kính râm Aviator Cổ điển",
-        variant: "Màu: Đen",
-        price: 1250000,
-        quantity: 1,
-      },
-      {
-        id: 2,
-        name: "Kính cận chống ánh sáng xanh",
-        variant: "Độ: -2.00 | Gọng: Trong suốt",
-        price: 850000,
-        quantity: 2,
-      },
-    ];
-
-  const [cartItems] = useState(initialCart);
+  const currentUser = user || JSON.parse(localStorage.getItem("user")) || {};
 
   const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    email: "",
-    address: "",
+    fullName: currentUser.fullName || "",
+    phone: "", // Sẽ được tự động điền từ API
+    email: currentUser.email || "",
+    address: "", // Sẽ được tự động điền từ API
     note: "",
+    paymentMethod: "COD"
   });
 
-  const shippingFee = 30000;
+  // ⚡ GỌI API LẤY THÔNG TIN USER (GỒM CẢ SĐT VÀ ĐỊA CHỈ)
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = currentUser.token;
+      if (!token) return;
+      try {
+        const res = await fetch("https://myspectra.runasp.net/api/Users/me", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setForm(prev => ({
+            ...prev,
+            phone: data.phone || "",
+            address: data.address || "",
+            fullName: data.fullName || prev.fullName
+          }));
+        }
+      } catch (err) {
+        console.error("Lỗi tải thông tin cá nhân:", err);
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
-  const subtotal = useMemo(() => {
-    return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  }, [cartItems]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const total = subtotal + (cartItems.length ? shippingFee : 0);
+  const shippingFee = 0;
+  const subtotal = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
+  const total = subtotal + shippingFee;
 
-  const formatVND = (n) =>
-    n.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
+  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const formatUSD = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n);
 
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
-  };
-
-  const placeOrder = (e) => {
+  const placeOrder = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg("");
 
-    // Validate đơn giản
-    if (!form.fullName.trim() || !form.phone.trim() || !form.address.trim()) {
-      alert("Vui lòng nhập Họ tên, SĐT và Địa chỉ.");
+    const token = currentUser.token;
+    if (!token) {
+      alert("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
+      navigate("/login");
       return;
     }
-    if (cartItems.length === 0) {
-      alert("Giỏ hàng trống.");
+
+    if (!form.phone) {
+      alert("Số điện thoại không được để trống. Vui lòng cập nhật SĐT trong phần hồ sơ cá nhân.");
+      setIsSubmitting(false);
       return;
     }
 
-    // tạo mã đơn demo
-    const orderId = "OD" + Math.floor(100000 + Math.random() * 900000);
+    try {
+      const formattedItems = items.map(item => {
+        const detail = {
+          frameId: String(item.id), 
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.price),
+          color: item.color || "Default", 
+          frameColor: item.color || "Default"
+        };
+        
+        if (item.lensInfo && item.lensInfo.typeId && item.lensInfo.featureId) {
+          detail.lensTypeId = String(item.lensInfo.typeId);
+          detail.lensFeatureId = String(item.lensInfo.featureId);
+          detail.prescriptionId = item.lensInfo.prescriptionId || null; 
+        }
+        return detail;
+      });
 
-    // chuyển sang trang thành công + gửi dữ liệu để hiển thị
-    navigate("/checkout-success", {
-      state: {
-        orderId,
-        customer: {
-          fullName: form.fullName,
-          phone: form.phone,
-          email: form.email,
-          address: form.address,
-          note: form.note,
-        },
-        total,
-      },
-    });
+      const payload = {
+        receiverName: form.fullName.trim(),
+        customerName: form.fullName.trim(),
+        receiverPhone: form.phone, // Lấy SĐT chuẩn từ state
+        phoneNumber: form.phone,
+        phone: form.phone,
+        shippingAddress: form.address.trim(),
+        address: form.address.trim(),
+        note: form.note,
+        paymentMethod: form.paymentMethod,
+        items: formattedItems,
+        orderDetails: formattedItems
+      };
+
+      const res = await fetch("https://myspectra.runasp.net/api/Orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        const createdId = result.id || result.orderId;
+        
+        if (form.paymentMethod === "VNPAY") {
+          try {
+            const paymentRes = await fetch("https://myspectra.runasp.net/api/Payments", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+              body: JSON.stringify({ paymentMethod: "VNPAY", orderId: createdId })
+            });
+
+            if (paymentRes.ok) {
+              const paymentData = await paymentRes.json();
+              if (paymentData.paymentUrl) {
+                clearCart(); 
+                window.location.href = paymentData.paymentUrl;
+                return; 
+              } else { alert("Lỗi: Backend không trả về Link VNPay!"); }
+            } else { alert("Lỗi kết nối tạo VNPay!"); }
+          } catch (err) { alert("Lỗi mạng khi tạo thanh toán VNPay"); }
+        } else {
+          clearCart(); 
+          navigate("/checkout-success", {
+            state: { orderId: createdId, customer: form, total: total }
+          });
+        }
+      } else {
+        const errData = await res.json();
+        setErrorMsg(errData.message || "Lỗi tạo đơn hàng từ Server.");
+      }
+    } catch (err) {
+      setErrorMsg("Lỗi mạng! Không thể kết nối tới Server.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (items.length === 0) return <div style={{textAlign: "center", padding: "50px"}}>Giỏ hàng trống. Không thể thanh toán.</div>;
 
   return (
     <div className="checkout">
       <div className="checkout__container">
-        <div className="checkout__top">
-          <h1 className="checkout__title">Thanh toán</h1>
-          <button className="btn btn--ghost" onClick={() => navigate("/cart")}>
-            ← Quay lại giỏ hàng
-          </button>
-        </div>
+        <h1 className="checkout__title">Thanh Toán</h1>
+        
+        <form className="checkout__grid" onSubmit={placeOrder}>
+          <div className="checkout__form">
+            <h2>Thông tin giao hàng</h2>
+            
+            {errorMsg && <div style={{color: 'red', backgroundColor: '#fee2e2', padding: '10px', borderRadius: '5px', marginBottom: '15px'}}>{errorMsg}</div>}
 
-        <div className="checkout__grid">
-          {/* LEFT: FORM */}
-          <form className="card" onSubmit={placeOrder}>
-            <h2 className="card__title">Thông tin nhận hàng</h2>
-
-            <div className="field">
-              <label>Họ và tên *</label>
-              <input
-                name="fullName"
-                value={form.fullName}
-                onChange={onChange}
-                placeholder="Nguyễn Văn A"
-              />
+            <div className="form-row">
+              <div className="form-group">
+                <label>Họ và tên <span className="req">*</span></label>
+                <input type="text" name="fullName" value={form.fullName} onChange={onChange} required />
+              </div>
+              <div className="form-group">
+                <label>Số điện thoại (Cố định)</label>
+                {/* ⚡ KHÓA Ô SỐ ĐIỆN THOẠI NHƯNG VẪN HIỂN THỊ */}
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value={form.phone} 
+                  readOnly 
+                  style={{ backgroundColor: '#e5e7eb', color: '#6b7280', cursor: 'not-allowed', outline: 'none' }}
+                  title="Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
+                  placeholder={form.phone ? "" : "Đang tải SĐT..."}
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label>Email liên hệ</label>
+              <input type="email" name="email" value={form.email} onChange={onChange} />
             </div>
 
-            <div className="field">
-              <label>Số điện thoại *</label>
-              <input
-                name="phone"
-                value={form.phone}
-                onChange={onChange}
-                placeholder="0987xxxxxx"
-              />
+            <div className="form-group">
+              <label>Địa chỉ giao hàng <span className="req">*</span></label>
+              <input type="text" name="address" value={form.address} onChange={onChange} required />
+            </div>
+            
+            <div className="form-group">
+              <label>Ghi chú đơn hàng (Tùy chọn)</label>
+              <textarea name="note" rows="3" value={form.note} onChange={onChange} placeholder="Giao giờ hành chính, gọi trước khi giao..."></textarea>
             </div>
 
-            <div className="field">
-              <label>Email</label>
-              <input
-                name="email"
-                value={form.email}
-                onChange={onChange}
-                placeholder="email@gmail.com"
-              />
+            <div className="form-group" style={{marginTop: '20px'}}>
+              <label style={{fontSize: '18px', fontWeight: 'bold', marginBottom: '10px', display: 'block'}}>Phương thức thanh toán <span className="req">*</span></label>
+              <select name="paymentMethod" value={form.paymentMethod} onChange={onChange} style={{width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', backgroundColor: '#f9fafb', fontSize: '15px'}}>
+                <option value="COD">💵 Thanh toán tiền mặt (COD)</option>
+                <option value="VNPAY">💳 Thanh toán qua VNPay (Quét mã QR / Thẻ ATM)</option>
+              </select>
             </div>
+          </div>
 
-            <div className="field">
-              <label>Địa chỉ *</label>
-              <input
-                name="address"
-                value={form.address}
-                onChange={onChange}
-                placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
-              />
-            </div>
-
-            <div className="field">
-              <label>Ghi chú</label>
-              <textarea
-                name="note"
-                value={form.note}
-                onChange={onChange}
-                rows={3}
-                placeholder="Ví dụ: Giao giờ hành chính..."
-              />
-            </div>
-
-            <button className="btn btn--full" type="submit">
-              Đặt hàng
-            </button>
-
-            <small className="hint">
-              * Demo UI (chưa tích hợp cổng thanh toán).
-            </small>
-          </form>
-
-          {/* RIGHT: SUMMARY */}
-          <div className="card">
-            <h2 className="card__title">Tóm tắt đơn hàng</h2>
-
-            <div className="order-list">
-              {cartItems.map((it) => (
-                <div key={it.id} className="order-item">
-                  <div className="order-item__left">
-                    <div className="order-item__name">{it.name}</div>
-                    <div className="order-item__variant">{it.variant}</div>
-                    <div className="order-item__qty">SL: {it.quantity}</div>
+          <div className="checkout__summary">
+            <h2>Đơn hàng của bạn</h2>
+            <div className="summary__items">
+              {items.map((item, idx) => (
+                <div className="summary__item" key={idx} style={{display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px'}}>
+                  <div>
+                    <div className="item__name" style={{fontWeight: 'bold'}}>{item.name}</div>
+                    {item.lensInfo && <div style={{fontSize: '12px', color: '#666'}}>+ {item.lensInfo.type} / {item.lensInfo.feature}</div>}
+                    <div className="item__qty" style={{fontSize: '13px'}}>SL: {item.quantity} | Màu: {item.color || "Mặc định"}</div>
                   </div>
-                  <div className="order-item__price">
-                    {formatVND(it.price * it.quantity)}
+                  <div className="item__price" style={{fontWeight: 'bold', color: '#10b981'}}>
+                    {formatUSD(item.price * item.quantity)}
+
                   </div>
                 </div>
               ))}
             </div>
-
-            <div className="line" />
-
-            <div className="row">
-              <span>Tạm tính</span>
-              <span>{formatVND(subtotal)}</span>
+            <div className="summary__row"><span>Tạm tính</span><span>{formatUSD(subtotal)}</span></div>
+            <div className="summary__row"><span>Phí giao hàng</span><span>{shippingFee === 0 ? "Miễn phí" : formatUSD(shippingFee)}</span></div>
+            <div className="summary__row summary__total" style={{fontSize: '20px', marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #ccc'}}>
+              <span>Tổng thanh toán</span><span style={{color: '#10b981'}}>{formatUSD(total)}</span>
             </div>
 
-            <div className="row">
-              <span>Phí vận chuyển</span>
-              <span>
-                {cartItems.length ? formatVND(30000) : formatVND(0)}
-              </span>
-            </div>
-
-            <div className="line" />
-
-            <div className="row row--total">
-              <span>Tổng</span>
-              <span>{formatVND(total)}</span>
-            </div>
+            <button type="submit" disabled={isSubmitting} className="checkout__btn" style={{width: '100%', padding: '15px', backgroundColor: isSubmitting ? '#9ca3af' : '#111827', color: 'white', fontWeight: 'bold', border: 'none', borderRadius: '8px', marginTop: '20px', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontSize: '16px'}}>
+              {isSubmitting ? "Đang xử lý..." : `Xác Nhận Đặt Hàng (${formatUSD(total)})`}
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

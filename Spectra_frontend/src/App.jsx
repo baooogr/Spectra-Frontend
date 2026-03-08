@@ -1,60 +1,21 @@
-// <<<<<<< HEAD
-// import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
 
-// function App() {
-//   const [count, setCount] = useState(0)
-
-//   return (
-//     <>
-    
-//     </>
-//   )
-// }
-
-// export default App
-// =======
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-import ProductCard from "./components/product/ProductCard";
-import ProductDetail from "./components/product/ProductDetail";
-import productList from "./components/product/data/ProductList";
-import OrderHistory from "./components/product/OrderHistory";
-import OrderDetail from "./components/product/OrderDetail";
-import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import CheckoutSuccess from "./pages/CheckoutSuccess";
+import React from "react";
+import AppRouter from "./routes/AppRouter";
+import { CartProvider } from "./context/CartContext";
+import { OrderProvider } from "./context/OrderContext"; 
+import { UserProvider } from "./context/UserContext"; 
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="container">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <div className="product-list">
-                {productList.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
-            }
-          />
-
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/orders" element={<OrderHistory />} />
-          <Route path="/orders/:id" element={<OrderDetail />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/checkout-success" element={<CheckoutSuccess />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <UserProvider>  
+      <OrderProvider>
+        <CartProvider>
+          <AppRouter />
+        </CartProvider>
+      </OrderProvider>
+    </UserProvider>
   );
 }
 
 export default App;
-// >>>>>>> anhncnse192324
+
