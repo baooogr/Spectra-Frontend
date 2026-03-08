@@ -164,10 +164,9 @@ export default function ProductDetail() {
 
         <div className="product-info-col">
           <h2 className="product-title">{product.frameName}</h2>
-          <p className="product-brand">Thương hiệu: <strong>{product.brand}</strong></p>
+          
+          <p className="product-brand">Thương hiệu: <strong>{product.brand?.brandName || "Đang cập nhật"}</strong></p>
           <p className="product-price">${product.basePrice}</p>
-
-          <div className="product-rating">⭐ 5.0 <span>(Đánh giá)</span></div>
 
           <div className="product-status">
             Trạng thái: <span className={inStock ? "status-in-stock" : "status-out-stock"}>
@@ -199,8 +198,18 @@ export default function ProductDetail() {
           <div className="product-description-box">
             <h3>Chi tiết sản phẩm</h3>
             <ul>
-              <li><strong>Chất liệu:</strong> {product.material || "Chưa cập nhật"}</li>
-              <li><strong>Màu sắc:</strong> {product.color || "Chưa cập nhật"}</li>
+              {/* SỬA CHẤT LIỆU */}
+              <li><strong>Chất liệu:</strong> {product.material?.materialName || "Chưa cập nhật"}</li>
+              
+              {/* SỬA MÀU SẮC (API mới trả về mảng frameColors) */}
+              <li>
+                <strong>Màu sắc:</strong> {
+                  product.frameColors?.length > 0 
+                    ? product.frameColors.map(c => c.color?.colorName || c.colorName).join(", ") 
+                    : product.color || "Chưa cập nhật"
+                }
+              </li>
+              
               <li><strong>Kích thước (Rộng - Cầu - Càng):</strong> {product.lensWidth} - {product.bridgeWidth} - {product.templeLength} mm</li>
               <li><strong>Kiểu dáng:</strong> {product.shape || "Chưa cập nhật"}</li>
             </ul>

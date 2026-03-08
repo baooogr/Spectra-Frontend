@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 function ProductCard({ product }) {
   const navigate = useNavigate();
   const [thumbnailUrl, setThumbnailUrl] = useState(
-    product.imageUrl || product.image?.[0] || product.mediaUrls?.[0] || null
+    product.frameMedia?.[0]?.mediaUrl || product.imageUrl || product.image?.[0] || product.mediaUrls?.[0] || null
   );
 
   useEffect(() => {
@@ -144,7 +144,7 @@ function ProductCard({ product }) {
 
       {/* Thương hiệu & hình dáng */}
       <p style={{ margin: "0 0 6px", fontSize: "12px", color: "#6b7280" }}>
-        {product.brand} {product.shape ? `- ${product.shape}` : ""}
+        {product.brand?.brandName || "Đang cập nhật"} {product.shape ? `- ${product.shape}` : ""}
       </p>
 
       {/* ✅ Dòng trạng thái tồn kho */}
