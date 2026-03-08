@@ -57,8 +57,6 @@ export default function ProductDetail() {
 
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  
-  // ⚡ BIẾN QUẢN LÝ TRẠNG THÁI KHÁCH BẤM NÚT NÀO
   const [isPreordering, setIsPreordering] = useState(false);
 
   useEffect(() => {
@@ -95,12 +93,12 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleOpenLensSelection = () => {
-    setIsPreordering(false); // ⚡ KHÔNG PHẢI PREORDER
+    setIsPreordering(false); 
     setIsLensModalOpen(true);
   };
 
   const handleOpenPreorderSelection = () => {
-    setIsPreordering(true); // ⚡ LÀ PREORDER
+    setIsPreordering(true); 
     setIsLensModalOpen(true);
   };
 
@@ -116,22 +114,15 @@ export default function ProductDetail() {
     };
 
     if (isPreordering) {
-      // Đóng modal
       setIsLensModalOpen(false); 
-      
-      // KIỂM TRA ĐĂNG NHẬP TRƯỚC KHI CHO ĐI TỚI PREORDER
       const token = JSON.parse(localStorage.getItem("user"))?.token;
       if (!token) {
         alert("Bạn cần đăng nhập để thực hiện Đặt Trước (Pre-order).");
         navigate("/login");
         return;
       }
-
-      // ĐIỀU HƯỚNG THẲNG SANG TRANG THANH TOÁN PRE-ORDER VÀ TRUYỀN DỮ LIỆU SẢN PHẨM QUA STATE
       navigate("/checkout-preorder", { state: { preorderItem: itemData } });
-
     } else {
-      // NẾU MUA THƯỜNG -> BỎ VÀO GIỎ HÀNG
       addToCart(itemData, quantity); 
       setIsLensModalOpen(false); 
       setIsSuccessModalOpen(true); 
@@ -197,21 +188,40 @@ export default function ProductDetail() {
 
           <div className="product-description-box">
             <h3>Chi tiết sản phẩm</h3>
-            <ul>
-              {/* SỬA CHẤT LIỆU */}
+            <ul style={{ listStyleType: 'none', padding: 0, lineHeight: '1.8' }}>
               <li><strong>Chất liệu:</strong> {product.material?.materialName || "Chưa cập nhật"}</li>
               
-              {/* SỬA MÀU SẮC (API mới trả về mảng frameColors) */}
-              <li>
-                <strong>Màu sắc:</strong> {
-                  product.frameColors?.length > 0 
-                    ? product.frameColors.map(c => c.color?.colorName || c.colorName).join(", ") 
-                    : product.color || "Chưa cập nhật"
-                }
+              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <strong>Màu sắc:</strong> 
+                {product.frameColors?.length > 0 ? (
+                  product.frameColors.map((c, idx) => {
+                    const colorData = c.color || c;
+                    return (
+                      <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f3f4f6', padding: '2px 8px', borderRadius: '12px', fontSize: '14px' }}>
+                        {colorData.hexCode && (
+                          <span style={{ width: '12px', height: '12px', backgroundColor: colorData.hexCode, borderRadius: '50%', border: '1px solid #d1d5db', display: 'inline-block' }}></span>
+                        )}
+                        {colorData.colorName || "Không tên"}
+                      </span>
+                    );
+                  })
+                ) : (
+                  <span>Chưa cập nhật</span>
+                )}
               </li>
               
-              <li><strong>Kích thước (Rộng - Cầu - Càng):</strong> {product.lensWidth} - {product.bridgeWidth} - {product.templeLength} mm</li>
-              <li><strong>Kiểu dáng:</strong> {product.shape || "Chưa cập nhật"}</li>
+              {/* CẬP NHẬT KIỂU DÁNG THEO OBJECT */}
+              <li><strong>Kiểu dáng:</strong> {product.shape?.shapeName || product.shape || "Chưa cập nhật"}</li>
+              <li><strong>Kích cỡ (Size):</strong> <span style={{ textTransform: 'capitalize' }}>{product.size || "Chưa cập nhật"}</span></li>
+              
+              {/* TÁCH BIỆT THÔNG SỐ KÍNH */}
+              <li style={{ marginTop: '15px' }}><strong>Thông số kỹ thuật:</strong></li>
+              <ul style={{ listStyleType: 'square', paddingLeft: '20px', marginTop: '5px' }}>
+                <li><strong>Rộng tròng (Lens Width):</strong> {product.lensWidth} mm</li>
+                <li><strong>Cầu kính (Bridge Width):</strong> {product.bridgeWidth} mm</li>
+                <li><strong>Càng kính (Temple Length):</strong> {product.templeLength} mm</li>
+                <li><strong>Rộng khung (Frame Width):</strong> {product.frameWidth} mm</li>
+              </ul>
             </ul>
           </div>
         </div>

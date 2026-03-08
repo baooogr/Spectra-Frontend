@@ -124,9 +124,6 @@ function ProductCard({ product }) {
         <span style={{ fontSize: "20px", fontWeight: "bold" }}>
           ${product.basePrice || product.price || 0}
         </span>
-        <span style={{ fontSize: "18px", fontWeight: "bold", color: "#f59e0b" }}>
-          ⭐ 5.0
-        </span>
       </div>
 
       {/* Tên sản phẩm */}
