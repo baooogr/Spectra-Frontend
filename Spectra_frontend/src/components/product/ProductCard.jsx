@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -37,14 +36,11 @@ function ProductCard({ product }) {
   return (
     <div
       style={{
-
         border: `1px solid ${isOutOfStock ? "#bfdbfe" : "#ddd"}`,
-
         padding: "14px",
         width: "230px",
         borderRadius: "12px",
         cursor: "pointer",
-
         backgroundColor: "#fff",
         transition: "transform 0.2s, box-shadow 0.2s",
         position: "relative",
@@ -122,15 +118,11 @@ function ProductCard({ product }) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-
           marginBottom: "6px",
         }}
       >
         <span style={{ fontSize: "20px", fontWeight: "bold" }}>
           ${product.basePrice || product.price || 0}
-        </span>
-        <span style={{ fontSize: "18px", fontWeight: "bold", color: "#f59e0b" }}>
-          ⭐ 5.0
         </span>
       </div>
 
@@ -181,10 +173,8 @@ function ProductCard({ product }) {
           
         </div>
       )}
-
     </div>
   );
 }
 
 export default ProductCard;
-
