@@ -74,7 +74,7 @@ export default function AppRouter() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           
-          {/* ⚡ BỔ SUNG ROUTE MỚI CHO TRANG THANH TOÁN PRE-ORDER Ở ĐÂY */}
+          
           <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
 
           <Route path="/checkout-success" element={<CheckoutSuccess />} />

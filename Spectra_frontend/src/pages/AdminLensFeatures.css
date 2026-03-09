@@ -1,0 +1,41 @@
+.admin-lens-container { padding-bottom: 40px; }
+.admin-lens-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.admin-lens-title { margin: 0; color: #111827; }
+.btn-add { padding: 10px 20px; background-color: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.btn-add:hover { background-color: #7c3aed; }
+
+.table-container { background-color: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
+.admin-table { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-table thead { background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+.admin-table th { padding: 15px; color: #374151; font-weight: 600; }
+.admin-table tbody tr { border-bottom: 1px solid #f3f4f6; }
+.admin-table tbody tr:hover { background-color: #f9fafb; }
+.admin-table td { padding: 15px; color: #333; vertical-align: middle; }
+
+.col-name { font-weight: 500; font-size: 15px; color: #1f2937; }
+.col-price { color: #10b981; font-weight: bold; }
+.col-action { text-align: right; }
+
+/* Badge cho chiết suất (Index) */
+.badge-index { display: inline-block; background-color: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 13px; font-family: monospace; border: 1px solid #c7d2fe; }
+
+.btn-edit { padding: 6px 16px; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; transition: 0.2s; }
+.btn-edit:hover { background-color: #2563eb; }
+.btn-delete { padding: 6px 16px; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+.btn-delete:hover { background-color: #dc2626; }
+
+/* MODAL */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background-color: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.modal-title { margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #111827; }
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 14px; font-weight: bold; color: #4b5563; margin-bottom: 6px; }
+.form-group input[type="text"], .form-group input[type="number"] { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #d1d5db; box-sizing: border-box; font-size: 14px; outline: none; }
+.form-group input:focus { border-color: #8b5cf6; box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2); }
+.form-hint { font-size: 12px; color: #6b7280; margin-top: 5px; margin-bottom: 0; font-style: italic; }
+
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; }
+.btn-cancel { padding: 10px 20px; border: 1px solid #ccc; background: white; border-radius: 6px; cursor: pointer; font-weight: 500; }
+.btn-save { padding: 10px 20px; background: #111827; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.btn-save:hover { background-color: #000; }
