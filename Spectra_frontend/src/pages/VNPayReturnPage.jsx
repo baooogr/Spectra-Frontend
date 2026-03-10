@@ -13,8 +13,7 @@ export default function VNPayReturnPage() {
   const paymentId = searchParams.get("paymentId");
 
   useEffect(() => {
-    // ✅ KHÔNG gọi fetch thêm — Backend đã xử lý VNPay và redirect về đây rồi.
-    // Chỉ cần đọc params từ URL để hiển thị kết quả.
+  
 
     // Debug: in ra params để kiểm tra
     console.log("🔵 VNPay Return Params:", {
@@ -34,8 +33,7 @@ export default function VNPayReturnPage() {
       // Có responseCode nhưng không phải "00"
       setStatus("failed");
     } else if (message) {
-      // Backend redirect với "message" thay vì vnp_ResponseCode
-      // Ví dụ: ?message=Missing%20secure%20hash → thất bại
+      
       const isSuccess =
         message.toLowerCase().includes("success") ||
         message.toLowerCase().includes("thành công");
