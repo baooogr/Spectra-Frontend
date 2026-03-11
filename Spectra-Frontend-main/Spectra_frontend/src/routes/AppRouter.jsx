@@ -28,7 +28,8 @@ import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
-
+import PolicyPage from '../pages/PolicyPage';
+import AdminShipping from '../pages/AdminShipping';
 // VNPay
 import VNPayReturnPage from "../pages/VNPayReturnPage";
 
@@ -59,6 +60,8 @@ export default function AppRouter() {
             <Route path="lensfeatures" element={<AdminLensFeatures />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="/policy" element={<PolicyPage />} />
+            <Route path="/admin/shipping" element={<AdminShipping />} />
           </Route>
         </Route>
 
