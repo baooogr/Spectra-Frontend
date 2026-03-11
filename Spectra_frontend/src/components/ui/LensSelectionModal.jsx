@@ -9,7 +9,7 @@ const formatVND = (usdAmount) => {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
-    currencyDisplay: 'code', // Chế độ hiển thị chữ "VND" thay vì ký hiệu "₫"
+    currencyDisplay: 'code', 
     minimumFractionDigits: 2,
   }).format(vndAmount);
 };
@@ -41,7 +41,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState("");
   const [inputMode, setInputMode] = useState("saved");
 
-  // --- THÊM: State lưu lỗi theo khu vực ---
+  // State lưu lỗi theo khu vực
   const [validationErrors, setValidationErrors] = useState({ right: [], left: [], other: [] });
 
   // Khởi tạo form với các giá trị mặc định chuẩn
@@ -107,19 +107,26 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     const token = userStr ? JSON.parse(userStr)?.token : null;
     if (!token) { alert("Vui lòng đăng nhập để lưu toa thuốc!"); return; }
 
-    setIsSavingNew(true);
-    setValidationErrors({ right: [], left: [], other: [] }); // Reset lỗi khi bấm lưu
+    // KIỂM TRA BẮT BUỘC NHẬP TRỤC (AXIS) KHI CÓ LOẠN (CYL) NGAY TẠI FRONTEND
+    if ((Number(prescriptionForm.cylinderRight) !== 0 && Number(prescriptionForm.axisRight) === 0) || 
+        (Number(prescriptionForm.cylinderLeft) !== 0 && Number(prescriptionForm.axisLeft) === 0)) {
+      setValidationErrors({ other: ["Lỗi: Khi bạn có độ Loạn (CYL), bạn bắt buộc phải chọn Trục (AXIS) từ 1 đến 180."] });
+      return;
+    }
 
-    // 🔥 GỬI PASCALCASE ĐỂ KHỚP VỚI BACKEND C# 🔥
+    setIsSavingNew(true);
+    setValidationErrors({ right: [], left: [], other: [] }); 
+
+    // GỬI PASCALCASE ĐỂ KHỚP VỚI BACKEND C#
     const payload = {
       SphereRight: Number(prescriptionForm.sphereRight),
       CylinderRight: Number(prescriptionForm.cylinderRight),
       AxisRight: Number(prescriptionForm.axisRight),
-      AddRight: 0,
+      AddRight: null, // Gửi null thay vì 0
       SphereLeft: Number(prescriptionForm.sphereLeft),
       CylinderLeft: Number(prescriptionForm.cylinderLeft),
       AxisLeft: Number(prescriptionForm.axisLeft),
-      AddLeft: 0,
+      AddLeft: null, // Gửi null thay vì 0
       PupillaryDistance: Number(prescriptionForm.pupillaryDistance),
       DoctorName: prescriptionForm.doctorName,
       ClinicName: prescriptionForm.clinicName,
@@ -142,7 +149,6 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
         setInputMode("saved");
       } else {
         const err = await res.json();
-        // --- PHÂN LOẠI LỖI ---
         if (err.errors) {
           const allMsgs = Object.values(err.errors).flat();
           setValidationErrors({
@@ -158,7 +164,6 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
     finally { setIsSavingNew(false); }
   };
 
-  // ⚡ TÌNH GIÁ TRỰC TIẾP
   const selectedTypeData = lensTypes.find(t => String(t.id || t.lensTypeId || t.typeId) === String(selectedLensType));
   const selectedFeatureData = lensFeatures.find(f => String(f.id || f.lensFeatureId || f.featureId) === String(selectedLensFeature));
 
@@ -264,7 +269,19 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
                       <div style={{ flex: 1 }}><label style={{ fontSize: '11px' }}>CYL</label>
                         <select value={prescriptionForm.cylinderRight} onChange={e => {
                           const val = e.target.value;
-                          setPrescriptionForm({ ...prescriptionForm, cylinderRight: val, axisRight: Number(val) === 0 ? 0 : prescriptionForm.axisRight });
+                          let newAxis = prescriptionForm.axisRight;
+                          
+                          if (Number(val) === 0) {
+                            newAxis = 0; 
+                          } else if (Number(newAxis) === 0) {
+                            newAxis = 1; // Đồng bộ UI và State
+                          }
+                      
+                          setPrescriptionForm({ 
+                            ...prescriptionForm, 
+                            cylinderRight: val, 
+                            axisRight: newAxis 
+                          });
                         }} style={{ width: '100%', padding: '4px' }}>
                           {cylOptions.map(v => <option key={v} value={v}>{v > 0 ? `+${v}` : v}</option>)}
                         </select>
@@ -294,7 +311,19 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
                       <div style={{ flex: 1 }}><label style={{ fontSize: '11px' }}>CYL</label>
                         <select value={prescriptionForm.cylinderLeft} onChange={e => {
                           const val = e.target.value;
-                          setPrescriptionForm({ ...prescriptionForm, cylinderLeft: val, axisLeft: Number(val) === 0 ? 0 : prescriptionForm.axisLeft });
+                          let newAxis = prescriptionForm.axisLeft;
+                          
+                          if (Number(val) === 0) {
+                            newAxis = 0; 
+                          } else if (Number(newAxis) === 0) {
+                            newAxis = 1; // Đồng bộ UI và State
+                          }
+                      
+                          setPrescriptionForm({ 
+                            ...prescriptionForm, 
+                            cylinderLeft: val, 
+                            axisLeft: newAxis 
+                          });
                         }} style={{ width: '100%', padding: '4px' }}>
                           {cylOptions.map(v => <option key={v} value={v}>{v > 0 ? `+${v}` : v}</option>)}
                         </select>

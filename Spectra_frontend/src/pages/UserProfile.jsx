@@ -30,7 +30,7 @@ export default function UserProfile() {
   const [prescriptions, setPrescriptions] = useState([]);
   const [isAddingPrescription, setIsAddingPrescription] = useState(false);
   
-  // --- THÊM: State lưu lỗi theo khu vực ---
+  // State lưu lỗi theo khu vực
   const [validationErrors, setValidationErrors] = useState({ right: [], left: [], other: [] });
 
   const [prescriptionForm, setPrescriptionForm] = useState({
@@ -94,18 +94,25 @@ export default function UserProfile() {
 
   const handleSavePrescription = async (e) => {
     e.preventDefault();
-    setValidationErrors({ right: [], left: [], other: [] }); // Reset lỗi
+    setValidationErrors({ right: [], left: [], other: [] }); 
+
+    // KIỂM TRA BẮT BUỘC NHẬP TRỤC (AXIS) KHI CÓ LOẠN (CYL) NGAY TẠI FRONTEND
+    if ((Number(prescriptionForm.cylinderRight) !== 0 && Number(prescriptionForm.axisRight) === 0) || 
+        (Number(prescriptionForm.cylinderLeft) !== 0 && Number(prescriptionForm.axisLeft) === 0)) {
+      setValidationErrors({ other: ["Lỗi: Khi bạn có độ Loạn (CYL), bạn bắt buộc phải chọn Trục (AXIS) từ 1 đến 180."] });
+      return;
+    }
     
-    // Gửi PascalCase và ép ngày cố định để Backend C# không báo lỗi
+    // Gửi dữ liệu lên Backend
     const payload = {
       SphereRight: Number(prescriptionForm.sphereRight),
       CylinderRight: Number(prescriptionForm.cylinderRight),
       AxisRight: Number(prescriptionForm.axisRight),
-      AddRight: 0,
+      AddRight: null, // Gửi null để tránh lỗi Range(0.75, 3.5)
       SphereLeft: Number(prescriptionForm.sphereLeft),
       CylinderLeft: Number(prescriptionForm.cylinderLeft),
       AxisLeft: Number(prescriptionForm.axisLeft),
-      AddLeft: 0,
+      AddLeft: null, // Gửi null để tránh lỗi Range(0.75, 3.5)
       PupillaryDistance: Number(prescriptionForm.pupillaryDistance),
       DoctorName: prescriptionForm.doctorName || "Khách tự nhập",
       ClinicName: prescriptionForm.clinicName || "Khách tự nhập",
@@ -127,7 +134,6 @@ export default function UserProfile() {
         const err = await res.json();
         if (err.errors) {
           const allMsgs = Object.values(err.errors).flat();
-          // PHÂN LOẠI LỖI THEO TỪ KHÓA TRONG TIN NHẮN CỦA BACKEND
           setValidationErrors({
             right: allMsgs.filter(m => m.toLowerCase().includes("right")),
             left: allMsgs.filter(m => m.toLowerCase().includes("left")),
@@ -233,10 +239,18 @@ export default function UserProfile() {
                     value={prescriptionForm.cylinderRight}
                     onChange={e => {
                       const val = e.target.value;
-                      setPrescriptionForm({
+                      let newAxis = prescriptionForm.axisRight;
+                      
+                      if (Number(val) === 0) {
+                        newAxis = 0; // Nếu hết loạn thì trả Trục về 0
+                      } else if (Number(newAxis) === 0) {
+                        newAxis = 1; // Đồng bộ UI nhảy số 1 thì state cũng là 1
+                      }
+                  
+                      setPrescriptionForm({ 
                         ...prescriptionForm, 
                         cylinderRight: val, 
-                        axisRight: Number(val) === 0 ? 0 : prescriptionForm.axisRight
+                        axisRight: newAxis 
                       });
                     }}
                   >
@@ -283,10 +297,18 @@ export default function UserProfile() {
                     value={prescriptionForm.cylinderLeft}
                     onChange={e => {
                       const val = e.target.value;
-                      setPrescriptionForm({
+                      let newAxis = prescriptionForm.axisLeft;
+                      
+                      if (Number(val) === 0) {
+                        newAxis = 0; 
+                      } else if (Number(newAxis) === 0) {
+                        newAxis = 1; 
+                      }
+                  
+                      setPrescriptionForm({ 
                         ...prescriptionForm, 
                         cylinderLeft: val, 
-                        axisLeft: Number(val) === 0 ? 0 : prescriptionForm.axisLeft
+                        axisLeft: newAxis 
                       });
                     }}
                   >
