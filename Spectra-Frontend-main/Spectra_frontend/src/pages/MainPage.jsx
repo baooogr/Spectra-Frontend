@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import "./MainPage.css";
 import ProductCard from "../components/product/ProductCard";
 
-// 1. Import ảnh banner từ thư mục assets
+// Import ảnh banner từ thư mục assets
 import bannerImg from "../assets/bn.jpg"; 
 
 export default function MainPage() {
@@ -13,6 +13,7 @@ export default function MainPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedShapes, setSelectedShapes] = useState([]);
   const [selectedMaterials, setSelectedMaterials] = useState([]);
   const [selectedPrice, setSelectedPrice] = useState("all"); 
@@ -41,6 +42,11 @@ export default function MainPage() {
     fetchProducts();
   }, []);
 
+  // Tự động trích xuất các thuộc tính thực tế từ danh sách sản phẩm
+  const availableBrands = [...new Set(products.map(p => p.brand?.brandName || p.brand).filter(Boolean))];
+  const availableShapes = [...new Set(products.map(p => p.shape).filter(Boolean))];
+  const availableMaterials = [...new Set(products.map(p => p.material).filter(Boolean))];
+
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const productName = product.frameName || product.name || "";
@@ -48,9 +54,11 @@ export default function MainPage() {
 
       const productShape = product.shape || "";
       const productMaterial = product.material || "";
+      const productBrand = product.brand?.brandName || product.brand || "";
 
       const shapeMatch = selectedShapes.length === 0 || selectedShapes.includes(productShape);
       const materialMatch = selectedMaterials.length === 0 || selectedMaterials.includes(productMaterial);
+      const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(productBrand);
 
       const price = product.basePrice || product.price || 0;
       let priceMatch = true;
@@ -58,11 +66,11 @@ export default function MainPage() {
       else if (selectedPrice === "15to20") priceMatch = price >= 15 && price <= 20;
       else if (selectedPrice === "over20") priceMatch = price > 20;
 
-      return searchMatch && shapeMatch && materialMatch && priceMatch;
+      return searchMatch && shapeMatch && materialMatch && brandMatch && priceMatch;
     });
-  }, [products, selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
+  }, [products, selectedShapes, selectedMaterials, selectedBrands, selectedPrice, searchQuery]);
 
-  useEffect(() => { setCurrentPage(1); }, [selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
+  useEffect(() => { setCurrentPage(1); }, [selectedShapes, selectedMaterials, selectedBrands, selectedPrice, searchQuery]);
   useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [currentPage]);
 
   const indexOfLastProduct = currentPage * productsPerPage;
@@ -82,7 +90,7 @@ export default function MainPage() {
   return (
     <div className="main-page">
       
-      {/* 2. Thêm Banner vào đây (Ngay trên main-header) */}
+      {/* Banner */}
       <div style={{ width: '100%', marginLeft: '40px', overflow: 'hidden' }}>
         <img 
           src={bannerImg} 
@@ -93,8 +101,6 @@ export default function MainPage() {
 
       <div className="main-header">
         <h1>Khám phá bộ sưu tập kính</h1>
-          
-        
         {searchQuery && (
           <p style={{ marginTop: '10px', fontSize: '18px', fontWeight: 'bold' }}>
             Kết quả tìm kiếm cho: "<span style={{color: '#0070c9'}}>{searchQuery}</span>"
@@ -103,29 +109,85 @@ export default function MainPage() {
       </div>
 
       <div className="main-content">
-        {/* ... (Giữ nguyên phần Sidebar và Danh sách sản phẩm như cũ) ... */}
+        
+        {/* Sidebar Filter tự động render dựa trên mảng available */}
         <aside className="sidebar-filter">
           <h3>Bộ lọc sản phẩm</h3>
-          <div className="filter-group">
-            <h4>Hình dáng gọng</h4>
-            <label className="filter-label"><input type="checkbox" checked={selectedShapes.includes("Rectangle")} onChange={() => handleCheckboxChange(setSelectedShapes, selectedShapes, "Rectangle")} /> Chữ nhật (Rectangle)</label>
-            <label className="filter-label"><input type="checkbox" checked={selectedShapes.includes("Square")} onChange={() => handleCheckboxChange(setSelectedShapes, selectedShapes, "Square")} /> Vuông (Square)</label>
-            <label className="filter-label"><input type="checkbox" checked={selectedShapes.includes("Round")} onChange={() => handleCheckboxChange(setSelectedShapes, selectedShapes, "Round")} /> Tròn (Round)</label>
-          </div>
-          <div className="filter-group">
-            <h4>Chất liệu</h4>
-            <label className="filter-label"><input type="checkbox" checked={selectedMaterials.includes("Plastic")} onChange={() => handleCheckboxChange(setSelectedMaterials, selectedMaterials, "Plastic")} /> Nhựa (Plastic)</label>
-            <label className="filter-label"><input type="checkbox" checked={selectedMaterials.includes("Stainless Steel")} onChange={() => handleCheckboxChange(setSelectedMaterials, selectedMaterials, "Stainless Steel")} /> Thép không gỉ</label>
-          </div>
+
+          {/* Lọc Thương hiệu */}
+          {availableBrands.length > 0 && (
+            <div className="filter-group">
+              <h4>Thương hiệu</h4>
+              {availableBrands.map(brand => (
+                <label key={brand} className="filter-label">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedBrands.includes(brand)} 
+                    onChange={() => handleCheckboxChange(setSelectedBrands, selectedBrands, brand)} 
+                  /> 
+                  <span>{brand}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Lọc Hình dáng */}
+          {availableShapes.length > 0 && (
+            <div className="filter-group">
+              <h4>Hình dáng gọng</h4>
+              {availableShapes.map(shape => (
+                <label key={shape} className="filter-label">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedShapes.includes(shape)} 
+                    onChange={() => handleCheckboxChange(setSelectedShapes, selectedShapes, shape)} 
+                  /> 
+                  <span>{shape}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Lọc Chất liệu */}
+          {availableMaterials.length > 0 && (
+            <div className="filter-group">
+              <h4>Chất liệu</h4>
+              {availableMaterials.map(material => (
+                <label key={material} className="filter-label">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedMaterials.includes(material)} 
+                    onChange={() => handleCheckboxChange(setSelectedMaterials, selectedMaterials, material)} 
+                  /> 
+                  <span>{material}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Lọc Mức giá */}
           <div className="filter-group">
             <h4>Mức giá</h4>
-            <label className="filter-label"><input type="radio" name="price" checked={selectedPrice === "all"} onChange={() => setSelectedPrice("all")} /> Tất cả</label>
-            <label className="filter-label"><input type="radio" name="price" checked={selectedPrice === "under15"} onChange={() => setSelectedPrice("under15")} /> Dưới $15</label>
-            <label className="filter-label"><input type="radio" name="price" checked={selectedPrice === "15to20"} onChange={() => setSelectedPrice("15to20")} /> Từ $15 - $20</label>
-            <label className="filter-label"><input type="radio" name="price" checked={selectedPrice === "over20"} onChange={() => setSelectedPrice("over20")} /> Trên $20</label>
+            <label className="filter-label">
+              <input type="radio" name="price" checked={selectedPrice === "all"} onChange={() => setSelectedPrice("all")} /> 
+              <span>Tất cả</span>
+            </label>
+            <label className="filter-label">
+              <input type="radio" name="price" checked={selectedPrice === "under15"} onChange={() => setSelectedPrice("under15")} /> 
+              <span>Dưới $15</span>
+            </label>
+            <label className="filter-label">
+              <input type="radio" name="price" checked={selectedPrice === "15to20"} onChange={() => setSelectedPrice("15to20")} /> 
+              <span>Từ $15 - $20</span>
+            </label>
+            <label className="filter-label">
+              <input type="radio" name="price" checked={selectedPrice === "over20"} onChange={() => setSelectedPrice("over20")} /> 
+              <span>Trên $20</span>
+            </label>
           </div>
         </aside>
 
+        {/* Cột hiển thị sản phẩm */}
         <section className="product-section">
           {isLoading && <p style={{ textAlign: "center", fontSize: "18px", marginTop: "40px" }}>⏳ Đang tải dữ liệu từ máy chủ...</p>}
           {error && <p style={{ textAlign: "center", fontSize: "18px", marginTop: "40px", color: "red" }}>❌ {error}</p>}
