@@ -7,37 +7,24 @@ export const useCart = () => useContext(CartContext);
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (product, quantity, selectedVariant = "Mặc định") => {
+  const addToCart = (product, quantity) => {
     setCartItems((prevItems) => {
-    
+      // Kiểm tra trùng ID, cùng màu và cùng cấu hình tròng kính
       const existingItemIndex = prevItems.findIndex(
-        (item) => item.id === product.id && item.variant === selectedVariant
+        (item) => 
+          item.id === product.id && 
+          item.color === product.color &&
+          JSON.stringify(item.lensInfo) === JSON.stringify(product.lensInfo)
       );
 
       if (existingItemIndex >= 0) {
-       
         const newItems = [...prevItems];
-        newItems[existingItemIndex] = {
-          ...newItems[existingItemIndex],
-          quantity: newItems[existingItemIndex].quantity + quantity
-        };
+        newItems[existingItemIndex].quantity += quantity;
         return newItems;
       } else {
-    
-        return [
-          ...prevItems,
-          {
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.image[0], 
-            variant: selectedVariant,
-            quantity: quantity,
-          },
-        ];
+        return [...prevItems, { ...product }];
       }
     });
-     
   };
 
   const updateQty = (id, newQty) => {
@@ -47,7 +34,6 @@ export const CartProvider = ({ children }) => {
     );
   };
 
- 
   const removeItem = (id) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
