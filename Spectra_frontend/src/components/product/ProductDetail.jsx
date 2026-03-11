@@ -54,6 +54,9 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  // STATE MỚI: Lưu trữ danh sách các kính cùng tên (các phiên bản màu khác)
+  const [siblingFrames, setSiblingFrames] = useState([]);
 
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -61,13 +64,14 @@ export default function ProductDetail() {
 
   useEffect(() => {
     const fetchProductDetails = async () => {
+      setIsLoading(true); // Reset loading state khi chuyển màu
       try {
+        // 1. Lấy thông tin kính hiện tại
         const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
         if (!res.ok) throw new Error("Không thể tải thông tin sản phẩm");
         const data = await res.json();
         setProduct(data);
         
-        // Sửa logic lấy ảnh ở đây
         let fetchedImages = [];
         if (data.frameMedia && data.frameMedia.length > 0) {
           fetchedImages = data.frameMedia.map(m => m.mediaUrl).filter(Boolean);
@@ -78,6 +82,18 @@ export default function ProductDetail() {
         } else {
           setImages([fallbackImage]);
         }
+
+        // 2. Fetch TOÀN BỘ kính để tìm các phiên bản màu sắc khác (cùng frameName)
+        const resAll = await fetch(`https://myspectra.runasp.net/api/Frames`);
+        if (resAll.ok) {
+            const allData = await resAll.json();
+            const allItems = allData.items || allData || [];
+            
+            // Lọc ra những kính có cùng frameName
+            const siblings = allItems.filter(f => f.frameName === data.frameName);
+            setSiblingFrames(siblings);
+        }
+
       } catch (err) { 
         setError(err.message); 
       } finally { 
@@ -85,7 +101,7 @@ export default function ProductDetail() {
       }
     };
     fetchProductDetails();
-  }, [id]);
+  }, [id]); // Phụ thuộc vào ID để render lại khi đổi màu
 
   const handleOpenLensSelection = () => {
     setIsPreordering(false); 
@@ -155,6 +171,51 @@ export default function ProductDetail() {
           <p className="product-brand">Thương hiệu: <strong>{product.brand?.brandName || "Đang cập nhật"}</strong></p>
           <p className="product-price">${product.basePrice}</p>
 
+          {/* KHU VỰC CHỌN MÀU SẮC (CÁC PHIÊN BẢN CÙNG TÊN) */}
+          {siblingFrames.length > 0 && (
+            <div className="product-color-selector" style={{ margin: '15px 0' }}>
+              <h4 style={{ marginBottom: '10px', fontSize: '15px' }}>Màu sắc có sẵn:</h4>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                {siblingFrames.map(sibling => {
+                  const colorObj = sibling.frameColors?.[0]?.color || sibling.frameColors?.[0] || {};
+                  const siblingId = sibling.frameId || sibling.id;
+                  const isCurrentActive = siblingId === id;
+
+                  return (
+                    <button
+                      key={siblingId}
+                      onClick={() => navigate(`/products/${siblingId}`)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        cursor: isCurrentActive ? 'default' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        border: isCurrentActive ? '2px solid #2563eb' : '1px solid #d1d5db',
+                        backgroundColor: isCurrentActive ? '#eff6ff' : '#ffffff',
+                        fontWeight: isCurrentActive ? 'bold' : 'normal',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => { if (!isCurrentActive) e.currentTarget.style.borderColor = '#9ca3af'; }}
+                      onMouseLeave={(e) => { if (!isCurrentActive) e.currentTarget.style.borderColor = '#d1d5db'; }}
+                    >
+                      <span style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: colorObj.hexCode || '#ccc',
+                        borderRadius: '50%',
+                        display: 'inline-block',
+                        border: '1px solid #9ca3af'
+                      }}></span>
+                      {colorObj.colorName || 'Mặc định'}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="product-status">
             Trạng thái: <span className={inStock ? "status-in-stock" : "status-out-stock"}>
               {inStock ? `Còn hàng (${product.stockQuantity})` : "Hết hàng (Hỗ trợ Đặt trước)"}
@@ -186,26 +247,6 @@ export default function ProductDetail() {
             <h3>Chi tiết sản phẩm</h3>
             <ul style={{ listStyleType: 'none', padding: 0, lineHeight: '1.8' }}>
               <li><strong>Chất liệu:</strong> {product.material?.materialName || "Chưa cập nhật"}</li>
-              
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <strong>Màu sắc:</strong> 
-                {product.frameColors?.length > 0 ? (
-                  product.frameColors.map((c, idx) => {
-                    const colorData = c.color || c;
-                    return (
-                      <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f3f4f6', padding: '2px 8px', borderRadius: '12px', fontSize: '14px' }}>
-                        {colorData.hexCode && (
-                          <span style={{ width: '12px', height: '12px', backgroundColor: colorData.hexCode, borderRadius: '50%', border: '1px solid #d1d5db', display: 'inline-block' }}></span>
-                        )}
-                        {colorData.colorName || "Không tên"}
-                      </span>
-                    );
-                  })
-                ) : (
-                  <span>Chưa cập nhật</span>
-                )}
-              </li>
-              
               <li><strong>Kiểu dáng:</strong> {product.shape?.shapeName || product.shape || "Chưa cập nhật"}</li>
               <li><strong>Kích cỡ (Size):</strong> <span style={{ textTransform: 'capitalize' }}>{product.size || "Chưa cập nhật"}</span></li>
               
