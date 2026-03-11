@@ -1,0 +1,111 @@
+
+.order-detail-container {
+  max-width: 900px;
+  margin: 50px auto;
+  background: #fff;
+  padding: 32px 36px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+
+.order-detail-container h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+
+.order-detail-container p {
+  font-size: 15px;
+  margin: 8px 0;
+  color: #333;
+}
+
+.order-detail-container p b {
+  color: #111;
+  min-width: 160px;
+  display: inline-block;
+}
+
+
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 36px 0 16px;
+}
+
+
+.order-table-wrapper {
+  overflow-x: auto;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fafafa;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.order-table thead {
+  background: #f1f3f5;
+}
+
+.order-table th,
+.order-table td {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 14.5px;
+}
+
+.order-table th {
+  font-weight: 600;
+  color: #111;
+}
+
+.order-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.order-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.order-table tbody td {
+  color: #333;
+}
+
+
+.order-table td:last-child,
+.order-table th:last-child {
+  text-align: right;
+}
+
+
+.order-grand-total {
+  text-align: right;
+  margin-top: 24px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0070c9;
+}
+
+.payment-status {
+  font-weight: 600;
+}
+
+
+.payment-status.completed {
+  color: #2e7d32;       
+}
+
+
+.payment-status.pending {
+  color: #ed6c02;
+}
+
+
+.payment-status.failed {
+  color: #d32f2f;
+}
