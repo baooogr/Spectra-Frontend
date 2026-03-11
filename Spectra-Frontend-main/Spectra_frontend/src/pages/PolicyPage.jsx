@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
-import './PolicyPage.css'; // Import file CSS riêng
+import './PolicyPage.css';
 
 const DEFAULT_POLICIES = [
   {
-    title: "1. Chính sách mua gọng và tròng kính",
-    content: "Quý khách có thể chọn mua riêng gọng kính. Tuy nhiên, tròng kính cắt theo độ không bán rời và chỉ hỗ trợ bán kèm khi quý khách mua cùng gọng kính."
+    title: "1. Quy định về gọng và tròng kính",
+    content: "Quý khách có thể mua riêng gọng kính. Tuy nhiên, tròng kính không được bán rời mà chỉ bán kèm khi quý khách chọn mua cùng gọng kính tại cửa hàng."
   },
   {
-    title: "2. Điều kiện tiếp nhận đổi/trả",
-    content: "Chỉ áp dụng với đơn hàng đã giao thành công và sản phẩm chưa từng áp dụng đổi trả trước đó."
+    title: "2. Điều kiện đổi/trả hàng",
+    content: "Yêu cầu đổi/trả chỉ được giải quyết đối với các đơn hàng đã được giao thành công và sản phẩm chưa từng được đổi trả trước đó."
   },
   {
-    title: "3. Quy định giá trị đổi hàng",
-    content: "Sản phẩm đổi phải có giá trị bằng hoặc thấp hơn sản phẩm đã mua. Nếu muốn đổi sang sản phẩm giá trị cao hơn, vui lòng tạo đơn hàng mới."
+    title: "3. Chính sách giá trị khi đổi hàng",
+    content: "Sản phẩm đổi phải có giá trị bằng hoặc thấp hơn sản phẩm ban đầu. Nếu quý khách muốn đổi sản phẩm có giá cao hơn, vui lòng tạo đơn hàng mới."
   },
   {
     title: "4. Mức hoàn tiền khi trả hàng",
-    content: "Số tiền hoàn lại sẽ từ 30% đến 50% giá trị gốc tùy thuộc vào tình trạng thực tế của sản phẩm khi thu hồi. Không hoàn tiền 100%."
+    content: "Khi trả hàng, số tiền hoàn lại sẽ dao động từ 30% đến 50% giá trị gốc, tùy thuộc vào tình trạng sản phẩm khi chúng tôi nhận lại. Không áp dụng hoàn tiền 100%."
   }
 ];
 
@@ -27,22 +27,29 @@ export default function PolicyPage() {
   });
   const [isEditing, setIsEditing] = useState(false);
   
+  // Kiểm tra quyền từ LocalStorage
   const user = JSON.parse(localStorage.getItem("user"));
   const canEdit = user?.role === "admin" || user?.role === "manager";
 
   const handleSave = () => {
     localStorage.setItem("store_policies", JSON.stringify(policies));
     setIsEditing(false);
-    alert("Đã cập nhật chính sách cửa hàng!");
+    alert("Cập nhật chính sách thành công!");
+  };
+
+  const handleUpdate = (index, field, value) => {
+    const newPolicies = [...policies];
+    newPolicies[index][field] = value;
+    setPolicies(newPolicies);
   };
 
   return (
-    <div className="policy-container">
+    <div className="policy-wrapper">
       <div className="policy-header">
         <h1 className="policy-title">Chính Sách Mua & Đổi Trả</h1>
         {canEdit && (
           <button 
-            className={isEditing ? "btn-save" : "btn-edit"}
+            className={`btn-toggle-edit ${isEditing ? 'btn-save' : 'btn-edit'}`}
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
           >
             {isEditing ? "Lưu thay đổi" : "Chỉnh sửa nội dung"}
@@ -50,34 +57,26 @@ export default function PolicyPage() {
         )}
       </div>
 
-      <div className="policy-list">
+      <div>
         {policies.map((policy, index) => (
-          <div key={index} className="policy-item">
+          <div key={index} className="policy-card">
             {isEditing ? (
               <>
                 <input 
-                  className="policy-input"
+                  className="edit-input"
                   value={policy.title}
-                  onChange={(e) => {
-                    const newPol = [...policies];
-                    newPol[index].title = e.target.value;
-                    setPolicies(newPol);
-                  }}
+                  onChange={(e) => handleUpdate(index, 'title', e.target.value)}
                 />
                 <textarea 
-                  className="policy-textarea"
+                  className="edit-textarea"
                   value={policy.content}
-                  onChange={(e) => {
-                    const newPol = [...policies];
-                    newPol[index].content = e.target.value;
-                    setPolicies(newPol);
-                  }}
+                  onChange={(e) => handleUpdate(index, 'content', e.target.value)}
                 />
               </>
             ) : (
               <>
-                <h3 className="policy-item-title">{policy.title}</h3>
-                <p className="policy-item-content">{policy.content}</p>
+                <h3>{policy.title}</h3>
+                <p>{policy.content}</p>
               </>
             )}
           </div>
