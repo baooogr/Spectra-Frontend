@@ -1,0 +1,85 @@
+.policy-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.policy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 20px;
+}
+
+.policy-title {
+  font-size: 28px;
+  color: #111827;
+  margin: 0;
+}
+
+.btn-edit {
+  padding: 8px 16px;
+  background-color: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-save {
+  padding: 8px 16px;
+  background-color: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.policy-list {
+  margin-top: 30px;
+}
+
+.policy-item {
+  margin-bottom: 25px;
+  padding: 20px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+}
+
+.policy-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.policy-textarea {
+  width: 100%;
+  padding: 10px;
+  min-height: 80px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.policy-item-title {
+  margin: 0 0 10px 0;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.policy-item-content {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
+}
