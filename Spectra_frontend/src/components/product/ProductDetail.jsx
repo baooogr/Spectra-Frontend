@@ -55,16 +55,15 @@ export default function ProductDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   
-  // STATE MỚI: Lưu trữ danh sách các kính cùng tên (các phiên bản màu khác)
+  // Lưu trữ danh sách các kính cùng tên (các phiên bản màu khác)
   const [siblingFrames, setSiblingFrames] = useState([]);
 
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [isPreordering, setIsPreordering] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
-      setIsLoading(true); // Reset loading state khi chuyển màu
+      setIsLoading(true); 
       try {
         // 1. Lấy thông tin kính hiện tại
         const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
@@ -88,8 +87,6 @@ export default function ProductDetail() {
         if (resAll.ok) {
             const allData = await resAll.json();
             const allItems = allData.items || allData || [];
-            
-            // Lọc ra những kính có cùng frameName
             const siblings = allItems.filter(f => f.frameName === data.frameName);
             setSiblingFrames(siblings);
         }
@@ -101,15 +98,9 @@ export default function ProductDetail() {
       }
     };
     fetchProductDetails();
-  }, [id]); // Phụ thuộc vào ID để render lại khi đổi màu
+  }, [id]);
 
   const handleOpenLensSelection = () => {
-    setIsPreordering(false); 
-    setIsLensModalOpen(true);
-  };
-
-  const handleOpenPreorderSelection = () => {
-    setIsPreordering(true); 
     setIsLensModalOpen(true);
   };
 
@@ -124,20 +115,9 @@ export default function ProductDetail() {
       lensInfo: cartDataOptions.lensIncluded ? cartDataOptions.lensDetails : null
     };
 
-    if (isPreordering) {
-      setIsLensModalOpen(false); 
-      const token = JSON.parse(localStorage.getItem("user"))?.token;
-      if (!token) {
-        alert("Bạn cần đăng nhập để thực hiện Đặt Trước (Pre-order).");
-        navigate("/login");
-        return;
-      }
-      navigate("/checkout-preorder", { state: { preorderItem: itemData } });
-    } else {
-      addToCart(itemData, quantity); 
-      setIsLensModalOpen(false); 
-      setIsSuccessModalOpen(true); 
-    }
+    addToCart(itemData, quantity); 
+    setIsLensModalOpen(false); 
+    setIsSuccessModalOpen(true); 
   };
 
   if (isLoading) return <p className="center-msg" style={{color: "#666", textAlign: "center", padding: "50px"}}>⏳ Đang tải thông tin sản phẩm...</p>;
@@ -171,7 +151,7 @@ export default function ProductDetail() {
           <p className="product-brand">Thương hiệu: <strong>{product.brand?.brandName || "Đang cập nhật"}</strong></p>
           <p className="product-price">${product.basePrice}</p>
 
-          {/* KHU VỰC CHỌN MÀU SẮC (CÁC PHIÊN BẢN CÙNG TÊN) */}
+          {/* KHU VỰC CHỌN MÀU SẮC */}
           {siblingFrames.length > 0 && (
             <div className="product-color-selector" style={{ margin: '15px 0' }}>
               <h4 style={{ marginBottom: '10px', fontSize: '15px' }}>Màu sắc có sẵn:</h4>
@@ -216,29 +196,28 @@ export default function ProductDetail() {
             </div>
           )}
 
+          {/* DÒNG TRẠNG THÁI SẢN PHẨM */}
           <div className="product-status">
-            Trạng thái: <span className={inStock ? "status-in-stock" : "status-out-stock"}>
-              {inStock ? `Còn hàng (${product.stockQuantity})` : "Hết hàng (Hỗ trợ Đặt trước)"}
+            Trạng thái: <span className={inStock ? "status-in-stock" : "status-out-stock"} style={{ color: inStock ? 'inherit' : '#ef4444', fontWeight: 'bold' }}>
+              {inStock ? `Còn hàng (${product.stockQuantity})` : "Hết hàng (Out of Stock)"}
             </span>
           </div>
 
           <div className="quantity-wrapper">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty">-</button>
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty" disabled={!inStock}>-</button>
             <span className="qty-value">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={inStock && quantity >= product.stockQuantity}>+</button>
+            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!inStock || quantity >= product.stockQuantity}>+</button>
           </div>
 
+          {/* NÚT THÊM VÀO GIỎ HÀNG VÀ OUT OF STOCK */}
           {inStock ? (
              <button onClick={handleOpenLensSelection} className="btn-add-cart active">
                🛒 Thêm vào giỏ hàng
              </button>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-              <button disabled className="btn-add-cart disabled" style={{ opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#9ca3af' }}>
-                🚫 Out of Stock
-              </button>
-              <button onClick={handleOpenPreorderSelection} className="btn-add-cart active" style={{ backgroundColor: '#2563eb' }}>
-                🚀 Đặt Trước (Pre-Order)
+            <div style={{ marginTop: '20px' }}>
+              <button disabled className="btn-add-cart disabled" style={{ opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#9ca3af', width: '100%', padding: '15px', borderRadius: '8px', color: 'white', fontWeight: 'bold', border: 'none' }}>
+                🚫 Out of Stock (Hết hàng)
               </button>
             </div>
           )}
