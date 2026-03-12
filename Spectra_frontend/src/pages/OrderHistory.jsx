@@ -13,6 +13,14 @@ export default function OrderHistory() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // "all" | "orders" | "preorders"
 
+  // ⚡ THÊM HÀM FORMAT TIỀN TỆ VÀO ĐÂY
+  const EXCHANGE_RATE = 26250;
+  const formatPrice = (n) => {
+    const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n);
+    const vnd = new Intl.NumberFormat("vi-VN").format(n * EXCHANGE_RATE) + " VND";
+    return `${usd} (${vnd})`;
+  };
+
   useEffect(() => {
     const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
     if (!token) {
@@ -160,8 +168,9 @@ export default function OrderHistory() {
           <div>
             <p style={{ margin: "0 0 4px 0" }}>
               Tổng tiền:{" "}
+              {/* ⚡ ĐÃ SỬA: Gọi hàm formatPrice cho đơn hàng thường */}
               <strong style={{ color: "#111827", fontSize: "18px" }}>
-                ${order.totalAmount || order.totalPrice || 0}
+                {formatPrice(order.totalAmount || order.totalPrice || 0)}
               </strong>
             </p>
             <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
@@ -303,9 +312,9 @@ export default function OrderHistory() {
           <div>
             <p style={{ margin: "0 0 4px 0" }}>
               Tổng tiền:{" "}
-              {/* Hiển thị giá lấy được từ Payment hoặc tính toán */}
+              {/* ⚡ ĐÃ SỬA: Gọi hàm formatPrice cho đơn Preorder */}
               <strong style={{ color: "#1e40af", fontSize: "18px" }}>
-                ${finalAmount}
+                {formatPrice(finalAmount || 0)}
               </strong>
             </p>
             {totalQty > 0 && (
