@@ -55,8 +55,8 @@ export default function ProductDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Lưu trữ danh sách các kính cùng tên (các phiên bản màu khác)
-  const [siblingFrames, setSiblingFrames] = useState([]);
+  // STATE MỚI: Lưu màu sắc hiện tại khách đang chọn
+  const [selectedColor, setSelectedColor] = useState(null);
 
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -65,7 +65,6 @@ export default function ProductDetail() {
     const fetchProductDetails = async () => {
       setIsLoading(true);
       try {
-        // 1. Lấy thông tin kính hiện tại
         const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
         if (!res.ok) throw new Error("Không thể tải thông tin sản phẩm");
         const data = await res.json();
@@ -82,13 +81,9 @@ export default function ProductDetail() {
           setImages([fallbackImage]);
         }
 
-        // 2. Fetch TOÀN BỘ kính để tìm các phiên bản màu sắc khác (cùng frameName)
-        const resAll = await fetch(`https://myspectra.runasp.net/api/Frames`);
-        if (resAll.ok) {
-          const allData = await resAll.json();
-          const allItems = allData.items || allData || [];
-          const siblings = allItems.filter(f => f.frameName === data.frameName);
-          setSiblingFrames(siblings);
+        // Tự động chọn màu sắc đầu tiên (nếu có) thay vì dùng [0] cứng ngắc
+        if (data.frameColors && data.frameColors.length > 0) {
+          setSelectedColor(data.frameColors[0]);
         }
 
       } catch (err) {
@@ -104,31 +99,31 @@ export default function ProductDetail() {
     setIsLensModalOpen(true);
   };
 
-  // components/product/ProductDetail.jsx
   const handleConfirmAddToCart = (cartDataOptions) => {
-    // Lấy giá từ API: Lens Type dùng basePrice, Lens Feature dùng extraPrice
     const tPrice = cartDataOptions.lensDetails?.lensType?.basePrice || 0;
     const fPrice = cartDataOptions.lensDetails?.lensFeature?.extraPrice || 0;
 
-    // Lấy màu sắc an toàn từ dữ liệu gọng kính
-    const itemColor = product.frameColors?.[0]?.color?.colorName || 
-                      product.frameColors?.[0]?.colorName || 
-                      "Mặc định";
+    // SỬA: Lấy thông tin màu sắc từ selectedColor (do người dùng click chọn trên UI)
+    const colorObj = selectedColor?.color || selectedColor || {};
+    const itemColor = colorObj.colorName || "Mặc định";
+    const itemColorId = colorObj.id || colorObj.colorId || selectedColor?.colorId || null;
 
     const itemData = {
       id: product.id || product.frameId,
       name: product.frameName,
-      price: cartDataOptions.finalPrice, // Tổng giá cuối cùng (Gọng + Tròng + Tính năng)
+      price: cartDataOptions.finalPrice,
       image: images[0],
-      color: itemColor,
+      color: itemColor, 
+      colorId: itemColorId, 
       quantity: quantity,
       lensInfo: cartDataOptions.lensIncluded ? {
-        type: cartDataOptions.lensDetails.lensType?.typeName || 
-              cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
+        type: cartDataOptions.lensDetails.lensType?.typeName || cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
         typePrice: tPrice, 
-        feature: cartDataOptions.lensDetails.lensFeature?.featureSpecification || 
-                 cartDataOptions.lensDetails.lensFeature?.featureName || "N/A",
-        featurePrice: fPrice 
+        feature: cartDataOptions.lensDetails.lensFeature?.featureSpecification || cartDataOptions.lensDetails.lensFeature?.featureName || "N/A",
+        featureId: cartDataOptions.lensDetails.lensFeature?.id || cartDataOptions.lensDetails.lensFeature?.featureId,
+        typeId: cartDataOptions.lensDetails.lensType?.id || cartDataOptions.lensDetails.lensType?.lensTypeId,
+        featurePrice: fPrice, 
+        prescriptionId: cartDataOptions.lensDetails?.prescriptionId || cartDataOptions.prescriptionId || null
       } : null
     };
 
@@ -138,7 +133,6 @@ export default function ProductDetail() {
   };
 
   if (isLoading) return <p className="center-msg" style={{ color: "#666", textAlign: "center", padding: "50px" }}>⏳ Đang tải thông tin sản phẩm...</p>;
-
   if (error || !product) return (
     <div className="center-msg" style={{ textAlign: "center", padding: "50px" }}>
       <h2 className="error-text" style={{ color: "red" }}>❌ {error}</h2>
@@ -146,7 +140,9 @@ export default function ProductDetail() {
     </div>
   );
 
-  const inStock = product.stockQuantity > 0;
+  // SỬA: Tính toán tồn kho dựa trên MÀU đang được chọn
+  const currentStock = selectedColor ? (selectedColor.stockQuantity || 0) : (product.stockQuantity || 0);
+  const inStock = currentStock > 0;
 
   return (
     <>
@@ -164,24 +160,26 @@ export default function ProductDetail() {
 
         <div className="product-info-col">
           <h2 className="product-title">{product.frameName}</h2>
-
           <p className="product-brand">Thương hiệu: <strong>{product.brand?.brandName || "Đang cập nhật"}</strong></p>
           <p className="product-price">${product.basePrice}</p>
 
-          {/* KHU VỰC CHỌN MÀU SẮC */}
-          {siblingFrames.length > 0 && (
+          {/* SỬA: Vòng lặp màu sắc nội bộ product.frameColors thay vì siblingFrames */}
+          {product.frameColors && product.frameColors.length > 0 && (
             <div className="product-color-selector" style={{ margin: '15px 0' }}>
               <h4 style={{ marginBottom: '10px', fontSize: '15px' }}>Màu sắc có sẵn:</h4>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                {siblingFrames.map(sibling => {
-                  const colorObj = sibling.frameColors?.[0]?.color || sibling.frameColors?.[0] || {};
-                  const siblingId = sibling.frameId || sibling.id;
-                  const isCurrentActive = siblingId === id;
-
+                {product.frameColors.map(fc => {
+                  const colorObj = fc.color || {};
+                  const fcId = fc.colorId || colorObj.colorId;
+                  const isCurrentActive = selectedColor && (selectedColor.colorId === fcId);
+                  
                   return (
                     <button
-                      key={siblingId}
-                      onClick={() => navigate(`/products/${siblingId}`)}
+                      key={fcId}
+                      onClick={() => {
+                        setSelectedColor(fc);
+                        setQuantity(1); // Reset số lượng về 1 khi chuyển màu
+                      }}
                       style={{
                         padding: '8px 16px',
                         borderRadius: '6px',
@@ -192,7 +190,8 @@ export default function ProductDetail() {
                         border: isCurrentActive ? '2px solid #2563eb' : '1px solid #d1d5db',
                         backgroundColor: isCurrentActive ? '#eff6ff' : '#ffffff',
                         fontWeight: isCurrentActive ? 'bold' : 'normal',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s',
+                        opacity: fc.stockQuantity <= 0 ? 0.6 : 1 // Làm mờ nhẹ nếu hết hàng
                       }}
                       onMouseEnter={(e) => { if (!isCurrentActive) e.currentTarget.style.borderColor = '#9ca3af'; }}
                       onMouseLeave={(e) => { if (!isCurrentActive) e.currentTarget.style.borderColor = '#d1d5db'; }}
@@ -205,7 +204,8 @@ export default function ProductDetail() {
                         display: 'inline-block',
                         border: '1px solid #9ca3af'
                       }}></span>
-                      {colorObj.colorName || 'Mặc định'}
+                      {colorObj.colorName || 'Màu sắc'} 
+                      {fc.stockQuantity <= 0 && <span style={{fontSize: '11px', color: '#ef4444'}}> (Hết hàng)</span>}
                     </button>
                   );
                 })}
@@ -213,17 +213,18 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* DÒNG TRẠNG THÁI SẢN PHẨM */}
+          {/* DÒNG TRẠNG THÁI SẢN PHẨM THEO MÀU ĐANG CHỌN */}
           <div className="product-status">
             Trạng thái: <span className={inStock ? "status-in-stock" : "status-out-stock"} style={{ color: inStock ? 'inherit' : '#ef4444', fontWeight: 'bold' }}>
-              {inStock ? `Còn hàng (${product.stockQuantity})` : "Hết hàng (Out of Stock)"}
+              {inStock ? `Còn hàng (${currentStock})` : "Hết hàng (Out of Stock)"}
             </span>
           </div>
 
           <div className="quantity-wrapper">
             <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty" disabled={!inStock}>-</button>
             <span className="qty-value">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!inStock || quantity >= product.stockQuantity}>+</button>
+            {/* Chặn không cho thêm vào giỏ hàng quá số lượng tồn kho của màu */}
+            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!inStock || quantity >= currentStock}>+</button>
           </div>
 
           {/* NÚT THÊM VÀO GIỎ HÀNG VÀ OUT OF STOCK */}
