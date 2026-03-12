@@ -13,7 +13,10 @@ export default function OrderDetail() {
 
   useEffect(() => {
     const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
-    if (!token) { navigate("/login"); return; }
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
     const fetchOrderDetail = async () => {
       try {
@@ -23,6 +26,7 @@ export default function OrderDetail() {
             Authorization: `Bearer ${token}`,
           },
         });
+
         if (res.ok) {
           const data = await res.json();
           setOrder(data);
@@ -41,72 +45,127 @@ export default function OrderDetail() {
     fetchOrderDetail();
   }, [id, user, navigate]);
 
-  if (isLoading)
-    return <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>⏳ Đang tải chi tiết đơn hàng...</div>;
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
+        ⏳ Đang tải chi tiết đơn hàng...
+      </div>
+    );
+  }
 
-  if (error || !order)
+  if (error || !order) {
     return (
       <div style={{ textAlign: "center", padding: "60px" }}>
         <h2 style={{ color: "#dc2626" }}>{error || "Không tìm thấy đơn hàng"}</h2>
-        <Link to="/orders" style={{ color: "#3b82f6" }}>← Quay lại lịch sử mua hàng</Link>
+        <Link to="/orders" style={{ color: "#3b82f6" }}>
+          ← Quay lại lịch sử mua hàng
+        </Link>
       </div>
     );
+  }
 
   const formatUSD = (n) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n || 0);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(n || 0);
 
   const getStatusBadge = (status) => {
     const s = status?.toLowerCase() || "";
     const map = {
-      pending:    { text: "Chờ xác nhận",   color: "#d97706", bg: "#fef3c7" },
-      confirmed:  { text: "Đã xác nhận",    color: "#059669", bg: "#d1fae5" },
-      processing: { text: "Đang xử lý",     color: "#4338ca", bg: "#ede9fe" },
-      shipped:    { text: "Đang giao hàng", color: "#7e22ce", bg: "#f3e8ff" },
+      pending: { text: "Chờ xác nhận", color: "#d97706", bg: "#fef3c7" },
+      confirmed: { text: "Đã xác nhận", color: "#059669", bg: "#d1fae5" },
+      processing: { text: "Đang xử lý", color: "#4338ca", bg: "#ede9fe" },
+      shipped: { text: "Đang giao hàng", color: "#7e22ce", bg: "#f3e8ff" },
       delivering: { text: "Đang giao hàng", color: "#7e22ce", bg: "#f3e8ff" },
-      delivered:  { text: "Hoàn thành",     color: "#059669", bg: "#d1fae5" },
-      completed:  { text: "Hoàn thành",     color: "#059669", bg: "#d1fae5" },
-      cancelled:  { text: "Đã huỷ",         color: "#dc2626", bg: "#fee2e2" },
+      delivered: { text: "Hoàn thành", color: "#059669", bg: "#d1fae5" },
+      completed: { text: "Hoàn thành", color: "#059669", bg: "#d1fae5" },
+      cancelled: { text: "Đã huỷ", color: "#dc2626", bg: "#fee2e2" },
     };
-    const s2 = map[s] || { text: status || "Không rõ", color: "#6b7280", bg: "#f3f4f6" };
+
+    const s2 = map[s] || {
+      text: status || "Không rõ",
+      color: "#6b7280",
+      bg: "#f3f4f6",
+    };
+
     return (
-      <span style={{ fontWeight: "bold", color: s2.color, backgroundColor: s2.bg, padding: "4px 14px", borderRadius: "20px", fontSize: "14px" }}>
+      <span
+        style={{
+          fontWeight: "bold",
+          color: s2.color,
+          backgroundColor: s2.bg,
+          padding: "4px 14px",
+          borderRadius: "20px",
+          fontSize: "14px",
+        }}
+      >
         {s2.text}
       </span>
     );
   };
 
-  // === FIELDS XÁC NHẬN TỪ BACKEND RESPONSE ===
-  // order.shippingAddress  ← địa chỉ nhập lúc checkout ✅
-  // order.user.fullName    ← tên người dùng
-  // order.user.phone       ← SĐT profile (backend không lưu SĐT checkout riêng)
-  // order.orderItems[]     ← danh sách sản phẩm
-  // item.frame.frameName   ← tên kính
-  // item.frame.color       ← màu kính
-  // item.orderPrice        ← giá tại thời điểm mua
-  // item.quantity          ← số lượng
-
-  const receiverName    = order.user?.fullName   || "—";
-  const receiverPhone   = order.user?.phone      || "—";
-  const shippingAddress = order.shippingAddress  || "—";
-  const orderNote       = order.note             || "Không có";
+  const receiverName = order.user?.fullName || "—";
+  const receiverPhone = order.user?.phone || "—";
+  const shippingAddress = order.shippingAddress || "—";
+  const orderNote = order.note || "Không có";
 
   const paymentMethodLabel =
-    order.paymentMethod === "COD"   ? "Thanh toán khi nhận hàng (COD)"
-    : order.paymentMethod === "VNPAY" ? "VNPay"
-    : order.paymentMethod           || "—";
+    order.paymentMethod === "COD"
+      ? "Thanh toán khi nhận hàng (COD)"
+      : order.paymentMethod === "VNPAY"
+      ? "VNPay"
+      : order.paymentMethod || "—";
 
   const itemsList = order.orderItems?.filter(Boolean) || [];
 
+  const canComplaint = ["delivered", "completed"].includes(
+    (order.status || "").toLowerCase()
+  );
+
   return (
-    <div style={{ maxWidth: "860px", margin: "40px auto", padding: "20px", fontFamily: "sans-serif" }}>
-      <Link to="/orders" style={{ color: "#6b7280", textDecoration: "none", fontSize: "14px", display: "inline-block", marginBottom: "20px" }}>
+    <div
+      style={{
+        maxWidth: "860px",
+        margin: "40px auto",
+        padding: "20px",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <Link
+        to="/orders"
+        style={{
+          color: "#6b7280",
+          textDecoration: "none",
+          fontSize: "14px",
+          display: "inline-block",
+          marginBottom: "20px",
+        }}
+      >
         ← Lịch sử mua hàng
       </Link>
 
-      <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "12px", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
-
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #f3f4f6", paddingBottom: "18px", marginBottom: "24px", flexWrap: "wrap", gap: "10px" }}>
+      <div
+        style={{
+          backgroundColor: "white",
+          padding: "30px",
+          borderRadius: "12px",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            borderBottom: "2px solid #f3f4f6",
+            paddingBottom: "18px",
+            marginBottom: "24px",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
           <div>
             <h2 style={{ margin: 0, fontSize: "22px" }}>Chi Tiết Đơn Hàng</h2>
             <p style={{ margin: "6px 0 0", color: "#6b7280", fontSize: "14px" }}>
@@ -116,32 +175,72 @@ export default function OrderDetail() {
           {getStatusBadge(order.status)}
         </div>
 
-        {/* 2 cột thông tin */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "28px" }}>
-
-          {/* Thông tin đơn hàng */}
-          <div style={{ backgroundColor: "#f9fafb", padding: "18px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-            <h4 style={{ marginTop: 0, marginBottom: "12px", color: "#374151", fontSize: "15px", borderBottom: "1px solid #e5e7eb", paddingBottom: "8px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "16px",
+            marginBottom: "28px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#f9fafb",
+              padding: "18px",
+              borderRadius: "10px",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <h4
+              style={{
+                marginTop: 0,
+                marginBottom: "12px",
+                color: "#374151",
+                fontSize: "15px",
+                borderBottom: "1px solid #e5e7eb",
+                paddingBottom: "8px",
+              }}
+            >
               Thông tin đơn hàng
             </h4>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
               <b>Ngày đặt:</b>{" "}
-              {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}
+              {order.createdAt
+                ? new Date(order.createdAt).toLocaleString("vi-VN")
+                : "—"}
             </p>
             {order.arrivalDate && (
               <p style={{ margin: "6px 0", fontSize: "14px" }}>
-                <b>Ngày nhận hàng:</b> {new Date(order.arrivalDate).toLocaleString("vi-VN")}
+                <b>Ngày nhận hàng:</b>{" "}
+                {new Date(order.arrivalDate).toLocaleString("vi-VN")}
               </p>
             )}
-           
+            <p style={{ margin: "6px 0", fontSize: "14px" }}>
+              <b>Phương thức thanh toán:</b> {paymentMethodLabel}
+            </p>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
               <b>Ghi chú:</b> {orderNote}
             </p>
           </div>
 
-          {/* Thông tin giao hàng */}
-          <div style={{ backgroundColor: "#f0fdf4", padding: "18px", borderRadius: "10px", border: "1px solid #bbf7d0" }}>
-            <h4 style={{ marginTop: 0, marginBottom: "12px", color: "#374151", fontSize: "15px", borderBottom: "1px solid #bbf7d0", paddingBottom: "8px" }}>
+          <div
+            style={{
+              backgroundColor: "#f0fdf4",
+              padding: "18px",
+              borderRadius: "10px",
+              border: "1px solid #bbf7d0",
+            }}
+          >
+            <h4
+              style={{
+                marginTop: 0,
+                marginBottom: "12px",
+                color: "#374151",
+                fontSize: "15px",
+                borderBottom: "1px solid #bbf7d0",
+                paddingBottom: "8px",
+              }}
+            >
               Thông tin giao hàng
             </h4>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
@@ -156,58 +255,202 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {/* Danh sách sản phẩm */}
-        <h3 style={{ borderBottom: "1px solid #f3f4f6", paddingBottom: "10px", marginBottom: "16px", fontSize: "17px" }}>
+        <h3
+          style={{
+            borderBottom: "1px solid #f3f4f6",
+            paddingBottom: "10px",
+            marginBottom: "16px",
+            fontSize: "17px",
+          }}
+        >
           Sản phẩm đã mua
         </h3>
 
+        {!canComplaint && (
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "12px 16px",
+              borderRadius: "8px",
+              backgroundColor: "#eff6ff",
+              color: "#1d4ed8",
+              fontSize: "14px",
+            }}
+          >
+            Complaint chỉ khả dụng khi đơn hàng đã hoàn thành.
+          </div>
+        )}
+
         {itemsList.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#9ca3af", fontStyle: "italic", padding: "20px 0" }}>
+          <p
+            style={{
+              textAlign: "center",
+              color: "#9ca3af",
+              fontStyle: "italic",
+              padding: "20px 0",
+            }}
+          >
             Không có thông tin sản phẩm.
           </p>
         ) : (
           <div style={{ marginBottom: "24px" }}>
             {itemsList.map((item, index) => {
-              const frameName   = item.frame?.frameName || "Gọng kính";
-              const frameColor  = item.selectedColor    || item.frame?.color || null;
-              const qty         = item.quantity         || 1;
-              const unitPrice   = item.orderPrice       || 0;
-              const lensType    = item.lensType?.lensSpecification || null;
+              const frameName = item.frame?.frameName || "Gọng kính";
+              const frameColor = item.selectedColor || item.frame?.color || null;
+              const qty = item.quantity || 1;
+              const unitPrice = item.orderPrice || 0;
+              const lensType = item.lensType?.lensSpecification || null;
               const lensFeature = item.feature?.featureSpecification || null;
               const prescriptionUrl = item.prescription?.imageUrl || null;
-              const brand       = item.frame?.brand || null;
+              const brand = item.frame?.brand || null;
 
               return (
                 <div
                   key={item.orderItemId || index}
-                  style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "16px 0", borderBottom: "1px dashed #e5e7eb", gap: "12px" }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    padding: "16px 0",
+                    borderBottom: "1px dashed #e5e7eb",
+                    gap: "12px",
+                  }}
                 >
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: "16px" }}>{frameName}</p>
-                    {brand && <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#6b7280" }}>Thương hiệu: {brand}</p>}
+                    <p
+                      style={{
+                        margin: "0 0 4px 0",
+                        fontWeight: "bold",
+                        fontSize: "16px",
+                      }}
+                    >
+                      {frameName}
+                    </p>
+
+                    {brand && (
+                      <p
+                        style={{
+                          margin: "0 0 4px 0",
+                          fontSize: "13px",
+                          color: "#6b7280",
+                        }}
+                      >
+                        Thương hiệu: {brand}
+                      </p>
+                    )}
+
                     {frameColor && (
-                      <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#6b7280" }}>
+                      <p
+                        style={{
+                          margin: "0 0 4px 0",
+                          fontSize: "13px",
+                          color: "#6b7280",
+                        }}
+                      >
                         Màu sắc: <b>{frameColor}</b>
                       </p>
                     )}
+
                     {(lensType || lensFeature) && (
-                      <div style={{ backgroundColor: "#ede9fe", padding: "6px 12px", borderRadius: "6px", border: "1px solid #ddd6fe", margin: "6px 0", display: "inline-block" }}>
-                        <p style={{ margin: 0, fontSize: "13px", color: "#4338ca", fontWeight: "500" }}>
-                          Tròng kính: {lensType}{lensFeature ? ` — ${lensFeature}` : ""}
+                      <div
+                        style={{
+                          backgroundColor: "#ede9fe",
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid #ddd6fe",
+                          margin: "6px 0",
+                          display: "inline-block",
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "13px",
+                            color: "#4338ca",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Tròng kính: {lensType}
+                          {lensFeature ? ` — ${lensFeature}` : ""}
                         </p>
                       </div>
                     )}
-                    <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#374151" }}>
+
+                    <p
+                      style={{
+                        margin: "4px 0 0",
+                        fontSize: "13px",
+                        color: "#374151",
+                      }}
+                    >
                       Số lượng: <b>x{qty}</b>
                     </p>
+
                     {prescriptionUrl && (
-                      <a href={prescriptionUrl} target="_blank" rel="noreferrer"
-                        style={{ display: "inline-block", marginTop: "6px", fontSize: "13px", color: "#b91c1c", fontWeight: "bold", textDecoration: "underline" }}>
+                      <a
+                        href={prescriptionUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          display: "inline-block",
+                          marginTop: "6px",
+                          fontSize: "13px",
+                          color: "#b91c1c",
+                          fontWeight: "bold",
+                          textDecoration: "underline",
+                        }}
+                      >
                         👁️ Xem Toa thuốc / Đơn kính
                       </a>
                     )}
+
+                    {item.orderItemId && canComplaint && (
+                      <div style={{ marginTop: "12px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        <button
+                          onClick={() =>
+                            navigate(`/complaint?orderItemId=${item.orderItemId}`)
+                          }
+                          style={{
+                            padding: "10px 16px",
+                            border: "none",
+                            borderRadius: "8px",
+                            backgroundColor: "#2563eb",
+                            color: "#fff",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                          }}
+                        >
+                          Gửi khiếu nại
+                        </button>
+
+                        <button
+                          onClick={() => navigate("/complaint-history")}
+                          style={{
+                            padding: "10px 16px",
+                            border: "1px solid #d1d5db",
+                            borderRadius: "8px",
+                            backgroundColor: "#fff",
+                            color: "#111827",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                          }}
+                        >
+                          Lịch sử khiếu nại
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontWeight: "bold", fontSize: "16px", color: "#059669", whiteSpace: "nowrap" }}>
+
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "16px",
+                      color: "#059669",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {formatUSD(unitPrice)}
                   </div>
                 </div>
@@ -216,8 +459,16 @@ export default function OrderDetail() {
           </div>
         )}
 
-        {/* Tổng cộng */}
-        <div style={{ textAlign: "right", fontSize: "20px", backgroundColor: "#f0fdf4", padding: "16px 20px", borderRadius: "8px", border: "1px solid #bbf7d0" }}>
+        <div
+          style={{
+            textAlign: "right",
+            fontSize: "20px",
+            backgroundColor: "#f0fdf4",
+            padding: "16px 20px",
+            borderRadius: "8px",
+            border: "1px solid #bbf7d0",
+          }}
+        >
           Tổng cộng:{" "}
           <strong style={{ color: "#111827", fontSize: "26px" }}>
             {formatUSD(order.totalAmount)}

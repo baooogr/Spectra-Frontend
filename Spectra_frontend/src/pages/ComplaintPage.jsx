@@ -1,95 +1,60 @@
-import React, { useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 import "./ComplaintPage.css";
 
 export default function ComplaintPage() {
-  // Giả lập dữ liệu userProfile lấy từ hệ thống
-  const userProfile = {
-    fullName: "Nguyễn Văn A",
-    phone: "0901234567",
-    email: "nguyenvana@gmail.com",
-  };
-const handleCreateComplaint = async (complaintData) => {
-  setErrorMsg("");
-  setSuccessMsg("");
-  setIsLoading(true);
+  const navigate = useNavigate();
+  const { user } = useContext(UserContext);
+  const [searchParams] = useSearchParams();
 
-  try {
-    const token = localStorage.getItem("token");
-
-    const response = await fetch("https://myspectra.runasp.net/api/Complaints", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        orderItemId: complaintData.orderItemId,
-        requestType: complaintData.requestType,
-        reason: complaintData.reason,
-        mediaUrl: complaintData.mediaUrl || "",
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setSuccessMsg("Gửi khiếu nại thành công!");
-      console.log("Complaint created:", data);
-      return data;
-    } else {
-      setErrorMsg(data.message || "Gửi khiếu nại thất bại!");
-      return null;
-    }
-  } catch (error) {
-    setErrorMsg("Không thể kết nối đến Server.");
-    return null;
-  } finally {
-    setIsLoading(false);
-  }
-};
-  // Giả lập danh sách đơn hàng của customer
-  const orders = [
-    {
-      id: "ORD001",
-      date: "2026-03-01",
-      total: 450000,
-      items: "Áo thun nam, Quần jeans",
-    },
-    {
-      id: "ORD002",
-      date: "2026-03-05",
-      total: 780000,
-      items: "Giày sneaker",
-    },
-    {
-      id: "ORD003",
-      date: "2026-03-09",
-      total: 320000,
-      items: "Túi xách mini",
-    },
-  ];
-
-  const complaintOptions = [
-    "Sản phẩm bị lỗi",
-    "Giao sai sản phẩm",
-    "Thiếu sản phẩm",
-    "Chất lượng không như mô tả",
-    "Giao hàng chậm",
-    "Khác",
-  ];
+  const orderItemIdFromUrl = searchParams.get("orderItemId") || "";
 
   const [formData, setFormData] = useState({
-    orderId: "",
-    complaintType: "",
-    otherComplaint: "",
+    orderItemId: orderItemIdFromUrl,
+    requestType: "complaint",
+    reason: "",
+    mediaUrl: "",
   });
 
   const [errors, setErrors] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const selectedOrder = useMemo(() => {
-    return orders.find((order) => order.id === formData.orderId);
-  }, [formData.orderId]);
+  const requestTypes = useMemo(
+    () => [
+      { value: "return", label: "Trả hàng" },
+      { value: "exchange", label: "Đổi hàng" },
+      { value: "refund", label: "Hoàn tiền" },
+      { value: "complaint", label: "Khiếu nại" },
+      { value: "warranty", label: "Bảo hành" },
+    ],
+    []
+  );
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.orderItemId.trim()) {
+      newErrors.orderItemId = "Thiếu orderItemId. Vui lòng chọn sản phẩm từ đơn hàng.";
+    }
+
+    if (!formData.requestType.trim()) {
+      newErrors.requestType = "Vui lòng chọn loại yêu cầu.";
+    } else {
+      const validTypes = ["return", "exchange", "refund", "complaint", "warranty"];
+      if (!validTypes.includes(formData.requestType)) {
+        newErrors.requestType = "Loại yêu cầu không hợp lệ.";
+      }
+    }
+
+    if (!formData.reason.trim()) {
+      newErrors.reason = "Vui lòng nhập lý do khiếu nại.";
+    }
+
+    return newErrors;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -97,205 +62,175 @@ const handleCreateComplaint = async (complaintData) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "complaintType" && value !== "Khác"
-        ? { otherComplaint: "" }
-        : {}),
     }));
 
     setErrors((prev) => ({
       ...prev,
       [name]: "",
     }));
+
+    setErrorMsg("");
+    setSuccessMsg("");
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.orderId) {
-      newErrors.orderId = "Vui lòng chọn đơn hàng muốn khiếu nại.";
-    }
-
-    if (!userProfile.email || userProfile.email.trim() === "") {
-      newErrors.email =
-        "Email là bắt buộc. Vui lòng cập nhật trong User Profile.";
-    }
-
-    if (!formData.complaintType) {
-      newErrors.complaintType = "Vui lòng chọn nội dung khiếu nại.";
-    }
-
-    if (
-      formData.complaintType === "Khác" &&
-      formData.otherComplaint.trim() === ""
-    ) {
-      newErrors.otherComplaint = "Vui lòng nhập nội dung khiếu nại khác.";
-    }
-
-    return newErrors;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
     const newErrors = validateForm();
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) return;
 
-    const payload = {
-      orderId: formData.orderId,
-      customerInfo: {
-        fullName: userProfile.fullName,
-        phone: userProfile.phone,
-        email: userProfile.email,
-      },
-      complaintType: formData.complaintType,
-      complaintContent:
-        formData.complaintType === "Khác"
-          ? formData.otherComplaint
-          : formData.complaintType,
-      status: "Pending",
-      createdAt: new Date().toISOString(),
-    };
+    setIsLoading(true);
 
-    console.log("Complaint Payload:", payload);
-    setSubmitted(true);
+    try {
+      const response = await fetch("https://myspectra.runasp.net/api/Complaints", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          orderItemId: formData.orderItemId,
+          requestType: formData.requestType,
+          reason: formData.reason,
+          mediaUrl: formData.mediaUrl.trim() || "",
+        }),
+      });
 
-    setFormData({
-      orderId: "",
-      complaintType: "",
-      otherComplaint: "",
-    });
+      const data = await response.json().catch(() => null);
+
+      if (response.ok) {
+        setSuccessMsg("Gửi khiếu nại thành công.");
+        setFormData((prev) => ({
+          ...prev,
+          requestType: "complaint",
+          reason: "",
+          mediaUrl: "",
+        }));
+
+        setTimeout(() => {
+          navigate("/complaint-history");
+        }, 1500);
+      } else {
+        setErrorMsg(data?.message || "Gửi khiếu nại thất bại.");
+      }
+    } catch (error) {
+      setErrorMsg("Không thể kết nối đến Server.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="complaint-page">
       <div className="complaint-container">
-        <h1 className="complaint-title">Gửi khiếu nại</h1>
-        <p className="complaint-subtitle">
-          Vui lòng chọn đơn hàng và nội dung khiếu nại của bạn.
-        </p>
+        <div className="complaint-topbar">
+          <Link to="/orders" className="back-link">
+            ← Quay lại đơn hàng
+          </Link>
+          <Link to="/complaint-history" className="history-link">
+            Lịch sử khiếu nại
+          </Link>
+        </div>
 
-        {submitted && (
-          <div className="success-message">
-            Khiếu nại của bạn đã được gửi thành công.
-          </div>
-        )}
+        <div className="complaint-card">
+          <h1 className="complaint-title">Gửi khiếu nại</h1>
+          <p className="complaint-subtitle">
+            Tạo yêu cầu khiếu nại / đổi trả / hoàn tiền / bảo hành cho sản phẩm đã mua.
+          </p>
 
-        <form className="complaint-form" onSubmit={handleSubmit}>
-          {/* Chọn đơn hàng */}
-          <div className="form-group">
-            <label htmlFor="orderId">Chọn đơn hàng muốn khiếu nại</label>
-            <select
-              id="orderId"
-              name="orderId"
-              value={formData.orderId}
-              onChange={handleChange}
-            >
-              <option value="">-- Chọn đơn hàng --</option>
-              {orders.map((order) => (
-                <option key={order.id} value={order.id}>
-                  {order.id} - {order.items}
-                </option>
-              ))}
-            </select>
-            {errors.orderId && <p className="error-text">{errors.orderId}</p>}
-          </div>
+          {errorMsg && <div className="alert error-alert">{errorMsg}</div>}
+          {successMsg && <div className="alert success-alert">{successMsg}</div>}
 
-          {/* Hiển thị thông tin đơn hàng đã chọn */}
-          {selectedOrder && (
-            <div className="order-info-box">
-              <h3>Thông tin đơn hàng</h3>
-              <p>
-                <strong>Mã đơn:</strong> {selectedOrder.id}
-              </p>
-              <p>
-                <strong>Ngày đặt:</strong> {selectedOrder.date}
-              </p>
-              <p>
-                <strong>Sản phẩm:</strong> {selectedOrder.items}
-              </p>
-              <p>
-                <strong>Tổng tiền:</strong> {selectedOrder.total.toLocaleString(
-                  "vi-VN"
-                )}{" "}
-                VND
-              </p>
-            </div>
-          )}
-
-          {/* Thông tin cá nhân */}
-          <div className="profile-box">
-            <div className="profile-header">
-              <h3>Thông tin cá nhân</h3>
-              <span className="profile-note">
-                Thông tin này được lấy từ User Profile. Muốn chỉnh sửa, vui lòng
-                vào trang User Profile.
-              </span>
-            </div>
-
-            <div className="profile-grid">
-              <div className="form-group">
-                <label>Họ và tên</label>
-                <input type="text" value={userProfile.fullName} disabled />
-              </div>
-
-              <div className="form-group">
-                <label>Số điện thoại</label>
-                <input type="text" value={userProfile.phone} disabled />
-              </div>
-
-              <div className="form-group full-width">
-                <label>Email</label>
-                <input type="email" value={userProfile.email} disabled />
-                {errors.email && <p className="error-text">{errors.email}</p>}
-              </div>
-            </div>
-          </div>
-
-          {/* Nội dung khiếu nại */}
-          <div className="form-group">
-            <label htmlFor="complaintType">Chọn nội dung khiếu nại</label>
-            <select
-              id="complaintType"
-              name="complaintType"
-              value={formData.complaintType}
-              onChange={handleChange}
-            >
-              <option value="">-- Chọn nội dung --</option>
-              {complaintOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            {errors.complaintType && (
-              <p className="error-text">{errors.complaintType}</p>
-            )}
-          </div>
-
-          {/* Nếu chọn Khác thì hiện input */}
-          {formData.complaintType === "Khác" && (
+          <form onSubmit={handleSubmit} className="complaint-form">
             <div className="form-group">
-              <label htmlFor="otherComplaint">Nhập nội dung khiếu nại khác</label>
-              <textarea
-                id="otherComplaint"
-                name="otherComplaint"
-                rows="4"
-                placeholder="Nhập yêu cầu khiếu nại khác của bạn..."
-                value={formData.otherComplaint}
+              <label htmlFor="orderItemId">Order Item ID</label>
+              <input
+                id="orderItemId"
+                name="orderItemId"
+                type="text"
+                value={formData.orderItemId}
                 onChange={handleChange}
+                placeholder="Nhập orderItemId"
+                readOnly={!!orderItemIdFromUrl}
+                className={errors.orderItemId ? "input-error" : ""}
               />
-              {errors.otherComplaint && (
-                <p className="error-text">{errors.otherComplaint}</p>
+              {errors.orderItemId && (
+                <p className="field-error">{errors.orderItemId}</p>
               )}
             </div>
-          )}
 
-          <button type="submit" className="submit-btn">
-            Gửi khiếu nại
-          </button>
-        </form>
+            <div className="form-group">
+              <label htmlFor="requestType">Loại yêu cầu</label>
+              <select
+                id="requestType"
+                name="requestType"
+                value={formData.requestType}
+                onChange={handleChange}
+                className={errors.requestType ? "input-error" : ""}
+              >
+                {requestTypes.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              {errors.requestType && (
+                <p className="field-error">{errors.requestType}</p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="reason">Lý do</label>
+              <textarea
+                id="reason"
+                name="reason"
+                rows="6"
+                value={formData.reason}
+                onChange={handleChange}
+                placeholder="Nhập lý do chi tiết..."
+                className={errors.reason ? "input-error" : ""}
+              />
+              {errors.reason && <p className="field-error">{errors.reason}</p>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="mediaUrl">Media URL (không bắt buộc)</label>
+              <input
+                id="mediaUrl"
+                name="mediaUrl"
+                type="text"
+                value={formData.mediaUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => navigate(-1)}
+                disabled={isLoading}
+              >
+                Huỷ
+              </button>
+
+              <button type="submit" className="primary-btn" disabled={isLoading}>
+                {isLoading ? "Đang gửi..." : "Gửi khiếu nại"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

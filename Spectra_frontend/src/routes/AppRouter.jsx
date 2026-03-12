@@ -63,6 +63,7 @@ export default function AppRouter() {
             <Route path="lensfeatures" element={<AdminLensFeatures />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="complaints" element={<ComplaintManagementPage/>} />
           </Route>
         </Route>
 
@@ -79,8 +80,8 @@ export default function AppRouter() {
           <Route path="/checkout" element={<CheckoutPage />} />
 
           <Route path="/complaint" element={<ComplaintPage/>} />
-          <Route path="/ComplaintHistory" element={<ComplaintHistoryPage/>} />
-          <Route path="/ComplaintManagement" element={<ComplaintManagementPage/>} />
+          <Route path="/complaintHistory" element={<ComplaintHistoryPage/>} />
+          
           
           {/* ⚡ BỔ SUNG ROUTE MỚI CHO TRANG THANH TOÁN PRE-ORDER Ở ĐÂY */}
           <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
