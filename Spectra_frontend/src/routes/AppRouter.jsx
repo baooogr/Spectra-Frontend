@@ -28,6 +28,7 @@ import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
+import AdminPreorderCampaigns from "../pages/AdminPreorderCampaigns";
 
 // VNPay
 import VNPayReturnPage from "../pages/VNPayReturnPage";
@@ -59,6 +60,7 @@ export default function AppRouter() {
             <Route path="lensfeatures" element={<AdminLensFeatures />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="campaigns" element={<AdminPreorderCampaigns />} />
           </Route>
         </Route>
 
