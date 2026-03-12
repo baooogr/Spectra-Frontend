@@ -32,9 +32,9 @@ export default function ComplaintManagementPage() {
     try {
       const token = localStorage.getItem("token");
 
-      // TODO: Gắn API thật ở đây
+      // GẮN API GET DANH SÁCH KHIẾU NẠI Ở ĐÂY
       // Ví dụ:
-      // const response = await fetch("https://myspectra.runasp.net/api/Complaints", {
+      // const response = await fetch("https://your-api.com/api/Complaints", {
       //   method: "GET",
       //   headers: {
       //     "Content-Type": "application/json",
@@ -44,57 +44,15 @@ export default function ComplaintManagementPage() {
       //
       // const data = await response.json();
       //
-      // if (response.ok) {
-      //   setComplaints(Array.isArray(data) ? data : []);
-      // } else {
-      //   setPageError(data.message || "Không thể tải danh sách khiếu nại.");
+      // if (!response.ok) {
+      //   throw new Error(data.message || "Không thể tải danh sách khiếu nại.");
       // }
+      //
+      // setComplaints(Array.isArray(data) ? data : []);
 
-      const mockData = [
-        {
-          id: "CP001",
-          customerName: "Nguyễn Văn A",
-          customerEmail: "vana@gmail.com",
-          customerPhone: "0901234567",
-          orderItemId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-          requestType: "complaint",
-          reason: "Sản phẩm bị lỗi ở phần gọng kính khi vừa mở hộp.",
-          mediaUrl: "https://via.placeholder.com/500",
-          status: "pending",
-          createdAt: "2026-03-10T09:30:00",
-          internalNote: "",
-        },
-        {
-          id: "CP002",
-          customerName: "Trần Thị B",
-          customerEmail: "thib@gmail.com",
-          customerPhone: "0911111111",
-          orderItemId: "4ab85f64-5717-4562-b3fc-2c963f66afa7",
-          requestType: "exchange",
-          reason: "Sản phẩm giao sai màu, tôi đặt màu đen nhưng nhận màu nâu.",
-          mediaUrl: "",
-          status: "processing",
-          createdAt: "2026-03-09T14:10:00",
-          internalNote: "Đang kiểm tra với bộ phận kho.",
-        },
-        {
-          id: "CP003",
-          customerName: "Lê Văn C",
-          customerEmail: "levanc@gmail.com",
-          customerPhone: "0988888888",
-          orderItemId: "5cd85f64-5717-4562-b3fc-2c963f66afa8",
-          requestType: "refund",
-          reason: "Khách yêu cầu hoàn tiền do sản phẩm không đúng mô tả.",
-          mediaUrl: "",
-          status: "resolved",
-          createdAt: "2026-03-07T11:45:00",
-          internalNote: "Đã xác nhận hoàn tiền cho khách.",
-        },
-      ];
-
-      setComplaints(mockData);
+      setComplaints([]);
     } catch (error) {
-      setPageError("Không thể kết nối đến Server.");
+      setPageError(error.message || "Không thể kết nối đến Server.");
     } finally {
       setLoading(false);
     }
@@ -102,11 +60,13 @@ export default function ComplaintManagementPage() {
 
   const filteredComplaints = useMemo(() => {
     return complaints.filter((item) => {
+      const keyword = filters.keyword.toLowerCase();
+
       const matchKeyword =
-        item.id.toLowerCase().includes(filters.keyword.toLowerCase()) ||
-        item.customerName.toLowerCase().includes(filters.keyword.toLowerCase()) ||
-        item.customerEmail.toLowerCase().includes(filters.keyword.toLowerCase()) ||
-        item.orderItemId.toLowerCase().includes(filters.keyword.toLowerCase());
+        (item.id || "").toLowerCase().includes(keyword) ||
+        (item.customerName || "").toLowerCase().includes(keyword) ||
+        (item.customerEmail || "").toLowerCase().includes(keyword) ||
+        (item.orderItemId || "").toLowerCase().includes(keyword);
 
       const matchStatus =
         filters.status === "all" ? true : item.status === filters.status;
@@ -131,7 +91,7 @@ export default function ComplaintManagementPage() {
       case "rejected":
         return "Từ chối";
       default:
-        return status;
+        return status || "";
     }
   };
 
@@ -163,7 +123,7 @@ export default function ComplaintManagementPage() {
       case "warranty":
         return "Bảo hành";
       default:
-        return type;
+        return type || "";
     }
   };
 
@@ -227,29 +187,31 @@ export default function ComplaintManagementPage() {
     try {
       const token = localStorage.getItem("token");
 
-      // TODO: Thay bằng API thật để:
-      // 1. Staff cập nhật trạng thái complaint
-      // 2. Backend gửi mail cho khách
-      //
-      // Ví dụ minh họa:
-      // const response = await fetch(`https://myspectra.runasp.net/api/Complaints/${selectedComplaint.id}`, {
-      //   method: "PUT",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify({
-      //     status: updateForm.status,
-      //     internalNote: updateForm.internalNote,
-      //     emailContent: updateForm.emailContent,
-      //   }),
-      // });
+      // GẮN API UPDATE + GỬI MAIL Ở ĐÂY
+      // Ví dụ:
+      // const response = await fetch(
+      //   `https://your-api.com/api/Complaints/${selectedComplaint.id}`,
+      //   {
+      //     method: "PUT",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //     body: JSON.stringify({
+      //       status: updateForm.status,
+      //       internalNote: updateForm.internalNote,
+      //       emailContent: updateForm.emailContent,
+      //     }),
+      //   }
+      // );
       //
       // const data = await response.json();
       //
       // if (!response.ok) {
       //   throw new Error(data.message || "Cập nhật thất bại");
       // }
+      //
+      // const updatedComplaint = data;
 
       const updatedComplaint = {
         ...selectedComplaint,
@@ -375,7 +337,10 @@ export default function ComplaintManagementPage() {
 
       {selectedComplaint && (
         <div className="modal-overlay" onClick={closeDetail}>
-          <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-content large"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <h2>Chi tiết đơn khiếu nại</h2>
               <button className="close-btn" onClick={closeDetail}>
