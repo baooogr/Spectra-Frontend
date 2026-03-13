@@ -15,10 +15,6 @@ import PreorderDetail from "../pages/PreorderDetail";
 import OrderDetail from "../pages/OrderDetail";
 import CartPage from "../pages/CartPage";
 
-import ComplaintPage from "../pages/ComplaintPage";
-import ComplaintHistoryPage from "../pages/ComplaintHistoryPage";
-import ComplaintManagementPage from "../pages/ComplaintManagementPage";
-
 import CheckoutPreorderPage from "../pages/CheckoutPreorderPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import CheckoutSuccess from "../pages/CheckoutSuccess";
@@ -63,7 +59,7 @@ export default function AppRouter() {
             <Route path="lensfeatures" element={<AdminLensFeatures />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
-            <Route path="complaints" element={<ComplaintManagementPage/>} />
+
           </Route>
         </Route>
 
@@ -78,12 +74,7 @@ export default function AppRouter() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
-
-          <Route path="/complaint" element={<ComplaintPage/>} />
-          <Route path="/complaintHistory" element={<ComplaintHistoryPage/>} />
           
-          
-          {/* ⚡ BỔ SUNG ROUTE MỚI CHO TRANG THANH TOÁN PRE-ORDER Ở ĐÂY */}
           <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
 
           <Route path="/checkout-success" element={<CheckoutSuccess />} />

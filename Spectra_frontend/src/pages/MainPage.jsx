@@ -20,25 +20,41 @@ export default function MainPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const response = await fetch("https://myspectra.runasp.net/api/Frames?page=1&pageSize=100");
-        if (response.ok) {
-          const data = await response.json();
-          setProducts(data.items || data || []); 
-        } else {
-          setError("Không thể tải danh sách sản phẩm.");
-        }
-      } catch (err) {
-        setError("Lỗi kết nối đến máy chủ Backend.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProducts();
+  useEffect(() => { 
+    const fetchProducts = async () => { 
+      setIsLoading(true); 
+      setError(""); 
+      try { 
+        const response = await fetch("https://myspectra.runasp.net/api/Frames?page=1&pageSize=100"); 
+        if (response.ok) { 
+          const data = await response.json(); 
+          const allFrames = data.items || data || [];
+
+          // ========= THÊM ĐOẠN NÀY ĐỂ LỌC TRÙNG TÊN =========
+          const uniqueFrames = [];
+          const seenNames = new Set();
+          
+          allFrames.forEach(frame => {
+            if (!seenNames.has(frame.frameName)) {
+              seenNames.add(frame.frameName);
+              uniqueFrames.push(frame); // Chỉ đẩy vào mảng kính nào chưa xuất hiện tên
+            }
+          });
+          // ===================================================
+
+          // Thay vì set toàn bộ data, hãy set danh sách đã lọc (uniqueFrames)
+          setProducts(uniqueFrames); 
+        } else { 
+          setError("Không thể tải danh sách sản phẩm."); 
+        } 
+      } catch (err) { 
+        setError("Lỗi kết nối đến máy chủ Backend."); 
+      } finally { 
+        setIsLoading(false); 
+      } 
+    }; 
+    fetchProducts(); 
+
   }, []);
 
   const filteredProducts = useMemo(() => {

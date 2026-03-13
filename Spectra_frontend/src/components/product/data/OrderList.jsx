@@ -16,7 +16,6 @@ export const orderList = [
     id: "OD002",
     date: "2025-02-15",
     status: "Pending",
-
     receiver: "Trần Thị B",
     phone: "0912345678",
     address: "456 Lê Lợi, Q.3, TP.HCM",

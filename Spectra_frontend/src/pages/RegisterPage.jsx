@@ -2,7 +2,8 @@ import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext"; 
 import { GoogleLogin } from "@react-oauth/google"; 
-import "./Auth.css"; // DÙNG CHUNG CSS VỚI LOGIN
+import "./Auth.css";
+
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -17,20 +18,45 @@ export default function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMsg(""); setSuccessMsg("");
-    if (formData.password !== formData.confirmPassword) { setErrorMsg("Mật khẩu xác nhận không khớp!"); return; }
+    
+    if (formData.password !== formData.confirmPassword) { 
+      setErrorMsg("Mật khẩu xác nhận không khớp!"); 
+      return; 
+    }
+    
     setIsLoading(true);
     try {
       const response = await fetch("https://myspectra.runasp.net/api/Auth/register", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, password: formData.password, fullName: formData.fullName, phone: formData.phone }),
+
+        body: JSON.stringify({ 
+          email: formData.email, 
+          password: formData.password, 
+          fullName: formData.fullName, 
+          phone: formData.phone 
+        }),
       });
       const data = await response.json();
+      
       if (response.ok || response.status === 201) {
+        // ⚡ TỰ ĐỘNG ĐĂNG NHẬP SAU KHI ĐĂNG KÝ THÀNH CÔNG
+        login({ 
+          token: data.token, 
+          userId: data.userId, 
+          email: data.email, 
+          fullName: data.fullName, 
+          role: data.role 
+        });
         setSuccessMsg("Đăng ký thành công! Đang chuyển hướng...");
-        setTimeout(() => navigate("/login"), 2000);
-      } else { setErrorMsg(data.message || "Đăng ký thất bại!"); }
-    } catch (error) { setErrorMsg("Không thể kết nối đến Server."); } 
-    finally { setIsLoading(false); }
+        setTimeout(() => navigate("/"), 2000);
+      } else { 
+        setErrorMsg(data.message || "Đăng ký thất bại!"); 
+      }
+    } catch (error) { 
+      setErrorMsg("Không thể kết nối đến Server."); 
+    } finally { 
+      setIsLoading(false); 
+    }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -42,11 +68,25 @@ export default function RegisterPage() {
       });
       const data = await response.json();
       if (response.ok) {
-        login({ token: data.token, fullName: data.fullName });
+
+        // ⚡ ĐĂNG NHẬP GOOGLE TỪ TRANG ĐĂNG KÝ
+        login({ 
+          token: data.token, 
+          userId: data.userId, 
+          email: data.email, 
+          fullName: data.fullName, 
+          role: data.role 
+        });
         navigate("/");
-      } else { setErrorMsg("Xác thực Google thất bại!"); }
-    } catch (error) { setErrorMsg("Lỗi kết nối API Google."); } 
-    finally { setIsLoading(false); }
+      } else { 
+        setErrorMsg("Xác thực Google thất bại!"); 
+      }
+    } catch (error) { 
+      setErrorMsg("Lỗi kết nối API Google."); 
+    } finally { 
+      setIsLoading(false); 
+    }
+
   };
 
   return (
@@ -57,11 +97,27 @@ export default function RegisterPage() {
       {successMsg && <div className="auth-msg success">{successMsg}</div>}
 
       <form onSubmit={handleRegister} className="auth-form">
-        <div className="form-group"><label>Họ và Tên:</label><input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required placeholder="Nhập họ và tên" /></div>
-        <div className="form-group"><label>Email:</label><input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="Nhập email" /></div>
-        <div className="form-group"><label>Số điện thoại:</label><input type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder="Nhập số điện thoại" /></div>
-        <div className="form-group"><label>Mật khẩu:</label><input type="password" name="password" value={formData.password} onChange={handleChange} required placeholder="Nhập mật khẩu" /></div>
-        <div className="form-group"><label>Xác nhận mật khẩu:</label><input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required placeholder="Nhập lại mật khẩu" /></div>
+
+        <div className="form-group">
+          <label>Họ và Tên:</label>
+          <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required placeholder="Nhập họ và tên" />
+        </div>
+        <div className="form-group">
+          <label>Email:</label>
+          <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="Nhập email" />
+        </div>
+        <div className="form-group">
+          <label>Số điện thoại:</label>
+          <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder="Nhập số điện thoại" />
+        </div>
+        <div className="form-group">
+          <label>Mật khẩu:</label>
+          <input type="password" name="password" value={formData.password} onChange={handleChange} required placeholder="Nhập mật khẩu" />
+        </div>
+        <div className="form-group">
+          <label>Xác nhận mật khẩu:</label>
+          <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required placeholder="Nhập lại mật khẩu" />
+        </div>
 
         <button type="submit" disabled={isLoading} className="btn-submit">
           {isLoading ? "Đang xử lý..." : "Đăng Ký"}

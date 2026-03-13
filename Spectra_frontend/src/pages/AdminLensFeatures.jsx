@@ -10,14 +10,12 @@ export default function AdminLensFeatures() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
 
-  
-  const initialForm = { lensIndex: 1.56, featureSpecification: "", extraPrice: 0 };
+  // ⚡ CẬP NHẬT: Loại bỏ lensIndex khỏi form theo API mới
+  const initialForm = { featureSpecification: "", extraPrice: 0 };
   const [formData, setFormData] = useState(initialForm);
 
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
   const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
-
-  // LẤY DANH SÁCH TÍNH NĂNG TRÒNG
 
   const fetchLensFeatures = async () => {
     setIsLoading(true);
@@ -33,15 +31,12 @@ export default function AdminLensFeatures() {
 
   useEffect(() => { fetchLensFeatures(); }, []);
 
- 
-  // MỞ MODAL THÊM/SỬA
-  
   const handleOpenModal = (feature = null) => {
     if (feature) {
       setIsEditing(true);
       setCurrentId(feature.id || feature.lensFeatureId);
       setFormData({
-        lensIndex: feature.lensIndex,
+
         featureSpecification: feature.featureSpecification,
         extraPrice: feature.extraPrice
       });
@@ -55,16 +50,13 @@ export default function AdminLensFeatures() {
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === "number" ? Number(value) : value
     }));
   };
 
-  
-  // LƯU (POST / PUT)
-  
   const handleSave = async (e) => {
     e.preventDefault();
     const method = isEditing ? "PUT" : "POST";
@@ -78,13 +70,10 @@ export default function AdminLensFeatures() {
         alert(isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!");
         setShowModal(false);
         fetchLensFeatures();
-      } else { alert("Lỗi khi lưu dữ liệu. Có thể trùng chiết suất/tính năng?"); }
+      } else { alert("Lỗi khi lưu dữ liệu."); }
     } catch (err) { alert("Lỗi kết nối server"); }
   };
 
- 
-  // XÓA (DELETE)
-  
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa tính năng tròng này vĩnh viễn?")) return;
     try {
@@ -92,14 +81,20 @@ export default function AdminLensFeatures() {
       if (res.ok || res.status === 204) {
         alert("Xóa thành công!");
         fetchLensFeatures();
-      } else { alert("Xóa thất bại!"); }
+      } else { 
+        // ⚡ Nâng cấp: Hiển thị lỗi từ Backend nếu đang dính Order
+        const errorData = await res.json();
+        alert("Xóa thất bại: " + (errorData.message || "Đang được sử dụng")); 
+      }
     } catch (err) { alert("Lỗi server"); }
   };
 
   return (
     <div className="admin-lens-container">
       <div className="admin-lens-header">
-        <h2 className="admin-lens-title">✨ Quản Lý Tính Năng Tròng Kính (Lens Features)</h2>
+
+        <h2 className="admin-lens-title">✨ Quản Lý Tính Năng Tròng (Lens Features)</h2>
+
         <button onClick={() => handleOpenModal()} className="btn-add">+ Thêm Tính Năng</button>
       </div>
 
@@ -107,19 +102,20 @@ export default function AdminLensFeatures() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Chiết Suất (Index)</th>
+
               <th>Tính Năng / Công Nghệ</th>
               <th>Phụ Phí ($)</th>
               <th className="col-action">Hành Động</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading ? <tr><td colSpan="4" style={{textAlign: 'center'}}>⏳ Đang tải dữ liệu...</td></tr> : 
-             lensFeatures.length === 0 ? <tr><td colSpan="4" style={{textAlign: 'center'}}>Chưa có tính năng nào.</td></tr> :
+
+            {isLoading ? <tr><td colSpan="3" style={{textAlign: 'center'}}>⏳ Đang tải dữ liệu...</td></tr> : 
+             lensFeatures.length === 0 ? <tr><td colSpan="3" style={{textAlign: 'center'}}>Chưa có tính năng nào.</td></tr> :
              
-             [...lensFeatures].sort((a,b) => a.lensIndex - b.lensIndex).map((feature, index) => (
+             lensFeatures.map((feature, index) => (
                 <tr key={index}>
-                  <td><span className="badge-index">IDX {feature.lensIndex}</span></td>
+
                   <td className="col-name">{feature.featureSpecification}</td>
                   <td className="col-price">+ ${feature.extraPrice}</td>
                   <td className="col-action">
@@ -138,11 +134,7 @@ export default function AdminLensFeatures() {
             <h3 className="modal-title">{isEditing ? "✏️ Sửa Tính Năng" : "✨ Thêm Tính Năng Mới"}</h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
-                <label>Chiết Suất Tròng (Lens Index):</label>
-                <input type="number" name="lensIndex" value={formData.lensIndex} onChange={handleChange} required min="1.0" step="0.01" />
-                <p className="form-hint">Gợi ý: 1.56 (Thường), 1.60 (Mỏng), 1.67 (Siêu mỏng), 1.74 (Siêu mỏng đặc biệt)</p>
-              </div>
-              <div className="form-group">
+
                 <label>Mô tả tính năng / Lớp phủ (Specification):</label>
                 <input type="text" name="featureSpecification" value={formData.featureSpecification} onChange={handleChange} required placeholder="VD: Lọc ánh sáng xanh, Đổi màu trà..." />
               </div>

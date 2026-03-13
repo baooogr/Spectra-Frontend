@@ -10,7 +10,9 @@ export default function AdminLens() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
 
-  const initialForm = { lensSpecification: "", requiresPrescription: false, extraPrice: 0 };
+  // ⚡ CẬP NHẬT: Đổi extraPrice thành basePrice theo đúng API
+  const initialForm = { lensSpecification: "", requiresPrescription: false, basePrice: 0 };
+
   const [formData, setFormData] = useState(initialForm);
 
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
@@ -37,7 +39,7 @@ export default function AdminLens() {
       setFormData({
         lensSpecification: lens.lensSpecification,
         requiresPrescription: lens.requiresPrescription,
-        extraPrice: lens.extraPrice
+        basePrice: lens.basePrice // ⚡ Lấy đúng trường basePrice
       });
     } else {
       setIsEditing(false);
@@ -79,7 +81,11 @@ export default function AdminLens() {
       if (res.ok || res.status === 204) {
         alert("Xóa thành công!");
         fetchLensTypes();
-      } else { alert("Xóa thất bại!"); }
+      } else { 
+        // ⚡ Nâng cấp: Hiển thị lỗi từ Backend nếu đang dính Order
+        const errorData = await res.json();
+        alert("Xóa thất bại: " + (errorData.message || "Đang được sử dụng")); 
+      }
     } catch (err) { alert("Lỗi server"); }
   };
 
@@ -96,7 +102,7 @@ export default function AdminLens() {
             <tr>
               <th>Thông số / Tên Tròng</th>
               <th>Yêu cầu Toa Thuốc (Cận/Viễn)</th>
-              <th>Phụ Phí ($)</th>
+              <th>Giá Cơ Bản ($)</th>
               <th className="col-action">Hành Động</th>
             </tr>
           </thead>
@@ -111,7 +117,7 @@ export default function AdminLens() {
                       ? <span className="badge-yes">⚠️ Bắt buộc có toa</span> 
                       : <span className="badge-no">✅ Không cần toa</span>}
                   </td>
-                  <td className="col-price">+ ${lens.extraPrice}</td>
+                  <td className="col-price">${lens.basePrice}</td>
                   <td className="col-action">
                     <button onClick={() => handleOpenModal(lens)} className="btn-edit">Sửa</button>
                     <button onClick={() => handleDelete(lens.id || lens.lensTypeId)} className="btn-delete">Xóa</button>
@@ -132,8 +138,9 @@ export default function AdminLens() {
                 <input type="text" name="lensSpecification" value={formData.lensSpecification} onChange={handleChange} required />
               </div>
               <div className="form-group">
-                <label>Phụ phí phát sinh ($):</label>
-                <input type="number" name="extraPrice" value={formData.extraPrice} onChange={handleChange} required min="0" step="0.01" />
+                <label>Giá Cơ Bản ($):</label>
+                <input type="number" name="basePrice" value={formData.basePrice} onChange={handleChange} required min="0" step="0.01" />
+
               </div>
               
               <div className="checkbox-wrapper">

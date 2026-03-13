@@ -259,7 +259,6 @@ const ProductList = [
                 "Discover understated elegance with this medium square frame, crafted from durable plastic and featuring a full-rim design that combines classic form with modern appeal. With its universal bridge fit and lightweight construction, this frame ensures effortless comfort and extended wearability for both men and women. Exuding a sophisticated and effortless style, it is perfect for enhancing the features of oval or heart-shaped faces. Versatile enough for everyday wear, this frame seamlessly blends practicality with refined elegance.",
         },
     },
-
     {
         id: "GM005",
         name: "Clear Square Glasses",

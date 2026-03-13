@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { GoogleLogin } from "@react-oauth/google";
-import "./Auth.css"; // IMPORT CSS VÀO ĐÂY
+import "./Auth.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -23,12 +23,24 @@ export default function LoginPage() {
       });
       const data = await response.json();
       if (response.ok) {
-        login({ token: data.token, fullName: data.fullName });
+        // ⚡ LƯU TOÀN BỘ 5 TRƯỜNG DỮ LIỆU TỪ API
+        login({ 
+          token: data.token, 
+          userId: data.userId, 
+          email: data.email, 
+          fullName: data.fullName, 
+          role: data.role 
+        });
         setSuccessMsg(`Đăng nhập thành công! Xin chào ${data.fullName}`);
         setTimeout(() => navigate("/"), 2000);
-      } else { setErrorMsg(data.message || "Sai tài khoản hoặc mật khẩu!"); }
-    } catch (error) { setErrorMsg("Không thể kết nối đến Server."); } 
-    finally { setIsLoading(false); }
+      } else { 
+        setErrorMsg(data.message || "Sai tài khoản hoặc mật khẩu!"); 
+      }
+    } catch (error) { 
+      setErrorMsg("Không thể kết nối đến Server."); 
+    } finally { 
+      setIsLoading(false); 
+    }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -40,12 +52,24 @@ export default function LoginPage() {
       });
       const data = await response.json();
       if (response.ok) {
-        login({ token: data.token, fullName: data.fullName });
+        // ⚡ LƯU TOÀN BỘ 5 TRƯỜNG DỮ LIỆU TỪ API (GOOGLE AUTH)
+        login({ 
+          token: data.token, 
+          userId: data.userId, 
+          email: data.email, 
+          fullName: data.fullName, 
+          role: data.role 
+        });
         setSuccessMsg(`Đăng nhập Google thành công!`);
         setTimeout(() => navigate("/"), 2000);
-      } else { setErrorMsg("Xác thực Google thất bại!"); }
-    } catch (error) { setErrorMsg("Lỗi kết nối API Google."); } 
-    finally { setIsLoading(false); }
+      } else { 
+        setErrorMsg("Xác thực Google thất bại!"); 
+      }
+    } catch (error) { 
+      setErrorMsg("Lỗi kết nối API Google."); 
+    } finally { 
+      setIsLoading(false); 
+    }
   };
 
   return (

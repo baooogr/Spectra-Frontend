@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 function ProductCard({ product }) {
   const navigate = useNavigate();
   const [thumbnailUrl, setThumbnailUrl] = useState(
-    product.frameMedia?.[0]?.mediaUrl || product.imageUrl || product.image?.[0] || product.mediaUrls?.[0] || null
+    product.frameMedia && product.frameMedia.length > 0 
+      ? product.frameMedia[0].mediaUrl 
+      : null
   );
 
   useEffect(() => {
@@ -27,7 +29,7 @@ function ProductCard({ product }) {
     fetchThumbnail();
   }, [product, thumbnailUrl]);
 
-  // ✅ Xác định trạng thái hàng
+  // Xác định trạng thái hàng
   const isOutOfStock =
     product.stockQuantity <= 0 ||
     product.status === "OutOfStock" ||
@@ -36,7 +38,7 @@ function ProductCard({ product }) {
   return (
     <div
       style={{
-        border: `1px solid ${isOutOfStock ? "#bfdbfe" : "#ddd"}`,
+        border: `1px solid ${isOutOfStock ? "#fecaca" : "#ddd"}`,
         padding: "14px",
         width: "230px",
         borderRadius: "12px",
@@ -55,14 +57,15 @@ function ProductCard({ product }) {
         e.currentTarget.style.boxShadow = "none";
       }}
     >
-      {/* ✅ Badge trạng thái góc trên */}
+
+      {/* Badge trạng thái góc trên */}
       {isOutOfStock && (
         <div
           style={{
             position: "absolute",
             top: "10px",
             left: "10px",
-            backgroundColor: "#2563eb",
+            backgroundColor: "#ef4444", // Đỏ
             color: "white",
             fontSize: "11px",
             fontWeight: "bold",
@@ -72,7 +75,7 @@ function ProductCard({ product }) {
             zIndex: 2,
           }}
         >
-          Đặt Trước
+          Out of Stock
         </div>
       )}
 
@@ -141,25 +144,25 @@ function ProductCard({ product }) {
 
       {/* Thương hiệu & hình dáng */}
       <p style={{ margin: "0 0 6px", fontSize: "12px", color: "#6b7280" }}>
-        {product.brand?.brandName || "Đang cập nhật"} {product.shape ? `- ${product.shape}` : ""}
+        {product.brand?.brandName || "Đang cập nhật"} {product.shape ? `- ${product.shape?.shapeName || product.shape}` : ""}
       </p>
 
-      {/* ✅ Dòng trạng thái tồn kho */}
+      {/* Dòng trạng thái tồn kho */}
       {isOutOfStock ? (
         <div
           style={{
             marginTop: "6px",
             padding: "5px 10px",
-            backgroundColor: "#eff6ff",
-            border: "1px solid #bfdbfe",
+            backgroundColor: "#fef2f2",
+            border: "1px solid #fecaca",
             borderRadius: "6px",
             fontSize: "12px",
-            color: "#1d4ed8",
+            color: "#dc2626", // Chữ đỏ
             fontWeight: "bold",
             textAlign: "center",
           }}
         >
-          Hết hàng · Có thể Đặt Trước
+          Hết hàng (Out of Stock)
         </div>
       ) : (
         <div
@@ -170,7 +173,8 @@ function ProductCard({ product }) {
             fontWeight: "500",
           }}
         >
-          
+          {/* Để trống hoặc hiển thị "Sắp hết" nếu muốn */}
+
         </div>
       )}
     </div>
