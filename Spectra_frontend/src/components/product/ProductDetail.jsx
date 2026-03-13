@@ -5,7 +5,6 @@ import LensSelectionModal from "../ui/LensSelectionModal";
 import Modal from "../ui/Modal";
 import "./ProductDetail.css";
 
-
 const fallbackImage = "https://placehold.co/600x400/eeeeee/999999?text=No+Image";
 
 const ImageGallery = ({ images }) => {
@@ -58,13 +57,18 @@ export default function ProductDetail() {
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
+  // --- STATE PREORDER ---
+  const [preorderInfo, setPreorderInfo] = useState(null);
+
   useEffect(() => {
     const fetchProductData = async () => {
       setIsLoading(true);
       try {
-        const [productRes, lensRes] = await Promise.all([
+        // GỌI SONG SONG 3 API
+        const [productRes, lensRes, campaignsRes] = await Promise.all([
           fetch(`https://myspectra.runasp.net/api/Frames/${id}`),
-          fetch(`https://myspectra.runasp.net/api/Frames/${id}/lens-types`)
+          fetch(`https://myspectra.runasp.net/api/Frames/${id}/lens-types`),
+          fetch(`https://myspectra.runasp.net/api/PreorderCampaigns/active`)
         ]);
 
         if (!productRes.ok) throw new Error("Không thể tải thông tin sản phẩm");
@@ -75,6 +79,25 @@ export default function ProductDetail() {
         if (lensRes.ok) {
           const lensData = await lensRes.json();
           setSupportedLensTypes(lensData.supportedLensTypes || []);
+        }
+
+        // KIỂM TRA LOGIC PRE-ORDER 
+        if (campaignsRes.ok) {
+           const campaignsData = await campaignsRes.json();
+           for (const camp of campaignsData) {
+               const frameInCamp = camp.frames?.find(f => f.frameId === id);
+               // Chỉ hiển thị trạng thái Preorder nếu thực sự hết hàng
+               if (frameInCamp && productData.stockQuantity <= 0) {
+                   setPreorderInfo({
+                       campaignId: camp.campaignId || camp.id,
+                       campaignName: camp.campaignName,
+                       expectedDeliveryDate: camp.estimatedDeliveryDate,
+                       campaignPrice: frameInCamp.campaignPrice,
+                       maxQuantityPerOrder: frameInCamp.maxQuantityPerOrder
+                   });
+                   break;
+               }
+           }
         }
 
         if (productData.frameMedia?.length > 0) {
@@ -93,25 +116,26 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleConfirmAddToCart = (cartDataOptions) => {
-    console.log("DỮ LIỆU TỪ MODAL TRUYỀN RA:", cartDataOptions);
-
     const colorObj = selectedColor?.color || selectedColor || {};
 
     const itemData = {
       id: product.id || product.frameId,
       name: product.frameName,
-      price: cartDataOptions.finalPrice, // Đảm bảo finalPrice này từ Modal đã cộng tổng tiền Gọng + Tròng
+      price: cartDataOptions.finalPrice, // Đã bao gồm Giá Preorder + Tròng
       image: images[0],
       color: colorObj.colorName || "Mặc định",
       colorId: colorObj.id || colorObj.colorId || null,
       quantity: quantity,
+      
+      // --- DỮ LIỆU ĐỂ GIỎ HÀNG NHẬN DIỆN PREORDER ---
+      isPreorder: isPreorder,
+      campaignId: isPreorder ? preorderInfo.campaignId : null,
+      expectedDeliveryDate: isPreorder ? preorderInfo.expectedDeliveryDate : null,
+
       lensInfo: cartDataOptions.lensIncluded ? {
-        // ⚡ FIX: Bắt buộc phải có 3 ID này để CheckoutPage gửi được cho Backend
         typeId: cartDataOptions.lensDetails.typeId,
         featureId: cartDataOptions.lensDetails.featureId,
         prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
-
-        // Thông tin để hiển thị UI (Giữ nguyên như cũ)
         type: cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
         feature: cartDataOptions.lensDetails.lensFeature?.featureSpecification || "Không có",
         typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0,
@@ -129,25 +153,48 @@ export default function ProductDetail() {
 
   const currentStock = selectedColor ? (selectedColor.stockQuantity || 0) : 0;
   const inStock = currentStock > 0;
+  
+  // TÍNH TOÁN BIẾN QUYẾT ĐỊNH
+  const isPreorder = !inStock && preorderInfo !== null;
+  const canBuy = inStock || isPreorder;
+  const maxAllowedQuantity = isPreorder ? preorderInfo.maxQuantityPerOrder : currentStock;
+  const displayPrice = isPreorder ? preorderInfo.campaignPrice : product.basePrice;
+  
+  // Đè lại giá basePrice truyền vào Modal Kính để tính tổng tiền đúng
+  const productForModal = { ...product, basePrice: displayPrice };
 
   return (
     <>
       <LensSelectionModal
         isOpen={isLensModalOpen}
         onClose={() => setIsLensModalOpen(false)}
-        product={product}
-        supportedLensTypes={supportedLensTypes} /* ⚡ TRUYỀN DANH SÁCH XUỐNG MODAL */
+        product={productForModal} // TRUYỀN GIÁ CẬP NHẬT VÀO MODAL
+        supportedLensTypes={supportedLensTypes}
         onConfirmAddToCart={handleConfirmAddToCart}
       />
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} />
 
       <div className="product-detail-container">
-        <ImageGallery images={images} />
+         <ImageGallery images={images} />
 
         <div className="product-info-col">
           <h2 className="product-title">{product.frameName}</h2>
           <p className="product-brand">Thương hiệu: <strong>{product.brand?.brandName || "N/A"}</strong></p>
-          <p className="product-price">${product.basePrice}</p>
+          
+          {/* HIỂN THỊ GIÁ BÁN (GẠCH NGANG NẾU LÀ PREORDER) */}
+          <p className="product-price" style={{ color: isPreorder ? "#2563eb" : "#000000" }}>
+            ${displayPrice}
+            {isPreorder && (
+                <span style={{ fontSize: "20px", textDecoration: "line-through", color: "#9ca3af", marginLeft: "15px" }}>
+                  ${product.basePrice}
+                </span>
+            )}
+          </p>
+          {isPreorder && (
+             <div style={{ display: 'inline-block', backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>
+                🔥 Ưu đãi đặt trước
+             </div>
+          )}
 
           <div className="product-color-selector" style={{ margin: '15px 0' }}>
             <h4 style={{ marginBottom: '10px', fontSize: '15px' }}>Màu sắc có sẵn:</h4>
@@ -170,31 +217,45 @@ export default function ProductDetail() {
             </div>
           </div>
 
+          {/* DÒNG TRẠNG THÁI HIỂN THỊ TỒN KHO HOẶC THÔNG TIN PREORDER */}
           <div className="product-status">
-            Trạng thái: <span className={inStock ? "status-in-stock" : "status-out-stock"}>
-              {inStock ? `Còn hàng (${currentStock})` : "Hết hàng"}
-            </span>
+            Trạng thái: 
+            {isPreorder ? (
+               <span style={{ color: '#2563eb', fontWeight: 'bold', marginLeft: '8px' }}>
+                 ⏱️ Đang mở đặt trước (Tối đa {maxAllowedQuantity} cái/đơn)
+                 <div style={{ fontSize: '13px', marginTop: '5px', color: '#4b5563' }}>
+                    📦 Dự kiến giao hàng: {new Date(preorderInfo.expectedDeliveryDate).toLocaleDateString('vi-VN')}
+                 </div>
+               </span>
+            ) : (
+               <span className={inStock ? "status-in-stock" : "status-out-stock"} style={{ marginLeft: '8px' }}>
+                 {inStock ? `Còn hàng (${currentStock})` : "Hết hàng"}
+               </span>
+            )}
           </div>
 
           <div className="quantity-wrapper">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty" disabled={!inStock}>-</button>
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty" disabled={!canBuy}>-</button>
             <span className="qty-value">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!inStock || quantity >= currentStock}>+</button>
+            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!canBuy || quantity >= maxAllowedQuantity}>+</button>
           </div>
 
+          {/* NÚT THÊM VÀO GIỎ / ĐẶT TRƯỚC */}
           <button
             onClick={() => setIsLensModalOpen(true)}
-            className={`btn-add-cart ${inStock ? 'active' : ''}`}
-            disabled={!inStock}
-            style={!inStock ? {
+            className={`btn-add-cart ${canBuy ? 'active' : ''}`}
+            disabled={!canBuy}
+            style={!canBuy ? {
               backgroundColor: '#e5e7eb',
               color: '#9ca3af',
               cursor: 'not-allowed',
               boxShadow: 'none',
               border: '1px solid #d1d5db'
+            } : isPreorder ? {
+              backgroundColor: '#2563eb', // Đổi màu xanh cho nổi bật
             } : {}}
           >
-            {inStock ? "🛒 Thêm vào giỏ hàng" : "🚫 Out of stock"}
+            {isPreorder ? "⏱️ Đặt trước ngay (Pre-order)" : inStock ? "🛒 Thêm vào giỏ hàng" : "🚫 Out of stock"}
           </button>
 
           <div className="product-info-grid">

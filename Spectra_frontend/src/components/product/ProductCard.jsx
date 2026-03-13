@@ -1,14 +1,49 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+// TỐI ƯU HÓA: Biến global để cache API Active Campaigns
+// Tránh việc 20 cái Product Card cùng render dẫn tới gọi API 20 lần
+let cachedCampaignsPromise = null;
+const getActiveCampaigns = () => {
+  if (!cachedCampaignsPromise) {
+    cachedCampaignsPromise = fetch("https://myspectra.runasp.net/api/PreorderCampaigns/active")
+      .then(res => res.ok ? res.json() : [])
+      .catch(() => []);
+  }
+  return cachedCampaignsPromise;
+};
+
 function ProductCard({ product }) {
   const navigate = useNavigate();
-
   const [thumbnailUrl, setThumbnailUrl] = useState(
     product.frameMedia && product.frameMedia.length > 0 
       ? product.frameMedia[0].mediaUrl 
       : null
   );
+  
+  // --- STATE PREORDER ---
+  const [preorderInfo, setPreorderInfo] = useState(null);
+
+  // Xác định trạng thái hết hàng cơ bản
+  const isOutOfStock = product.stockQuantity <= 0 || product.status === "OutOfStock" || product.status === "outofstock";
+
+  // Check Pre-order nếu hết hàng
+  useEffect(() => {
+    if (isOutOfStock) {
+      getActiveCampaigns().then(campaigns => {
+        for (const camp of campaigns) {
+          const frameInCamp = camp.frames?.find(f => f.frameId === (product.id || product.frameId));
+          if (frameInCamp) {
+            setPreorderInfo({
+              campaignPrice: frameInCamp.campaignPrice,
+              expectedDeliveryDate: camp.estimatedDeliveryDate
+            });
+            break; 
+          }
+        }
+      });
+    }
+  }, [product, isOutOfStock]);
 
   useEffect(() => {
     if (thumbnailUrl) return;
@@ -30,16 +65,13 @@ function ProductCard({ product }) {
     fetchThumbnail();
   }, [product, thumbnailUrl]);
 
-  // Xác định trạng thái hàng
-  const isOutOfStock =
-    product.stockQuantity <= 0 ||
-    product.status === "OutOfStock" ||
-    product.status === "outofstock";
+  // Cờ chốt cuối cùng
+  const isPreorder = isOutOfStock && preorderInfo !== null;
 
   return (
     <div
       style={{
-        border: `1px solid ${isOutOfStock ? "#fecaca" : "#ddd"}`,
+        border: `1px solid ${isPreorder ? "#93c5fd" : isOutOfStock ? "#fecaca" : "#ddd"}`,
         padding: "14px",
         width: "230px",
         borderRadius: "12px",
@@ -59,7 +91,25 @@ function ProductCard({ product }) {
       }}
     >
       {/* Badge trạng thái góc trên */}
-      {isOutOfStock && (
+      {isPreorder ? (
+        <div
+          style={{
+            position: "absolute",
+            top: "10px",
+            left: "10px",
+            backgroundColor: "#2563eb", // Xanh dương cho Pre-order
+            color: "white",
+            fontSize: "11px",
+            fontWeight: "bold",
+            padding: "3px 8px",
+            borderRadius: "20px",
+            letterSpacing: "0.3px",
+            zIndex: 2,
+          }}
+        >
+          ⏱️ Pre-order
+        </div>
+      ) : isOutOfStock ? (
         <div
           style={{
             position: "absolute",
@@ -77,7 +127,7 @@ function ProductCard({ product }) {
         >
           Out of Stock
         </div>
-      )}
+      ) : null}
 
       {/* Ảnh sản phẩm */}
       <div style={{ position: "relative" }}>
@@ -91,23 +141,16 @@ function ProductCard({ product }) {
               height: "150px",
               objectFit: "contain",
               marginBottom: "10px",
-              opacity: isOutOfStock ? 0.75 : 1,
+              opacity: (isOutOfStock && !isPreorder) ? 0.75 : 1, // Làm mờ nếu out of stock THẬT SỰ
               transition: "opacity 0.2s",
             }}
           />
         ) : (
           <div
             style={{
-              width: "100%",
-              height: "150px",
-              backgroundColor: "#f9fafb",
-              marginBottom: "10px",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#ccc",
-              fontSize: "12px",
+              width: "100%", height: "150px", backgroundColor: "#f9fafb",
+              marginBottom: "10px", borderRadius: "8px", display: "flex",
+              alignItems: "center", justifyContent: "center", color: "#ccc", fontSize: "12px",
             }}
           >
             Đang tải ảnh...
@@ -116,29 +159,21 @@ function ProductCard({ product }) {
       </div>
 
       {/* Giá & Rating */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "6px",
-        }}
-      >
-        <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-          ${product.basePrice || product.price || 0}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+        <span style={{ fontSize: "20px", fontWeight: "bold", color: isPreorder ? "#2563eb" : "#000" }}>
+          ${isPreorder ? preorderInfo.campaignPrice : (product.basePrice || product.price || 0)}
         </span>
+        
+        {/* Nếu là Pre-order, hiển thị giá gốc bị gạch ngang */}
+        {isPreorder && (
+          <span style={{ fontSize: "13px", textDecoration: "line-through", color: "#9ca3af" }}>
+             ${product.basePrice || product.price || 0}
+          </span>
+        )}
       </div>
 
       {/* Tên sản phẩm */}
-      <p
-        style={{
-          fontWeight: "500",
-          margin: "5px 0",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
+      <p style={{ fontWeight: "500", margin: "5px 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {product.frameName || product.name || "Chưa có tên"}
       </p>
 
@@ -148,32 +183,16 @@ function ProductCard({ product }) {
       </p>
 
       {/* Dòng trạng thái tồn kho */}
-      {isOutOfStock ? (
-        <div
-          style={{
-            marginTop: "6px",
-            padding: "5px 10px",
-            backgroundColor: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: "6px",
-            fontSize: "12px",
-            color: "#dc2626", // Chữ đỏ
-            fontWeight: "bold",
-            textAlign: "center",
-          }}
-        >
+      {isPreorder ? (
+        <div style={{ marginTop: "6px", padding: "5px 10px", backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "6px", fontSize: "11px", color: "#1d4ed8", fontWeight: "bold", textAlign: "center" }}>
+          Giao: {new Date(preorderInfo.expectedDeliveryDate).toLocaleDateString("vi-VN")}
+        </div>
+      ) : isOutOfStock ? (
+        <div style={{ marginTop: "6px", padding: "5px 10px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: "6px", fontSize: "12px", color: "#dc2626", fontWeight: "bold", textAlign: "center" }}>
           Hết hàng (Out of Stock)
         </div>
       ) : (
-        <div
-          style={{
-            marginTop: "6px",
-            fontSize: "12px",
-            color: product.stockQuantity <= (product.reorderLevel || 5) ? "#d97706" : "#10b981",
-            fontWeight: "500",
-          }}
-        >
-          {/* Để trống hoặc hiển thị "Sắp hết" nếu muốn */}
+        <div style={{ marginTop: "6px", fontSize: "12px", color: product.stockQuantity <= (product.reorderLevel || 5) ? "#d97706" : "#10b981", fontWeight: "500" }}>
         </div>
       )}
     </div>
