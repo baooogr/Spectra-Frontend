@@ -25,7 +25,8 @@ export default function AdminLayout() {
           <Link to="/admin/lenstypes" className="admin-link">Quản lý Tròng Kính</Link> 
           <Link to="/admin/lensfeatures" className="admin-link">Quản lý Tính Năng Tròng</Link>
           <Link to="/admin/orders" className="admin-link">Đơn hàng</Link>
-
+          <Link to="/admin/policy" className="admin-link">Chính Sách</Link>
+          <Link to="/admin/shipping" className="admin-link">Vận Chuyển</Link>
           {/* ⚡ DEMO: Mở nút này cho cả admin và manager */}
           {(role === "admin" || role === "manager") && (
             <Link to="/admin/users" className="admin-link">Quản lý Người Dùng</Link>
