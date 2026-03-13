@@ -20,6 +20,9 @@ export default function AdminLayout() {
         <div className="admin-logo">Spectra Admin</div>
         
         <nav className="admin-nav">
+          <Link to="/" className="admin-link" style={{ color: '#10b981', fontWeight: 'bold', marginBottom: '10px' }}>
+            🏠 Về Trang Chủ
+          </Link>
           <Link to="/admin" className="admin-link">Tổng quan</Link>
           <Link to="/admin/products" className="admin-link">Quản lý Kính</Link>
           <Link to="/admin/lenstypes" className="admin-link">Quản lý Tròng Kính</Link> 
