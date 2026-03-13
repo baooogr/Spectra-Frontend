@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
-// Tái sử dụng lại CSS của trang AdminProducts để giao diện đồng bộ
 import '../components/layout/AdminLayout.css'; 
 import './AdminProducts.css'; 
 
@@ -13,7 +12,6 @@ export default function AdminPreorderCampaigns() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Khởi tạo Form theo đúng API Backend yêu cầu
   const initialForm = {
     campaignName: "",
     description: "",
@@ -21,7 +19,7 @@ export default function AdminPreorderCampaigns() {
     endDate: "",
     maxSlots: 100,
     estimatedDeliveryDate: "",
-    frames: [] // Sẽ chứa mảng các Frame: { frameId, campaignPrice, maxQuantityPerOrder }
+    frames: [] 
   };
   const [formData, setFormData] = useState(initialForm);
 
@@ -31,13 +29,12 @@ export default function AdminPreorderCampaigns() {
     "Authorization": `Bearer ${token}` 
   };
 
-  // Lấy danh sách Campaign để hiển thị ra bảng
+  // ⚡ CẬP NHẬT THEO API MỚI CỦA BE: Fetch TẤT CẢ chiến dịch
   const fetchCampaigns = async () => {
     setIsLoading(true);
     try {
-      // Gọi API lấy chiến dịch đang Active. 
-      // (Nếu BE có viết API GET /api/PreorderCampaigns chung cho Admin thì đổi lại url nhé)
-      const res = await fetch("https://myspectra.runasp.net/api/PreorderCampaigns/active", { headers });
+      // BE đã sửa API này trả về tất cả (upcoming, active, ended)
+      const res = await fetch("[https://myspectra.runasp.net/api/PreorderCampaigns?page=1&pageSize=100](https://myspectra.runasp.net/api/PreorderCampaigns?page=1&pageSize=100)", { headers });
       if (res.ok) {
         const data = await res.json();
         setCampaigns(data.items || data || []);
@@ -49,17 +46,18 @@ export default function AdminPreorderCampaigns() {
     }
   };
 
-  // FLOW: Chỉ lấy danh sách Kính Đang Hết Hàng (Out of Stock) để đưa vào Pre-order
+  // Lấy sản phẩm hết hàng cho Admin
   const fetchOutOfStockFrames = async () => {
     try {
-      const res = await fetch("https://myspectra.runasp.net/api/Frames/inventory/out-of-stock", { headers });
+      const res = await fetch("[https://myspectra.runasp.net/api/Frames/inventory/out-of-stock](https://myspectra.runasp.net/api/Frames/inventory/out-of-stock)", { headers });
       if (res.ok) {
         const data = await res.json();
-        setOutOfStockFrames(data.items || data || []);
+        const rawFrames = data.items || data || [];
+        // Lọc chắc chắn tồn kho = 0 (phòng hờ)
+        const trueOutStockFrames = rawFrames.filter(f => f.stockQuantity <= 0 || f.status === 'out_of_stock');
+        setOutOfStockFrames(trueOutStockFrames);
       }
-    } catch (err) {
-      console.error("Lỗi fetch out of stock frames:", err);
-    }
+    } catch (err) { console.error("Lỗi fetch out of stock frames:", err); }
   };
 
   useEffect(() => {
@@ -68,35 +66,31 @@ export default function AdminPreorderCampaigns() {
 
   const handleOpenModal = () => {
     setFormData(initialForm);
-    fetchOutOfStockFrames(); // Mở modal thì mới bắt đầu gọi API check kho
+    fetchOutOfStockFrames(); 
     setIsModalOpen(true);
   };
 
-  // Xử lý Tích chọn/Bỏ chọn sản phẩm đưa vào chiến dịch
   const handleToggleFrame = (frame) => {
     const isSelected = formData.frames.some(f => f.frameId === (frame.id || frame.frameId));
     if (isSelected) {
-      // Nếu đã có thì xóa khỏi mảng
       setFormData(prev => ({
         ...prev,
         frames: prev.frames.filter(f => f.frameId !== (frame.id || frame.frameId))
       }));
     } else {
-      // Nếu chưa có thì thêm vào mảng, thiết lập giá trị mặc định cho Giá Pre-order và Giới hạn mua
       setFormData(prev => ({
         ...prev,
         frames: [...prev.frames, {
           frameId: frame.id || frame.frameId,
           frameName: frame.frameName,
           basePrice: frame.basePrice,
-          campaignPrice: frame.basePrice, // Khởi tạo Giá Pre-order = Giá Gốc (Admin tự sửa lại sau)
-          maxQuantityPerOrder: 2 // Theo rule Backend là mặc định 2
+          campaignPrice: frame.basePrice, 
+          maxQuantityPerOrder: 2 
         }]
       }));
     }
   };
 
-  // Xử lý khi Admin tự gõ thay đổi Giá Preorder hoặc Số lượng giới hạn
   const handleFrameConfigChange = (frameId, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -104,7 +98,6 @@ export default function AdminPreorderCampaigns() {
     }));
   };
 
-  // Gửi thông tin tạo Chiến dịch
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.frames.length === 0) {
@@ -118,8 +111,6 @@ export default function AdminPreorderCampaigns() {
     }
 
     setIsSubmitting(true);
-    
-    
     const formatDt = (dt) => dt.length === 16 ? dt + ":00" : dt;
 
     const payload = {
@@ -137,14 +128,14 @@ export default function AdminPreorderCampaigns() {
     };
 
     try {
-      const res = await fetch("https://myspectra.runasp.net/api/PreorderCampaigns", {
+      const res = await fetch("[https://myspectra.runasp.net/api/PreorderCampaigns](https://myspectra.runasp.net/api/PreorderCampaigns)", {
         method: "POST",
         headers,
         body: JSON.stringify(payload)
       });
       
       if (res.ok || res.status === 201) {
-        alert("Tạo chiến dịch Pre-order thành công! Sản phẩm này đã sống lại trên trang chủ.");
+        alert("Tạo chiến dịch Pre-order thành công!");
         setIsModalOpen(false);
         fetchCampaigns();
       } else {
@@ -158,31 +149,21 @@ export default function AdminPreorderCampaigns() {
     }
   };
 
-  // Xử lý nút Kết thúc sớm Chiến dịch
   const handleEndCampaign = async (id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn KẾT THÚC SỚM chiến dịch này? Sản phẩm sẽ lập tức bị ẩn khỏi trang chủ vì Out of Stock.")) return;
-    
+    if (!window.confirm("Bạn có chắc chắn muốn KẾT THÚC SỚM chiến dịch này?")) return;
     try {
-      const res = await fetch(`https://myspectra.runasp.net/api/PreorderCampaigns/${id}/end`, {
-        method: "PATCH",
-        headers
-      });
-      
+      const res = await fetch(`https://myspectra.runasp.net/api/PreorderCampaigns/${id}/end`, { method: "PATCH", headers });
       if (res.ok) {
         alert("Đã ép kết thúc chiến dịch!");
         fetchCampaigns();
-      } else {
-        alert("Lỗi khi kết thúc chiến dịch.");
-      }
-    } catch (err) {
-      alert("Lỗi kết nối mạng.");
-    }
+      } else { alert("Lỗi khi kết thúc chiến dịch."); }
+    } catch (err) { alert("Lỗi kết nối mạng."); }
   };
 
   return (
     <div className="admin-products-container">
       <div className="admin-products-header">
-        <h2 className="admin-products-title">Quản Lý Chiến Dịch Pre-order</h2>
+        <h2 className="admin-products-title">🚀 Quản Lý Chiến Dịch Đặt Trước (Pre-order)</h2>
         <button onClick={handleOpenModal} className="btn-add">+ Tạo Chiến Dịch Mới</button>
       </div>
 
@@ -200,9 +181,15 @@ export default function AdminPreorderCampaigns() {
           </thead>
           <tbody>
             {isLoading ? <tr><td colSpan="6" className="col-action">⏳ Đang tải dữ liệu...</td></tr> : 
-             campaigns.length === 0 ? <tr><td colSpan="6" className="col-action">Chưa có chiến dịch nào.</td></tr> :
+             campaigns.length === 0 ? <tr><td colSpan="6" className="col-action">Chưa có chiến dịch nào được tìm thấy.</td></tr> :
              campaigns.map((camp) => {
-                const isActive = camp.status === "active";
+                
+                // ⚡ CẬP NHẬT THEO API BE: Sử dụng trực tiếp Status do BE gửi xuống
+                const currentStatus = (camp.status || "").toLowerCase();
+                const isEnded = currentStatus === "ended" || camp.currentSlots >= camp.maxSlots;
+                // Có thể nhấn Dừng khẩn cấp nếu chiến dịch đang chạy hoặc chưa chạy
+                const canEndEarly = !isEnded; 
+
                 return (
                   <tr key={camp.campaignId || camp.id}>
                     <td className="col-name">
@@ -210,8 +197,8 @@ export default function AdminPreorderCampaigns() {
                       <div style={{fontSize: '13px', color: '#6b7280'}}>Gồm {camp.frames?.length || 0} sản phẩm</div>
                     </td>
                     <td style={{fontSize: '14px', lineHeight: '1.5'}}>
-                      <span style={{color: '#047857'}}>Bắt đầu: {new Date(camp.startDate).toLocaleDateString('vi-VN')}</span> <br/>
-                      <span style={{color: '#be123c'}}>Kết thúc: {new Date(camp.endDate).toLocaleDateString('vi-VN')}</span>
+                      <span style={{color: '#047857'}}>Bắt đầu: {new Date(camp.startDate).toLocaleDateString('vi-VN')} {new Date(camp.startDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span> <br/>
+                      <span style={{color: '#be123c'}}>Kết thúc: {new Date(camp.endDate).toLocaleDateString('vi-VN')} {new Date(camp.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span>
                     </td>
                     <td style={{fontWeight: 'bold'}}>{new Date(camp.estimatedDeliveryDate).toLocaleDateString('vi-VN')}</td>
                     <td>
@@ -220,15 +207,20 @@ export default function AdminPreorderCampaigns() {
                       </span>
                     </td>
                     <td>
-                      {isActive 
-                        ? <span style={{padding: '4px 8px', background: '#d1fae5', color: '#065f46', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px'}}>Đang chạy</span>
-                        : <span style={{padding: '4px 8px', background: '#fee2e2', color: '#991b1b', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px'}}>Đã kết thúc</span>
+                      {/* ⚡ XỬ LÝ GIAO DIỆN CHUẨN THEO KEYWORD CỦA BE */}
+                      {isEnded 
+                        ? <span style={{padding: '4px 8px', background: '#fee2e2', color: '#991b1b', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px'}}>Đã kết thúc</span>
+                        : currentStatus === "upcoming" 
+                          ? <span style={{padding: '4px 8px', background: '#fef3c7', color: '#92400e', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px'}}>Chưa bắt đầu</span>
+                          : currentStatus === "active"
+                            ? <span style={{padding: '4px 8px', background: '#d1fae5', color: '#065f46', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px'}}>Đang chạy</span>
+                            : <span style={{padding: '4px 8px', background: '#f3f4f6', color: '#4b5563', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px'}}>{currentStatus}</span>
                       }
                     </td>
                     <td className="col-action">
-                      {isActive && (
+                      {canEndEarly && (
                         <button onClick={() => handleEndCampaign(camp.campaignId || camp.id)} style={{padding: '8px 15px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}>
-                          Kết Thúc Sớm
+                          Dừng Khẩn Cấp
                         </button>
                       )}
                     </td>
@@ -272,14 +264,13 @@ export default function AdminPreorderCampaigns() {
                 </div>
               </div>
 
-              
               <div style={{borderTop: '2px solid #f3f4f6', paddingTop: '20px', marginBottom: '25px'}}>
-                <h3 style={{margin: '0 0 10px 0'}}>Chọn Sản Phẩm (Kho Đang Báo Hết Hàng)</h3>
-                <p style={{fontSize: '13px', color: '#6b7280', margin: '0 0 15px 0'}}>Tích chọn sản phẩm Out of stock để đưa vào đợt Pre-order, tự thiết lập giá ưu đãi (Campaign Price) và Giới hạn mua mỗi người.</p>
+                <h3 style={{margin: '0 0 10px 0'}}>📦 Chọn Sản Phẩm (Kho Đang Báo Hết Hàng)</h3>
+                <p style={{fontSize: '13px', color: '#6b7280', margin: '0 0 15px 0'}}>Tích chọn sản phẩm để đưa vào đợt Pre-order, tự thiết lập giá ưu đãi (Campaign Price) và Giới hạn mua mỗi người.</p>
                 
                 <div style={{maxHeight: '250px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px', backgroundColor: '#f9fafb'}}>
                   {outOfStockFrames.length === 0 ? (
-                    <div style={{padding: '20px', textAlign: 'center', color: '#9ca3af', fontWeight: 'bold'}}>Không có sản phẩm nào đang hết hàng (out of stock) để chạy chiến dịch lúc này.</div>
+                    <div style={{padding: '20px', textAlign: 'center', color: '#9ca3af', fontWeight: 'bold'}}>Không có sản phẩm nào hết hàng (stock = 0) để chạy chiến dịch lúc này.</div>
                   ) : (
                     outOfStockFrames.map(frame => {
                       const isChecked = formData.frames.some(f => f.frameId === (frame.id || frame.frameId));
@@ -293,7 +284,6 @@ export default function AdminPreorderCampaigns() {
                             <span style={{fontSize: '13px', color: '#6b7280'}}>Giá đang bán: <strong style={{textDecoration: 'line-through'}}>${frame.basePrice}</strong></span>
                           </div>
                           
-                         
                           {isChecked && (
                             <div style={{display: 'flex', gap: '15px'}}>
                               <div>
