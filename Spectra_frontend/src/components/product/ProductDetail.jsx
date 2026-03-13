@@ -5,6 +5,7 @@ import LensSelectionModal from "../ui/LensSelectionModal";
 import Modal from "../ui/Modal";
 import "./ProductDetail.css";
 
+
 const fallbackImage = "https://placehold.co/600x400/eeeeee/999999?text=No+Image";
 
 const ImageGallery = ({ images }) => {
@@ -67,7 +68,7 @@ export default function ProductDetail() {
         ]);
 
         if (!productRes.ok) throw new Error("Không thể tải thông tin sản phẩm");
-        
+
         const productData = await productRes.json();
         setProduct(productData);
 
@@ -92,10 +93,10 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleConfirmAddToCart = (cartDataOptions) => {
-    console.log("DỮ LIỆU TỪ MODAL TRUYỀN RA:", cartDataOptions); 
+    console.log("DỮ LIỆU TỪ MODAL TRUYỀN RA:", cartDataOptions);
 
     const colorObj = selectedColor?.color || selectedColor || {};
-    
+
     const itemData = {
       id: product.id || product.frameId,
       name: product.frameName,
@@ -111,13 +112,13 @@ export default function ProductDetail() {
         prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
 
         // Thông tin để hiển thị UI (Giữ nguyên như cũ)
-        type: cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A", 
-        feature: cartDataOptions.lensDetails.lensFeature?.featureSpecification || "Không có", 
-        typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0, 
-        featurePrice: cartDataOptions.lensDetails.lensFeature?.extraPrice || 0 
+        type: cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
+        feature: cartDataOptions.lensDetails.lensFeature?.featureSpecification || "Không có",
+        typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0,
+        featurePrice: cartDataOptions.lensDetails.lensFeature?.extraPrice || 0
       } : null
     };
-    
+
     addToCart(itemData, quantity);
     setIsLensModalOpen(false);
     setIsSuccessModalOpen(true);
@@ -131,7 +132,13 @@ export default function ProductDetail() {
 
   return (
     <>
-      <LensSelectionModal isOpen={isLensModalOpen} onClose={() => setIsLensModalOpen(false)} product={product} onConfirmAddToCart={handleConfirmAddToCart} />
+      <LensSelectionModal
+        isOpen={isLensModalOpen}
+        onClose={() => setIsLensModalOpen(false)}
+        product={product}
+        supportedLensTypes={supportedLensTypes} /* ⚡ TRUYỀN DANH SÁCH XUỐNG MODAL */
+        onConfirmAddToCart={handleConfirmAddToCart}
+      />
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} />
 
       <div className="product-detail-container">
@@ -175,8 +182,19 @@ export default function ProductDetail() {
             <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!inStock || quantity >= currentStock}>+</button>
           </div>
 
-          <button onClick={() => setIsLensModalOpen(true)} className="btn-add-cart active" disabled={!inStock}>
-            🛒 Thêm vào giỏ hàng
+          <button
+            onClick={() => setIsLensModalOpen(true)}
+            className={`btn-add-cart ${inStock ? 'active' : ''}`}
+            disabled={!inStock}
+            style={!inStock ? {
+              backgroundColor: '#e5e7eb',
+              color: '#9ca3af',
+              cursor: 'not-allowed',
+              boxShadow: 'none',
+              border: '1px solid #d1d5db'
+            } : {}}
+          >
+            {inStock ? "🛒 Thêm vào giỏ hàng" : "🚫 Out of stock"}
           </button>
 
           <div className="product-info-grid">
@@ -202,7 +220,7 @@ export default function ProductDetail() {
                 {supportedLensTypes.length > 0 && (
                   <div className="lens-types-section" style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
                     <h4 style={{ fontSize: '13px', marginBottom: '10px', color: '#111827', fontWeight: '700' }}>
-                      LOẠI TRÒNG KÍNH TƯƠNG THÍCH:
+                      LOẠI TRÒNG KÍNH HỖ TRỢ:
                     </h4>
                     {supportedLensTypes.map((lt) => (
                       <div className="info-row" key={lt.id || lt.lensTypeId} style={{ padding: '8px 0' }}>

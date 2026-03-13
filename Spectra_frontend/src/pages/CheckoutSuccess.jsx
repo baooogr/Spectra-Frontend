@@ -20,7 +20,7 @@ export default function CheckoutSuccess() {
   const formatCurrency = (amountInUSD) => {
     if (typeof amountInUSD !== "number") return null;
 
-    const EXCHANGE_RATE = 26250; 
+    const EXCHANGE_RATE = 25400; 
     
     // 1. Format USD: bỏ phần thập phân .00 nếu là số chẵn
     const formattedUSD = new Intl.NumberFormat("en-US", {

@@ -53,7 +53,7 @@ export default function VNPayReturnPage() {
   const formatAmount = (raw) => {
     if (!raw) return "—";
     
-    const EXCHANGE_RATE = 26250; 
+    const EXCHANGE_RATE = 25400; 
     let amountUSD = 0;
     let amountVND = 0;
     let rawNumber = Number(raw);

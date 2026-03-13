@@ -29,7 +29,7 @@ const cylOptions = generateOptions(-6, 6, 0.25);
 const pdOptions = Array.from({ length: 79 - 57 + 1 }, (_, i) => 57 + i);
 const axisOptions = Array.from({ length: 181 }, (_, i) => i);
 
-export default function LensSelectionModal({ isOpen, onClose, product, onConfirmAddToCart }) {
+export default function LensSelectionModal({ isOpen, onClose, product, supportedLensTypes = [], onConfirmAddToCart }) {
   const navigate = useNavigate();
 
   const [lensTypes, setLensTypes] = useState([]);
@@ -204,15 +204,53 @@ export default function LensSelectionModal({ isOpen, onClose, product, onConfirm
         <p style={{ color: "#666", marginBottom: '20px' }}>Gọng: <strong>{product?.frameName}</strong> (${basePrice})</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
+          {/* PHẦN 1: CHỌN LOẠI TRÒNG */}
           <div>
             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>1. Chọn Loại Tròng:</label>
-            <select style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} value={selectedLensType} onChange={(e) => setSelectedLensType(e.target.value)}>
+            <select 
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', outline: 'none' }} 
+              // Lấy ID làm value để hiển thị
+              value={typeof selectedLensType === 'object' ? (selectedLensType.id || selectedLensType.lensTypeId) : selectedLensType} 
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                if (!selectedId) {
+                  setSelectedLensType("");
+                  return;
+                }
+                
+                // ⚡ TÌM TRÒNG KÍNH VỪA CHỌN VÀ KIỂM TRA TƯƠNG THÍCH
+                const lens = lensTypes.find(l => String(l.id || l.lensTypeId) === selectedId);
+                const isSupported = supportedLensTypes.length === 0 || supportedLensTypes.some(
+                  s => s.lensTypeId === (lens.id || lens.lensTypeId) || s.lensSpecification === (lens.lensSpecification || lens.typeName)
+                );
+
+                // ⚡ NẾU KHÔNG HỖ TRỢ -> HIỆN THÔNG BÁO VÀ CHẶN KHÔNG CHO CHỌN
+                if (!isSupported) {
+                  alert(`❌ Gọng kính này không hỗ trợ: ${lens.lensSpecification || lens.typeName}`);
+                  return; 
+                }
+
+                // Nếu hợp lệ thì mới lưu vào State
+                setSelectedLensType(selectedId);
+              }}
+            >
               <option value="">-- Chọn loại tròng --</option>
-              {lensTypes.map((type) => (
-                <option key={type.lensTypeId || type.id} value={type.lensTypeId || type.id}>
-                  {type.typeName || type.lensSpecification} (+${type.basePrice || 0}) {type.requiresPrescription ? '[⚠️ Cần Toa]' : ''}
-                </option>
-              ))}
+              {lensTypes.map((lens) => {
+                // KIỂM TRA ĐỂ ĐỔI GIAO DIỆN BÊN TRONG DANH SÁCH MENU
+                const isSupported = supportedLensTypes.length === 0 || supportedLensTypes.some(
+                  s => s.lensTypeId === (lens.id || lens.lensTypeId) || s.lensSpecification === (lens.lensSpecification || lens.typeName)
+                );
+
+                return (
+                  <option 
+                    key={lens.id || lens.lensTypeId} 
+                    value={lens.id || lens.lensTypeId}
+                    style={!isSupported ? { color: "#9ca3af" } : { color: "#111827" }} // Đổi màu xám nếu không hỗ trợ
+                  >
+                    {lens.lensSpecification || lens.typeName} (+${lens.basePrice || 0}) {!isSupported ? " (🚫 Không hỗ trợ)" : ""}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
