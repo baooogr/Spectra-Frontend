@@ -57,7 +57,7 @@ export default function CheckoutPage() {
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   // ⚡ ĐỒNG BỘ ĐỊNH DẠNG FORMAT GIÁ TIỀN ÉP SÁT NGOẶC ($175(4.593.750 VND))
-  const EXCHANGE_RATE = 26250; 
+  const EXCHANGE_RATE = 25400; 
   const formatPrice = (n) => {
     const usd = new Intl.NumberFormat("en-US", { 
       style: "currency", 
@@ -120,7 +120,8 @@ export default function CheckoutPage() {
 
       // 2. Payload tạo đơn hàng
       const payload = {
-        shippingAddress: form.address.trim(),
+        // ⚡ TRICK: Nhồi Họ tên, SĐT và Email vào đầu chuỗi địa chỉ
+        shippingAddress: `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${form.address.trim()}`,
         shippingMethod: "standard",
         items: formattedItems
       };

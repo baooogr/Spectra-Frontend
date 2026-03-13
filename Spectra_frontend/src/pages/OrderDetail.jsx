@@ -53,7 +53,7 @@ export default function OrderDetail() {
     );
 
   // ⚡ HÀM FORMAT TIỀN TỆ ĐỒNG BỘ Y HỆT CHECKOUT SUCCESS
-  const EXCHANGE_RATE = 26250;
+  const EXCHANGE_RATE = 25400;
   const formatPrice = (n) => {
     const usd = new Intl.NumberFormat("en-US", { 
       style: "currency", 
@@ -85,17 +85,37 @@ export default function OrderDetail() {
     );
   };
 
-  const receiverName    = order.user?.fullName  || "—";
-  const receiverPhone   = order.user?.phone     || "—";
-  const shippingAddress = order.shippingAddress || "—";
-  const orderNote       = order.note            || "Không có";
+  let receiverName    = (order.user?.fullName || "—").replace("Nh?t", "Nhật");
+  let receiverPhone   = order.user?.phone     || "—";
+  let receiverEmail   = order.user?.email     || "—";
+  let shippingAddress = order.shippingAddress || "—";
+  const orderNote     = order.note            || "Không có";
 
-  const paymentMethodLabel =
-    order.paymentMethod === "COD"   ? "Thanh toán khi nhận hàng (COD)"
-    : order.paymentMethod === "VNPAY" ? "VNPay"
-    : order.paymentMethod           || "—";
+  // 2. ⚡ TRICK: Bóc tách với nhiều kịch bản (Fallback)
+  // Kịch bản 1: Chuẩn mới nhất [Tên - SĐT - Email] Địa chỉ
+  const matchNew = shippingAddress.match(/^\[(.*?) - (.*?) - (.*?)\] (.*)$/);
+  // Kịch bản 2: Bị lỗi dư ngoặc [Tên - SĐT] Email] Địa chỉ (như trong ảnh của bạn)
+  const matchError = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*?)] (.*)$/);
+  // Kịch bản 3: Chuẩn cũ ngày xưa [Tên - SĐT] Địa chỉ
+  const matchOld = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*)$/);
 
-  const itemsList = order.orderItems?.filter(Boolean) || [];
+  if (matchNew) {
+    receiverName    = matchNew[1];
+    receiverPhone   = matchNew[2];
+    receiverEmail   = matchNew[3];
+    shippingAddress = matchNew[4];
+  } else if (matchError) {
+    receiverName    = matchError[1];
+    receiverPhone   = matchError[2];
+    receiverEmail   = matchError[3].trim();
+    shippingAddress = matchError[4];
+  } else if (matchOld) {
+    receiverName    = matchOld[1];
+    receiverPhone   = matchOld[2];
+    shippingAddress = matchOld[3];
+  }
+
+  const itemsList = order.items || order.orderItems || [];
 
   return (
     <div style={{ maxWidth: "860px", margin: "40px auto", padding: "20px", fontFamily: "sans-serif" }}>
@@ -150,6 +170,12 @@ export default function OrderDetail() {
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
               <b>Số điện thoại:</b> {receiverPhone}
             </p>
+            {/* ⚡ THÊM DÒNG NÀY ĐỂ HIỂN THỊ EMAIL */}
+            {receiverEmail !== "—" && (
+              <p style={{ margin: "6px 0", fontSize: "14px" }}>
+                <b>Email:</b> {receiverEmail}
+              </p>
+            )}
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
               <b>Địa chỉ giao hàng:</b> {shippingAddress}
             </p>

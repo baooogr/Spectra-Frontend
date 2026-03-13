@@ -14,7 +14,7 @@ export default function OrderHistory() {
   const [activeTab, setActiveTab] = useState("all"); // "all" | "orders" | "preorders"
 
   // ⚡ THÊM HÀM FORMAT TIỀN TỆ VÀO ĐÂY
-  const EXCHANGE_RATE = 26250;
+  const EXCHANGE_RATE = 25400;
   const formatPrice = (n) => {
     const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n);
     const vnd = new Intl.NumberFormat("vi-VN").format(n * EXCHANGE_RATE) + " VND";
