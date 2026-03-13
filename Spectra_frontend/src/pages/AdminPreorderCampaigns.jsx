@@ -29,12 +29,10 @@ export default function AdminPreorderCampaigns() {
     "Authorization": `Bearer ${token}` 
   };
 
-  // ⚡ CẬP NHẬT THEO API MỚI CỦA BE: Fetch TẤT CẢ chiến dịch
   const fetchCampaigns = async () => {
     setIsLoading(true);
     try {
-      // BE đã sửa API này trả về tất cả (upcoming, active, ended)
-      const res = await fetch("[https://myspectra.runasp.net/api/PreorderCampaigns?page=1&pageSize=100](https://myspectra.runasp.net/api/PreorderCampaigns?page=1&pageSize=100)", { headers });
+      const res = await fetch("https://myspectra.runasp.net/api/PreorderCampaigns?page=1&pageSize=100", { headers });
       if (res.ok) {
         const data = await res.json();
         setCampaigns(data.items || data || []);
@@ -46,16 +44,13 @@ export default function AdminPreorderCampaigns() {
     }
   };
 
-  // Lấy sản phẩm hết hàng cho Admin
   const fetchOutOfStockFrames = async () => {
     try {
-      const res = await fetch("[https://myspectra.runasp.net/api/Frames/inventory/out-of-stock](https://myspectra.runasp.net/api/Frames/inventory/out-of-stock)", { headers });
+      const res = await fetch("https://myspectra.runasp.net/api/Frames/inventory/out-of-stock", { headers });
       if (res.ok) {
         const data = await res.json();
         const rawFrames = data.items || data || [];
-        // Lọc chắc chắn tồn kho = 0 (phòng hờ)
-        const trueOutStockFrames = rawFrames.filter(f => f.stockQuantity <= 0 || f.status === 'out_of_stock');
-        setOutOfStockFrames(trueOutStockFrames);
+        setOutOfStockFrames(rawFrames);
       }
     } catch (err) { console.error("Lỗi fetch out of stock frames:", err); }
   };
@@ -128,7 +123,7 @@ export default function AdminPreorderCampaigns() {
     };
 
     try {
-      const res = await fetch("[https://myspectra.runasp.net/api/PreorderCampaigns](https://myspectra.runasp.net/api/PreorderCampaigns)", {
+      const res = await fetch("https://myspectra.runasp.net/api/PreorderCampaigns", {
         method: "POST",
         headers,
         body: JSON.stringify(payload)
@@ -184,10 +179,22 @@ export default function AdminPreorderCampaigns() {
              campaigns.length === 0 ? <tr><td colSpan="6" className="col-action">Chưa có chiến dịch nào được tìm thấy.</td></tr> :
              campaigns.map((camp) => {
                 
-                // ⚡ CẬP NHẬT THEO API BE: Sử dụng trực tiếp Status do BE gửi xuống
-                const currentStatus = (camp.status || "").toLowerCase();
+                // ⚡ 1. SỬA MỚI: FRONTEND ÉP LẠI TRẠNG THÁI GÁNH LỖI CHO BACKEND
+                const now = new Date();
+                const startDt = new Date(camp.startDate);
+                const endDt = new Date(camp.endDate);
+                let currentStatus = (camp.status || "").toLowerCase();
+
+                // Logic Override: Nếu đã qua thời gian bắt đầu mà BE vẫn gửi "upcoming", ép lại thành "active"
+                if (now >= startDt && now <= endDt && currentStatus === "upcoming") {
+                  currentStatus = "active";
+                } 
+                // Nếu quá giờ kết thúc mà BE chưa báo "ended", ép lại thành "ended"
+                else if (now > endDt && currentStatus !== "ended") {
+                  currentStatus = "ended";
+                }
+
                 const isEnded = currentStatus === "ended" || camp.currentSlots >= camp.maxSlots;
-                // Có thể nhấn Dừng khẩn cấp nếu chiến dịch đang chạy hoặc chưa chạy
                 const canEndEarly = !isEnded; 
 
                 return (
@@ -197,8 +204,8 @@ export default function AdminPreorderCampaigns() {
                       <div style={{fontSize: '13px', color: '#6b7280'}}>Gồm {camp.frames?.length || 0} sản phẩm</div>
                     </td>
                     <td style={{fontSize: '14px', lineHeight: '1.5'}}>
-                      <span style={{color: '#047857'}}>Bắt đầu: {new Date(camp.startDate).toLocaleDateString('vi-VN')} {new Date(camp.startDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span> <br/>
-                      <span style={{color: '#be123c'}}>Kết thúc: {new Date(camp.endDate).toLocaleDateString('vi-VN')} {new Date(camp.endDate).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span>
+                      <span style={{color: '#047857'}}>Bắt đầu: {startDt.toLocaleDateString('vi-VN')} {startDt.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span> <br/>
+                      <span style={{color: '#be123c'}}>Kết thúc: {endDt.toLocaleDateString('vi-VN')} {endDt.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</span>
                     </td>
                     <td style={{fontWeight: 'bold'}}>{new Date(camp.estimatedDeliveryDate).toLocaleDateString('vi-VN')}</td>
                     <td>
@@ -207,7 +214,6 @@ export default function AdminPreorderCampaigns() {
                       </span>
                     </td>
                     <td>
-                      {/* ⚡ XỬ LÝ GIAO DIỆN CHUẨN THEO KEYWORD CỦA BE */}
                       {isEnded 
                         ? <span style={{padding: '4px 8px', background: '#fee2e2', color: '#991b1b', borderRadius: '4px', fontWeight: 'bold', fontSize: '12px'}}>Đã kết thúc</span>
                         : currentStatus === "upcoming" 
@@ -306,7 +312,7 @@ export default function AdminPreorderCampaigns() {
               <div style={{display: 'flex', justifyContent: 'flex-end', gap: '15px'}}>
                 <button type="button" onClick={() => setIsModalOpen(false)} style={{padding: '12px 25px', backgroundColor: '#f3f4f6', color: '#111827', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px'}}>Hủy Bỏ</button>
                 <button type="submit" disabled={isSubmitting} style={{padding: '12px 25px', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}}>
-                  {isSubmitting ? "Đang xử lý..." : "Chạy Chiến Dịch Ngay"}
+                  {isSubmitting ? "Đang xử lý..." : "🚀 Chạy Chiến Dịch Ngay"}
                 </button>
               </div>
             </form>
