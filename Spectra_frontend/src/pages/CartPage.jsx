@@ -34,6 +34,7 @@ export default function CartPage() {
         <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>🛒 Giỏ hàng của bạn</h1>
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "30px" }}>
           
+          {/* CỘT TRÁI: DANH SÁCH SẢN PHẨM */}
           <div className="cart__left">
             {cartItems.length === 0 ? (
               <div style={{ textAlign: "center", padding: "50px", background: "#f9f9f9", borderRadius: "10px" }}>
@@ -41,74 +42,81 @@ export default function CartPage() {
                 <Link to="/" style={{ color: "#2563eb", textDecoration: "underline" }}>Tiếp tục mua sắm</Link>
               </div>
             ) : (
-              cartItems.map((item, idx) => (
-                <div key={idx} style={{ display: "flex", gap: "20px", padding: "15px", borderBottom: "1px solid #eee", alignItems: "center" }}>
-                  <img src={item.image} alt={item.name} style={{ width: "100px", height: "100px", objectFit: "contain", borderRadius: "8px", background: "#f9f9f9" }} />
-                  
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ margin: "0 0 8px 0" }}>{item.name}</h3>
-                    <div style={{ fontSize: "14px", color: "#555", lineHeight: "1.6" }}>
-                      <p style={{ margin: 0 }}>- <strong>Màu sắc:</strong> {item.color}</p>
-                      {item.lensInfo ? (
-                        <>
-                          <p style={{ margin: 0 }}>- <strong>Loại tròng:</strong> {item.lensInfo.type} </p>
-                          <p style={{ margin: 0 }}>- <strong>Tính năng tròng:</strong> {item.lensInfo.feature} </p>
-                        </>
-                      ) : (
-                        <p style={{ margin: 0, color: "#999", fontStyle: "italic" }}>Chỉ mua gọng kính</p>
-                      )}
+              cartItems.map((item, idx) => {
+                // Tạo key độc nhất để React không bị nhầm lẫn khi Xóa/Sửa số lượng
+                const uniqueKey = `${item.id}-${item.color}-${idx}`;
+                
+                return (
+                  <div key={uniqueKey} style={{ display: "flex", gap: "20px", padding: "15px", borderBottom: "1px solid #eee", alignItems: "center" }}>
+                    <img src={item.image} alt={item.name} style={{ width: "100px", height: "100px", objectFit: "contain", borderRadius: "8px", background: "#f9f9f9" }} />
+                    
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ margin: "0 0 8px 0" }}>{item.name}</h3>
+                      <div style={{ fontSize: "14px", color: "#555", lineHeight: "1.6" }}>
+                        <p style={{ margin: 0 }}>- <strong>Màu sắc:</strong> {item.color}</p>
+                        {item.lensInfo ? (
+                          <>
+                            <p style={{ margin: 0 }}>- <strong>Loại tròng:</strong> {item.lensInfo.type} </p>
+                            <p style={{ margin: 0 }}>- <strong>Tính năng tròng:</strong> {item.lensInfo.feature} </p>
+                          </>
+                        ) : (
+                          <p style={{ margin: 0, color: "#999", fontStyle: "italic" }}>Chỉ mua gọng kính</p>
+                        )}
+                      </div>
                     </div>
 
-                    {/* DÙNG THẺ DIV ĐỂ BUỘC XUỐNG DÒNG */}
-                    
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <button onClick={() => updateQty(item.id, Math.max(1, item.quantity - 1))} style={{ padding: "5px 10px" }}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQty(item.id, item.quantity + 1)} style={{ padding: "5px 10px" }}>+</button>
+                      <button onClick={() => removeItem(item.id)} style={{ color: "red", border: "none", background: "none", cursor: "pointer", fontSize: "18px" }}>🗑️</button>
+                    </div>
                   </div>
-
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <button onClick={() => updateQty(item.id, Math.max(1, item.quantity - 1))} style={{ padding: "5px 10px" }}>-</button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQty(item.id, item.quantity + 1)} style={{ padding: "5px 10px" }}>+</button>
-                    <button onClick={() => removeItem(item.id)} style={{ color: "red", border: "none", background: "none", cursor: "pointer", fontSize: "18px" }}>🗑️</button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
+          {/* CỘT PHẢI: TÓM TẮT ĐƠN HÀNG */}
           <div className="cart__right">
             <div style={{ background: "#f9fafb", padding: "20px", borderRadius: "12px", border: "1px solid #eee", position: "sticky", top: "20px" }}>
               <h2 style={{ fontSize: "18px", marginBottom: "15px", borderBottom: "1px solid #e5e7eb", paddingBottom: "10px" }}>Tóm tắt đơn hàng</h2>
               
               <div style={{ marginBottom: "20px", borderBottom: "1px solid #e5e7eb", paddingBottom: "10px", maxHeight: "350px", overflowY: "auto" }}>
-                {cartItems.map((item, idx) => (
-                  <div key={idx} style={{ marginBottom: "15px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827", flex: 1 }}>{item.quantity}x {item.name}</span>
-                      
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>{formatUSD(item.price * item.quantity)}</div>
-                        <div style={{ fontSize: "11px", color: "#6b7280" }}>({formatVND(item.price * item.quantity)})</div>
+                {cartItems.map((item, idx) => {
+                  const uniqueKey = `${item.id}-${item.color}-${idx}`;
+                  
+                  return (
+                    <div key={uniqueKey} style={{ marginBottom: "15px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <span style={{ fontSize: "14px", fontWeight: "600", color: "#111827", flex: 1 }}>{item.quantity}x {item.name}</span>
+                        
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}>{formatUSD(item.price * item.quantity)}</div>
+                          <div style={{ fontSize: "11px", color: "#6b7280" }}>({formatVND(item.price * item.quantity)})</div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px", paddingLeft: "10px", borderLeft: "2px solid #e5e7eb" }}>
-                      <p style={{ margin: "2px 0" }}>- Màu: {item.color}</p>
-                      {item.lensInfo && (
-                        <>
-                          <p style={{ margin: "2px 0" }}>- Tròng: {item.lensInfo.type} {item.lensInfo.typePrice > 0 && `(+${formatUSD(item.lensInfo.typePrice)})`}</p>
-                          <p style={{ margin: "2px 0" }}>- Tính năng: {item.lensInfo.feature} {item.lensInfo.featurePrice > 0 && `(+${formatUSD(item.lensInfo.featurePrice)})`}</p>
-                        </>
-                      )}
-                    </div>
-                    <div style={{ marginTop: "12px" }}>
-                      <div style={{ fontWeight: "bold", color: "#10b981", fontSize: "18px", display: "block" }}>
-                        {formatUSD(item.price)}
+                      <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px", paddingLeft: "10px", borderLeft: "2px solid #e5e7eb" }}>
+                        <p style={{ margin: "2px 0" }}>- Màu: {item.color}</p>
+                        {item.lensInfo && (
+                          <>
+                            <p style={{ margin: "2px 0" }}>- Tròng: {item.lensInfo.type} {item.lensInfo.typePrice > 0 && `(+${formatUSD(item.lensInfo.typePrice)})`}</p>
+                            <p style={{ margin: "2px 0" }}>- Tính năng: {item.lensInfo.feature} {item.lensInfo.featurePrice > 0 && `(+${formatUSD(item.lensInfo.featurePrice)})`}</p>
+                          </>
+                        )}
                       </div>
-                      <div style={{ color: "#6b7280", fontSize: "14px", display: "block", marginTop: "2px" }}>
-                        ({formatVND(item.price)})
+                      <div style={{ marginTop: "12px" }}>
+                        <div style={{ fontWeight: "bold", color: "#10b981", fontSize: "18px", display: "block" }}>
+                          {formatUSD(item.price)}
+                        </div>
+                        <div style={{ color: "#6b7280", fontSize: "14px", display: "block", marginTop: "2px" }}>
+                          ({formatVND(item.price)})
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px", fontSize: "20px", fontWeight: "bold" }}>
