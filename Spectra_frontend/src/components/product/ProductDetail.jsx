@@ -92,21 +92,32 @@ export default function ProductDetail() {
   }, [id]);
 
   const handleConfirmAddToCart = (cartDataOptions) => {
+    console.log("DỮ LIỆU TỪ MODAL TRUYỀN RA:", cartDataOptions); 
+
     const colorObj = selectedColor?.color || selectedColor || {};
+    
     const itemData = {
       id: product.id || product.frameId,
       name: product.frameName,
-      price: cartDataOptions.finalPrice,
+      price: cartDataOptions.finalPrice, // Đảm bảo finalPrice này từ Modal đã cộng tổng tiền Gọng + Tròng
       image: images[0],
       color: colorObj.colorName || "Mặc định",
       colorId: colorObj.id || colorObj.colorId || null,
       quantity: quantity,
       lensInfo: cartDataOptions.lensIncluded ? {
-        type: cartDataOptions.lensDetails.lensType?.typeName || "N/A",
-        feature: cartDataOptions.lensDetails.lensFeature?.featureName || "N/A",
-        prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null
+        // ⚡ FIX: Bắt buộc phải có 3 ID này để CheckoutPage gửi được cho Backend
+        typeId: cartDataOptions.lensDetails.typeId,
+        featureId: cartDataOptions.lensDetails.featureId,
+        prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
+
+        // Thông tin để hiển thị UI (Giữ nguyên như cũ)
+        type: cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A", 
+        feature: cartDataOptions.lensDetails.lensFeature?.featureSpecification || "Không có", 
+        typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0, 
+        featurePrice: cartDataOptions.lensDetails.lensFeature?.extraPrice || 0 
       } : null
     };
+    
     addToCart(itemData, quantity);
     setIsLensModalOpen(false);
     setIsSuccessModalOpen(true);
