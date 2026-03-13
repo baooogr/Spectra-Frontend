@@ -52,12 +52,17 @@ export default function OrderDetail() {
       </div>
     );
 
-  // ⚡ HÀM FORMAT TIỀN TỆ ĐỒNG BỘ (USD & VND)
+  // ⚡ HÀM FORMAT TIỀN TỆ ĐỒNG BỘ Y HỆT CHECKOUT SUCCESS
   const EXCHANGE_RATE = 26250;
   const formatPrice = (n) => {
-    const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n || 0);
-    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE) + " VND";
-    return `${usd} (${vnd})`;
+    const usd = new Intl.NumberFormat("en-US", { 
+      style: "currency", 
+      currency: "USD", 
+      minimumFractionDigits: 0, 
+      maximumFractionDigits: 0 
+    }).format(n || 0);
+    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE);
+    return `${usd}(${vnd} VND)`;
   };
 
   const getStatusBadge = (status) => {
@@ -166,19 +171,23 @@ export default function OrderDetail() {
               const frameName   = item.frame?.frameName || "Gọng kính";
               const frameColor  = item.selectedColor    || item.frame?.color || null;
               const qty         = item.quantity         || 1;
-              const lensType    = item.lensType?.lensSpecification || null;
-              const lensFeature = item.feature?.featureSpecification || null;
               const prescriptionUrl = item.prescription?.imageUrl || null;
               
-              // ⚡ BÓC TÁCH GIÁ TIỀN TỪ BACKEND
+              // ⚡ CẬP NHẬT TÊN BIẾN ĐÚNG THEO PRODUCT DETAIL (lensSpecification, featureSpecification)
+              const lensType    = item.lensType?.lensSpecification || null;
+              
+              // Support cả 2 trường hợp tên object API trả về: lensFeature hoặc feature
+              const lensFeatureObj = item.lensFeature || item.feature;
+              const lensFeature = lensFeatureObj?.featureSpecification || null;
+              
+              // ⚡ BÓC TÁCH GIÁ TIỀN TỪ BACKEND (Sử dụng extraPrice cho tính năng tròng)
               const framePrice = item.frame?.basePrice || 0;
               const typePrice = item.lensType?.basePrice || 0;
-              const featurePrice = item.feature?.extraPrice || 0;
+              const featurePrice = lensFeatureObj?.extraPrice || 0;
               const totalLensPrice = typePrice + featurePrice; 
 
-              // ⚡ FIX LỖI 0$: Dò tìm đúng tên biến của Backend, nếu không có thì tự cộng (Gọng + Tròng)
+              // ⚡ Tự tính giá đơn vị
               const unitPrice = item.orderPrice || item.unitPrice || item.price || (framePrice + totalLensPrice);
-
               const calculatedFramePrice = framePrice > 0 ? framePrice : (unitPrice - totalLensPrice);
 
               return (
@@ -207,7 +216,7 @@ export default function OrderDetail() {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", backgroundColor: "#f8fafc", padding: "10px 12px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
                       <div style={{ flex: 1 }}>
                         <p style={{ margin: 0, fontSize: "14px", color: "#334155", fontWeight: "500" }}>
-                          Tròng kính: {lensType}{lensFeature ? ` — ${lensFeature}` : ""}
+                          Tròng kính: {lensType || "Không có"}{lensFeature ? ` — ${lensFeature}` : ""}
                         </p>
                         {prescriptionUrl && (
                           <a href={prescriptionUrl} target="_blank" rel="noreferrer"
