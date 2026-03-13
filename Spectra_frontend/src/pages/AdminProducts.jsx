@@ -563,11 +563,11 @@ export default function AdminProducts() {
                 <label style={{ fontWeight: 'bold', marginBottom: '10px', display: 'block' }}>Khoảng độ cận/viễn hỗ trợ (RX Range)</label>
                 <div style={{ display: 'flex', gap: '15px' }}>
                     <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '13px', color: '#4b5563' }}>Min RX (VD: -6.0):</label>
+                        <label style={{ fontSize: '13px', color: '#4b5563' }}>Min RX:</label>
                         <input type="number" step="0.25" name="minRx" value={formData.minRx} onChange={handleInputChange} placeholder="-6.0" />
                     </div>
                     <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '13px', color: '#4b5563' }}>Max RX (VD: +6.0):</label>
+                        <label style={{ fontSize: '13px', color: '#4b5563' }}>Max RX:</label>
                         <input type="number" step="0.25" name="maxRx" value={formData.maxRx} onChange={handleInputChange} placeholder="6.0" />
                     </div>
                 </div>
