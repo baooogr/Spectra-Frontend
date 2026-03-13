@@ -1,4 +1,5 @@
-.admin-shipping-container {
+/* Đổi tên class container cho đồng bộ */
+.shipping-page-container {
   padding: 30px;
   background-color: #ffffff;
   min-height: 100vh;

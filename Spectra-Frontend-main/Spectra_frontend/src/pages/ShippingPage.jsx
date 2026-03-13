@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import './AdminShipping.css';
+import './ShippingPage.css'; // Đổi tên import CSS
 
-export default function AdminShipping() {
+export default function ShippingPage() { // Đổi tên Component
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const token = JSON.parse(localStorage.getItem("user"))?.token;
 
   const fetchOrders = async () => {
+    setIsLoading(true);
     try {
       const res = await fetch("https://myspectra.runasp.net/api/Orders?page=1&pageSize=50", {
         headers: { "Authorization": `Bearer ${token}` }
@@ -32,6 +33,9 @@ export default function AdminShipping() {
     const trackingNum = prompt("Nhập mã vận đơn (Tracking Number) mới:");
     if (!trackingNum) return;
 
+    // Bổ sung thêm phần hỏi Đơn vị vận chuyển (Carrier) vì API yêu cầu
+    const carrierName = prompt("Nhập đơn vị vận chuyển (VD: VNPost, GHN, GHTK...):") || "VNPost";
+
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Shipping/orders/${orderId}/tracking`, {
         method: "PATCH",
@@ -39,7 +43,8 @@ export default function AdminShipping() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ trackingNumber: trackingNum })
+        // Truyền thêm carrier vào body
+        body: JSON.stringify({ trackingNumber: trackingNum, carrier: carrierName })
       });
 
       if (res.ok) {
@@ -54,7 +59,7 @@ export default function AdminShipping() {
   };
 
   return (
-    <div className="admin-shipping-container">
+    <div className="shipping-page-container">
       <h2 className="shipping-header">Quản lý Vận chuyển & Mã vận đơn</h2>
       
       {isLoading ? <p>Đang tải dữ liệu...</p> : (

@@ -29,7 +29,8 @@ import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
 import PolicyPage from '../pages/PolicyPage';
-import AdminShipping from '../pages/AdminShipping';
+import ShippingPage from '../pages/ShippingPage'; 
+
 // VNPay
 import VNPayReturnPage from "../pages/VNPayReturnPage";
 
@@ -61,7 +62,7 @@ export default function AppRouter() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="policy" element={<PolicyPage />} />
-            <Route path="/admin/shipping" element={<AdminShipping />} />
+            <Route path="shipping" element={<ShippingPage />} />
           </Route>
         </Route>
 
@@ -76,7 +77,6 @@ export default function AppRouter() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
-          
           
           <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
 
