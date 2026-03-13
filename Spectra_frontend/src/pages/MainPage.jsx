@@ -30,19 +30,17 @@ export default function MainPage() {
           const data = await response.json(); 
           const allFrames = data.items || data || [];
 
-          // ========= THÊM ĐOẠN NÀY ĐỂ LỌC TRÙNG TÊN =========
+          
           const uniqueFrames = [];
           const seenNames = new Set();
           
           allFrames.forEach(frame => {
             if (!seenNames.has(frame.frameName)) {
               seenNames.add(frame.frameName);
-              uniqueFrames.push(frame); // Chỉ đẩy vào mảng kính nào chưa xuất hiện tên
+              uniqueFrames.push(frame); 
             }
           });
-          // ===================================================
-
-          // Thay vì set toàn bộ data, hãy set danh sách đã lọc (uniqueFrames)
+          
           setProducts(uniqueFrames); 
         } else { 
           setError("Không thể tải danh sách sản phẩm."); 
@@ -97,7 +95,7 @@ export default function MainPage() {
   return (
     <div className="main-page">
       
-      {/* 2. Thêm Banner vào đây (Ngay trên main-header) */}
+      
       <div style={{ width: '100%', marginLeft: '40px', overflow: 'hidden' }}>
         <img 
           src={bannerImg} 
@@ -118,7 +116,7 @@ export default function MainPage() {
       </div>
 
       <div className="main-content">
-        {/* ... (Giữ nguyên phần Sidebar và Danh sách sản phẩm như cũ) ... */}
+        
         <aside className="sidebar-filter">
           <h3>Bộ lọc sản phẩm</h3>
           <div className="filter-group">
