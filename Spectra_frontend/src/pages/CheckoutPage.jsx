@@ -55,14 +55,18 @@ export default function CheckoutPage() {
   const total = subtotal + shippingFee;
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  
-  // ⚡ SỬA Ở ĐÂY: Thêm tỉ giá và hàm hiển thị song song USD & VND
-  const EXCHANGE_RATE = 26250; // Bạn có thể chỉnh sửa tỉ giá tại đây cho phù hợp
+
+  // ⚡ ĐỒNG BỘ ĐỊNH DẠNG FORMAT GIÁ TIỀN ÉP SÁT NGOẶC ($175(4.593.750 VND))
+  const EXCHANGE_RATE = 26250; 
   const formatPrice = (n) => {
-    const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(n);
-    // Chỉ format phân cách hàng nghìn, rồi tự gắn chữ " VND" vào cuối
-    const vnd = new Intl.NumberFormat("vi-VN").format(n * EXCHANGE_RATE) + " VND";
-    return `${usd} (${vnd})`;
+    const usd = new Intl.NumberFormat("en-US", { 
+      style: "currency", 
+      currency: "USD", 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(n || 0);
+    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE);
+    return `${usd}(${vnd} VND)`;
   };
 
   const placeOrder = async (e) => {
@@ -91,36 +95,33 @@ export default function CheckoutPage() {
           quantity: Number(item.quantity)
         };
 
-        // Hàm hỗ trợ lọc ID an toàn
         const getValidGuid = (val) => {
           if (!val || val === "null" || val === "undefined" || val === "") return undefined;
           return String(val);
         };
 
-        // ⚡ THÊM MÃ MÀU SẮC (BẮT BUỘC):
         const validColorId = getValidGuid(item.colorId || item.selectedColorId);
         if (validColorId) {
           detail.selectedColorId = validColorId;
         }
 
-        // Cấu hình tròng kính nếu có
         if (item.lensInfo) {
           const validTypeId = getValidGuid(item.lensInfo.typeId);
           const validFeatureId = getValidGuid(item.lensInfo.featureId);
           const validPrescriptionId = getValidGuid(item.lensInfo.prescriptionId);
 
           if (validTypeId) detail.lensTypeId = validTypeId;
-          if (validFeatureId) detail.featureId = validFeatureId; 
+          if (validFeatureId) detail.featureId = validFeatureId;
           if (validPrescriptionId) detail.prescriptionId = validPrescriptionId;
         }
-        
+
         return detail;
       });
 
-      // 2. Dọn dẹp Payload theo chuẩn API
+      // 2. Payload tạo đơn hàng
       const payload = {
         shippingAddress: form.address.trim(),
-        shippingMethod: "standard", 
+        shippingMethod: "standard",
         items: formattedItems
       };
 
@@ -153,10 +154,20 @@ export default function CheckoutPage() {
             } else { alert("Lỗi kết nối tạo VNPay!"); }
           } catch (err) { alert("Lỗi mạng khi tạo thanh toán VNPay"); }
         } else {
-          // Xử lý logic COD
+          // ⚡ ĐÃ FIX LỖI CRASH KHI TRUYỀN DỮ LIỆU SANG CHECKOUT-SUCCESS
           clearCart();
           navigate("/checkout-success", {
-            state: { orderId: createdId, customer: form, total: total }
+            state: {
+              orderId: createdId, 
+              customer: {
+                fullName: form.fullName,
+                phone: form.phone,
+                address: form.address
+              },
+              total: total, // Truyền đúng tổng tiền thực tế
+              items: items, // Truyền đúng giỏ hàng thực tế
+              createdAt: new Date().toISOString() 
+            }
           });
         }
       } else {
@@ -215,7 +226,24 @@ export default function CheckoutPage() {
 
             <div className="form-group">
               <label>Ghi chú đơn hàng (Tùy chọn)</label>
-              <textarea name="note" rows="3" value={form.note} onChange={onChange} placeholder="Giao giờ hành chính, gọi trước khi giao..."></textarea>
+              <textarea
+                name="note"
+                value={form.note}
+                onChange={onChange}
+                placeholder="Giao giờ hành chính, gọi trước khi giao..."
+                style={{
+                  width: "95%",
+                  minHeight: "110px", 
+                  padding: "12px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  outline: "none",
+                  fontFamily: "inherit",
+                  resize: "vertical", 
+                  fontSize: "14px",
+                  lineHeight: "1.5"
+                }}
+              ></textarea>
             </div>
 
             <div className="form-group" style={{ marginTop: '20px' }}>
@@ -237,7 +265,6 @@ export default function CheckoutPage() {
                     {item.lensInfo && <div style={{ fontSize: '12px', color: '#666' }}>+ {item.lensInfo.type} / {item.lensInfo.feature}</div>}
                     <div className="item__qty" style={{ fontSize: '13px' }}>SL: {item.quantity} | Màu: {item.color || "Mặc định"}</div>
                   </div>
-                  {/* Cập nhật hiển thị giá tiền sản phẩm */}
                   <div className="item__price" style={{ fontWeight: 'bold', color: '#10b981' }}>
                     {formatPrice(item.price * item.quantity)}
                   </div>
@@ -245,14 +272,12 @@ export default function CheckoutPage() {
               ))}
             </div>
 
-            {/* Cập nhật hiển thị giá tiền tổng */}
             <div className="summary__row"><span>Tạm tính</span><span>{formatPrice(subtotal)}</span></div>
             <div className="summary__row"><span>Phí giao hàng</span><span>{shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}</span></div>
             <div className="summary__row summary__total" style={{ fontSize: '20px', marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #ccc' }}>
               <span>Tổng thanh toán</span><span style={{ color: '#10b981' }}>{formatPrice(total)}</span>
             </div>
 
-            {/* Cập nhật hiển thị giá tiền trên nút bấm */}
             <button type="submit" disabled={isSubmitting} className="checkout__btn" style={{ width: '100%', padding: '15px', backgroundColor: isSubmitting ? '#9ca3af' : '#111827', color: 'white', fontWeight: 'bold', border: 'none', borderRadius: '8px', marginTop: '20px', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontSize: '16px' }}>
               {isSubmitting ? "Đang xử lý..." : `Xác Nhận Đặt Hàng - ${formatPrice(total)}`}
             </button>

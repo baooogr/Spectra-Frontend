@@ -5,16 +5,17 @@ export default function VNPayReturnPage() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading");
 
-  // Backend redirect về với các params này
+  // Các params có thể nhận được từ VNPay hoặc Backend của bạn
   const responseCode = searchParams.get("vnp_ResponseCode");
   const transactionNo = searchParams.get("vnp_TransactionNo") || searchParams.get("transactionId");
   const amount = searchParams.get("vnp_Amount") || searchParams.get("amount");
-  const message = searchParams.get("message"); // Backend có thể gửi thêm "message"
+  const message = searchParams.get("message");
   const paymentId = searchParams.get("paymentId");
+  
+  // Thêm dòng này để bắt tham số success từ URL của bạn
+  const successParam = searchParams.get("success"); 
 
   useEffect(() => {
-  
-
     // Debug: in ra params để kiểm tra
     console.log("🔵 VNPay Return Params:", {
       responseCode,
@@ -22,43 +23,71 @@ export default function VNPayReturnPage() {
       amount,
       message,
       paymentId,
+      successParam,
       fullUrl: window.location.search,
     });
 
-    // responseCode "00" = thành công (chuẩn VNPay)
-    // Một số backend tự custom redirect với params riêng
+    // Ưu tiên 1: Kiểm tra theo chuẩn VNPay gốc
     if (responseCode === "00") {
       setStatus("success");
     } else if (responseCode) {
-      // Có responseCode nhưng không phải "00"
       setStatus("failed");
-    } else if (message) {
-      
+    } 
+    // Ưu tiên 2: Kiểm tra theo tham số "success" từ Backend custom của bạn
+    else if (successParam !== null) {
+      setStatus(successParam === "true" ? "success" : "failed");
+    } 
+    // Ưu tiên 3: Kiểm tra theo message (nếu có)
+    else if (message) {
       const isSuccess =
         message.toLowerCase().includes("success") ||
         message.toLowerCase().includes("thành công");
       setStatus(isSuccess ? "success" : "failed");
-    } else {
-      // Không có params gì hết → lỗi
+    } 
+    // Nếu không có bất kỳ param nào hợp lệ
+    else {
       setStatus("failed");
     }
-  }, [responseCode, message]);
+  }, [responseCode, message, successParam]);
 
   const formatAmount = (raw) => {
     if (!raw) return "—";
-    // VNPay trả amount * 100, backend có thể đã chia rồi
-    const num = Number(raw);
-    if (num > 1_000_000) {
-      // Chưa chia — chia 100 để ra VND thực
-      return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      }).format(num / 100);
+    
+    const EXCHANGE_RATE = 26250; 
+    let amountUSD = 0;
+    let amountVND = 0;
+    let rawNumber = Number(raw);
+
+    // 1. Trường hợp Backend trả về thẳng tiền USD (Ví dụ: 180)
+    // Các đơn hàng thường nhỏ hơn 10.000 USD nên dùng mốc này để nhận diện
+    if (rawNumber < 10000) {
+      amountUSD = rawNumber; // Khẳng định đây là 180 USD
+      amountVND = amountUSD * EXCHANGE_RATE; // 180 * 26250 = 4.725.000 VND
+    } 
+    // 2. Trường hợp trả về chuẩn vnp_Amount của VNPay (Tiền VND nhân 100)
+    // Ví dụ: 472500000
+    else if (rawNumber > 1000000) {
+      amountVND = rawNumber / 100; // 472500000 / 100 = 4.725.000 VND
+      amountUSD = amountVND / EXCHANGE_RATE; 
+    } 
+    // 3. Trường hợp trả về tiền VND bình thường (Ví dụ: 4725000)
+    else {
+      amountVND = rawNumber;
+      amountUSD = amountVND / EXCHANGE_RATE;
     }
-    return new Intl.NumberFormat("vi-VN", {
+
+    // Định dạng USD (ví dụ: $180)
+    const formattedUSD = new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "VND",
-    }).format(num);
+      currency: "USD",
+      minimumFractionDigits: 0
+    }).format(amountUSD);
+
+    // Định dạng VND (ví dụ: 4.725.000 VND)
+    const formattedVND = new Intl.NumberFormat("vi-VN").format(amountVND) + " VND";
+
+    // Trả về chuỗi ghép: $180 (4.725.000 VND)
+    return `${formattedUSD} (${formattedVND})`;
   };
 
   return (
