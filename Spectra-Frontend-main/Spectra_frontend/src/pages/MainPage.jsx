@@ -42,19 +42,20 @@ export default function MainPage() {
     fetchProducts();
   }, []);
 
-  // Tự động trích xuất các thuộc tính thực tế từ danh sách sản phẩm
-  const availableBrands = [...new Set(products.map(p => p.brand?.brandName || p.brand).filter(Boolean))];
-  const availableShapes = [...new Set(products.map(p => p.shape).filter(Boolean))];
-  const availableMaterials = [...new Set(products.map(p => p.material).filter(Boolean))];
+  // ĐÃ SỬA: Tự động trích xuất chính xác thuộc tính chuỗi (String) từ mảng Object
+  const availableBrands = [...new Set(products.map(p => p.brand?.brandName || (typeof p.brand === 'string' ? p.brand : null)).filter(Boolean))];
+  const availableShapes = [...new Set(products.map(p => p.shape?.shapeName || (typeof p.shape === 'string' ? p.shape : null)).filter(Boolean))];
+  const availableMaterials = [...new Set(products.map(p => p.material?.materialName || (typeof p.material === 'string' ? p.material : null)).filter(Boolean))];
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const productName = product.frameName || product.name || "";
       const searchMatch = productName.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const productShape = product.shape || "";
-      const productMaterial = product.material || "";
-      const productBrand = product.brand?.brandName || product.brand || "";
+      // ĐÃ SỬA: Lấy chính xác tên của shape, material, brand để đối chiếu với mảng selected
+      const productShape = product.shape?.shapeName || (typeof product.shape === 'string' ? product.shape : "");
+      const productMaterial = product.material?.materialName || (typeof product.material === 'string' ? product.material : "");
+      const productBrand = product.brand?.brandName || (typeof product.brand === 'string' ? product.brand : "");
 
       const shapeMatch = selectedShapes.length === 0 || selectedShapes.includes(productShape);
       const materialMatch = selectedMaterials.length === 0 || selectedMaterials.includes(productMaterial);

@@ -60,7 +60,7 @@ export default function AppRouter() {
             <Route path="lensfeatures" element={<AdminLensFeatures />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
-            <Route path="/policy" element={<PolicyPage />} />
+            <Route path="policy" element={<PolicyPage />} />
             <Route path="/admin/shipping" element={<AdminShipping />} />
           </Route>
         </Route>
