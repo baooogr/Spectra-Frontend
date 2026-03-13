@@ -119,7 +119,7 @@ export default function AdminPreorderCampaigns() {
 
     setIsSubmitting(true);
     
-    // Format ngày giờ từ "YYYY-MM-DDTHH:mm" của HTML thành chuẩn "YYYY-MM-DDTHH:mm:00" của C#
+    
     const formatDt = (dt) => dt.length === 16 ? dt + ":00" : dt;
 
     const payload = {
@@ -182,7 +182,7 @@ export default function AdminPreorderCampaigns() {
   return (
     <div className="admin-products-container">
       <div className="admin-products-header">
-        <h2 className="admin-products-title">🚀 Quản Lý Chiến Dịch Đặt Trước (Pre-order)</h2>
+        <h2 className="admin-products-title">Quản Lý Chiến Dịch Pre-order</h2>
         <button onClick={handleOpenModal} className="btn-add">+ Tạo Chiến Dịch Mới</button>
       </div>
 
@@ -272,9 +272,9 @@ export default function AdminPreorderCampaigns() {
                 </div>
               </div>
 
-              {/* Phần 2: Chọn Kính Đưa Vào Campaign */}
+              
               <div style={{borderTop: '2px solid #f3f4f6', paddingTop: '20px', marginBottom: '25px'}}>
-                <h3 style={{margin: '0 0 10px 0'}}>📦 Chọn Sản Phẩm (Kho Đang Báo Hết Hàng)</h3>
+                <h3 style={{margin: '0 0 10px 0'}}>Chọn Sản Phẩm (Kho Đang Báo Hết Hàng)</h3>
                 <p style={{fontSize: '13px', color: '#6b7280', margin: '0 0 15px 0'}}>Tích chọn sản phẩm Out of stock để đưa vào đợt Pre-order, tự thiết lập giá ưu đãi (Campaign Price) và Giới hạn mua mỗi người.</p>
                 
                 <div style={{maxHeight: '250px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px', backgroundColor: '#f9fafb'}}>
@@ -293,7 +293,7 @@ export default function AdminPreorderCampaigns() {
                             <span style={{fontSize: '13px', color: '#6b7280'}}>Giá đang bán: <strong style={{textDecoration: 'line-through'}}>${frame.basePrice}</strong></span>
                           </div>
                           
-                          {/* Mở Form cấu hình riêng cho từng Frame được chọn */}
+                         
                           {isChecked && (
                             <div style={{display: 'flex', gap: '15px'}}>
                               <div>
