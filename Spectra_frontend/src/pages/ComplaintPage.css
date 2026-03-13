@@ -107,7 +107,8 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-.form-group input[readonly] {
+.form-group input[readonly],
+.form-group input:disabled {
   background: #f9fafb;
   color: #6b7280;
 }
@@ -120,6 +121,40 @@
   margin-top: 6px;
   color: #dc2626;
   font-size: 13px;
+}
+
+.profile-box {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.profile-header {
+  margin-bottom: 16px;
+}
+
+.profile-header h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #111827;
+}
+
+.profile-note {
+  display: inline-block;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.full-width {
+  grid-column: 1 / -1;
 }
 
 .form-actions {
@@ -171,6 +206,14 @@
 
   .complaint-title {
     font-size: 24px;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: auto;
   }
 
   .form-actions {

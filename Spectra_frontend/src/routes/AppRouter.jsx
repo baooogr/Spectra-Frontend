@@ -22,12 +22,17 @@ import ProductDetail from "../components/product/ProductDetail";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 
+import ComplaintPage from "../pages/ComplaintPage";
+import ComplaintHistoryPage from "../pages/ComplaintHistoryPage";
+
+// --- IMPORT CÁC TRANG ADMIN ---
 import AdminUsers from "../pages/AdminUsers";
 import AdminLensFeatures from "../pages/AdminLensFeatures";
 import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
+import ComplaintManagementPage from "../pages/ComplaintManagementPage";
 
 // VNPay
 import VNPayReturnPage from "../pages/VNPayReturnPage";
@@ -59,6 +64,7 @@ export default function AppRouter() {
             <Route path="lensfeatures" element={<AdminLensFeatures />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
+            <Route path="complaints" element={<ComplaintManagementPage />} />
 
           </Route>
         </Route>
@@ -74,9 +80,11 @@ export default function AppRouter() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+
+          <Route path="/complaint" element={<ComplaintPage />} />
+          <Route path="/complaint-history" element={<ComplaintHistoryPage />} />
           
           <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
-
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
           <Route path="/payment/return" element={<VNPayReturnPage />} />
 

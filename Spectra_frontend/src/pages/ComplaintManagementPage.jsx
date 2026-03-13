@@ -1,7 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import { UserContext } from "../context/UserContext";
 import "./ComplaintManagementPage.css";
 
 export default function ComplaintManagementPage() {
+  const { user } = useContext(UserContext);
+
   const [complaints, setComplaints] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +24,17 @@ export default function ComplaintManagementPage() {
     emailContent: "",
   });
 
+  const getToken = () => {
+    if (user?.token) return user.token;
+
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (storedUser?.token) return storedUser.token;
+    } catch (e) {}
+
+    return localStorage.getItem("token");
+  };
+
   useEffect(() => {
     fetchComplaints();
   }, []);
@@ -30,29 +44,43 @@ export default function ComplaintManagementPage() {
     setPageError("");
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
-      // GẮN API GET DANH SÁCH KHIẾU NẠI Ở ĐÂY
-      // Ví dụ:
-      // const response = await fetch("https://your-api.com/api/Complaints", {
-      //   method: "GET",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      // });
-      //
-      // const data = await response.json();
-      //
-      // if (!response.ok) {
-      //   throw new Error(data.message || "Không thể tải danh sách khiếu nại.");
-      // }
-      //
-      // setComplaints(Array.isArray(data) ? data : []);
+      if (!token) {
+        throw new Error("Bạn chưa đăng nhập hoặc chưa có token.");
+      }
 
-      setComplaints([]);
+      const response = await fetch("https://myspectra.runasp.net/api/Complaints", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const text = await response.text();
+      let data = null;
+
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.title ||
+            `Không thể tải danh sách khiếu nại. Status: ${response.status}`
+        );
+      }
+
+      setComplaints(
+        Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : []
+      );
     } catch (error) {
       setPageError(error.message || "Không thể kết nối đến Server.");
+      setComplaints([]);
     } finally {
       setLoading(false);
     }
@@ -63,10 +91,10 @@ export default function ComplaintManagementPage() {
       const keyword = filters.keyword.toLowerCase();
 
       const matchKeyword =
-        (item.id || "").toLowerCase().includes(keyword) ||
-        (item.customerName || "").toLowerCase().includes(keyword) ||
-        (item.customerEmail || "").toLowerCase().includes(keyword) ||
-        (item.orderItemId || "").toLowerCase().includes(keyword);
+        String(item.id || item.complaintId || "").toLowerCase().includes(keyword) ||
+        String(item.customerName || "").toLowerCase().includes(keyword) ||
+        String(item.customerEmail || "").toLowerCase().includes(keyword) ||
+        String(item.orderItemId || "").toLowerCase().includes(keyword);
 
       const matchStatus =
         filters.status === "all" ? true : item.status === filters.status;
@@ -185,34 +213,14 @@ export default function ComplaintManagementPage() {
     setSuccessMsg("");
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
 
-      // GẮN API UPDATE + GỬI MAIL Ở ĐÂY
-      // Ví dụ:
-      // const response = await fetch(
-      //   `https://your-api.com/api/Complaints/${selectedComplaint.id}`,
-      //   {
-      //     method: "PUT",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //     body: JSON.stringify({
-      //       status: updateForm.status,
-      //       internalNote: updateForm.internalNote,
-      //       emailContent: updateForm.emailContent,
-      //     }),
-      //   }
-      // );
-      //
-      // const data = await response.json();
-      //
-      // if (!response.ok) {
-      //   throw new Error(data.message || "Cập nhật thất bại");
-      // }
-      //
-      // const updatedComplaint = data;
+      if (!token) {
+        throw new Error("Bạn chưa đăng nhập hoặc chưa có token.");
+      }
 
+      // Tạm thời vẫn update local như code cũ của bạn
+      // Khi có API PUT thật thì thay vào đây
       const updatedComplaint = {
         ...selectedComplaint,
         status: updateForm.status,
@@ -221,7 +229,10 @@ export default function ComplaintManagementPage() {
 
       setComplaints((prev) =>
         prev.map((item) =>
-          item.id === selectedComplaint.id ? updatedComplaint : item
+          (item.id || item.complaintId) ===
+          (selectedComplaint.id || selectedComplaint.complaintId)
+            ? updatedComplaint
+            : item
         )
       );
 
@@ -299,8 +310,8 @@ export default function ComplaintManagementPage() {
               <tbody>
                 {filteredComplaints.length > 0 ? (
                   filteredComplaints.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.id}</td>
+                    <tr key={item.id || item.complaintId}>
+                      <td>{item.id || item.complaintId}</td>
                       <td>
                         <div className="cell-main">{item.customerName}</div>
                         <div className="cell-sub">{item.customerEmail}</div>
@@ -355,7 +366,7 @@ export default function ComplaintManagementPage() {
 
                   <div className="detail-item">
                     <span>Mã đơn khiếu nại:</span>
-                    <strong>{selectedComplaint.id}</strong>
+                    <strong>{selectedComplaint.id || selectedComplaint.complaintId}</strong>
                   </div>
 
                   <div className="detail-item">
