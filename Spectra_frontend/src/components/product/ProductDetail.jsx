@@ -169,7 +169,7 @@ export default function ProductDetail() {
           </p>
           {isPreorder && (
              <div style={{ display: 'inline-block', backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>
-                🔥 Ưu đãi đặt trước
+               Ưu đãi đặt trước
              </div>
           )}
 
@@ -198,10 +198,10 @@ export default function ProductDetail() {
             Trạng thái: 
             {isPreorder ? (
                <span style={{ color: '#2563eb', fontWeight: 'bold', marginLeft: '8px' }}>
-                 ⏱️ Đang mở đặt trước (Tối đa {maxAllowedQuantity} cái/đơn)
+                  Đang mở đặt trước (Tối đa {maxAllowedQuantity} cái/đơn)
                  <div style={{ fontSize: '13px', marginTop: '5px', color: '#4b5563' }}>
                     {/* ĐÃ SỬA: estimatedDeliveryDate */}
-                    📦 Dự kiến giao hàng: {new Date(preorderInfo.estimatedDeliveryDate).toLocaleDateString('vi-VN')}
+                     Dự kiến giao hàng: {new Date(preorderInfo.estimatedDeliveryDate).toLocaleDateString('vi-VN')}
                  </div>
                </span>
             ) : (
@@ -227,13 +227,13 @@ export default function ProductDetail() {
               backgroundColor: '#2563eb', 
             } : {}}
           >
-            {isPreorder ? "⏱️ Đặt trước ngay (Pre-order)" : inStock ? "🛒 Thêm vào giỏ hàng" : "🚫 Out of stock"}
+            {isPreorder ? " Đặt trước ngay (Pre-order)" : inStock ? "🛒 Thêm vào giỏ hàng" : " Out of stock"}
           </button>
 
           <div className="product-info-grid">
             <div className="info-card">
               <div className="info-card-header">
-                <span className="info-icon">📋</span>
+                
                 <h3>Chi tiết sản phẩm</h3>
               </div>
               <div className="info-card-body">
@@ -261,7 +261,6 @@ export default function ProductDetail() {
 
             <div className="info-card">
               <div className="info-card-header">
-                <span className="info-icon">📐</span>
                 <h3>Thông số kỹ thuật</h3>
               </div>
               <div className="info-card-body">

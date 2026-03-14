@@ -201,7 +201,7 @@ export default function PreorderDetail() {
                     {(lensType || lensFeature) && (
                       <div style={{ backgroundColor: "#ede9fe", padding: "6px 12px", borderRadius: "6px", border: "1px solid #ddd6fe", margin: "6px 0", display: "inline-block" }}>
                         <p style={{ margin: 0, fontSize: "13px", color: "#4338ca", fontWeight: "500" }}>
-                          🔬 {lensType}{lensFeature ? ` — ${lensFeature}` : ""}
+                           {lensType}{lensFeature ? ` — ${lensFeature}` : ""}
                         </p>
                       </div>
                     )}
