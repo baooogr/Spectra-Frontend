@@ -6,13 +6,14 @@ import UserProfile from "../pages/UserProfile";
 // --- IMPORT CÁC COMPONENT LAYOUT ---
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import AdminLayout from "../components/layout/AdminLayout"; 
+import AdminLayout from "../components/layout/AdminLayout";
 
 // --- IMPORT CÁC TRANG KHÁCH HÀNG ---
 import MainPage from "../pages/MainPage";
 import OrderHistory from "../pages/OrderHistory";
 
 import OrderDetail from "../pages/OrderDetail";
+import PreorderDetail from "../pages/PreorderDetail"; // ✅ THÊM MỚI
 import CartPage from "../pages/CartPage";
 
 import CheckoutPreorderPage from "../pages/CheckoutPreorderPage";
@@ -40,7 +41,7 @@ const CustomerLayout = () => {
     <>
       <Header />
       <main style={{ minHeight: '60vh' }}>
-        <Outlet /> 
+        <Outlet />
       </main>
       <Footer />
     </>
@@ -51,11 +52,11 @@ export default function AppRouter() {
   return (
     <Router>
       <Routes>
-        
+
         {/* --- ROUTES DÀNH CHO ADMIN & STAFF --- */}
         <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} /> 
+            <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="lenstypes" element={<AdminLensTypes />} />
             <Route path="lensfeatures" element={<AdminLensFeatures />} />
@@ -63,7 +64,6 @@ export default function AppRouter() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="campaigns" element={<AdminPreorderCampaigns />} />
             <Route path="/admin/shipping" element={<ShippingPage />} />
-            
           </Route>
         </Route>
 
@@ -71,17 +71,16 @@ export default function AppRouter() {
         <Route element={<CustomerLayout />}>
           <Route path="/" element={<MainPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
-          
+
           <Route path="/orders" element={<OrderHistory />} />
-          
           <Route path="/orders/:id" element={<OrderDetail />} />
+
+          {/* ✅ THÊM MỚI: Route cho trang chi tiết đơn đặt trước */}
+          <Route path="/preorders/:id" element={<PreorderDetail />} />
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
-          
-          
-          
 
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
           <Route path="/payment/return" element={<VNPayReturnPage />} />
