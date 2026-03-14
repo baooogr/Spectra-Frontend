@@ -15,7 +15,7 @@ import OrderHistory from "../pages/OrderHistory";
 import OrderDetail from "../pages/OrderDetail";
 import CartPage from "../pages/CartPage";
 
-
+import CheckoutPreorderPage from "../pages/CheckoutPreorderPage";
 import CheckoutPage from "../pages/CheckoutPage";
 import CheckoutSuccess from "../pages/CheckoutSuccess";
 import ProductDetail from "../components/product/ProductDetail";
@@ -78,6 +78,7 @@ export default function AppRouter() {
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
           
           
           
