@@ -40,12 +40,16 @@ export default function AdminLayout() {
         <div className="admin-logo">Spectra Admin</div>
         
         <nav className="admin-nav">
+          <Link to="/" className="admin-link" style={{ color: '#10b981', fontWeight: 'bold', marginBottom: '10px' }}>
+          Vá» Trang Chá»§
+          </Link>
           <Link to="/admin" className="admin-link">Tá»•ng quan</Link>
           <Link to="/admin/products" className="admin-link">Quáº£n lÃ½ KÃ­nh</Link>
           <Link to="/admin/lenstypes" className="admin-link">Quáº£n lÃ½ TrÃ²ng KÃ­nh</Link> 
           <Link to="/admin/lensfeatures" className="admin-link">Quáº£n lÃ½ TÃ­nh NÄƒng TrÃ²ng</Link>
           <Link to="/admin/orders" className="admin-link">ÄÆ¡n hÃ ng</Link>
           <Link to="/admin/campaigns" className="admin-link">Chiáº¿n Dá»‹ch Pre-order</Link>
+          <Link to="/admin/shipping" className="admin-link">Váº­n Chuyá»ƒn</Link>
 
           {/*  DEMO: Má»Ÿ nÃºt nÃ y cho cáº£ admin vÃ  manager */}
           {(role === "admin" || role === "manager") && (
@@ -1967,12 +1971,16 @@ import { useEffect, useState } from "react";
 
 function ProductCard({ product }) {
   const navigate = useNavigate();
-
   const [thumbnailUrl, setThumbnailUrl] = useState(
     product.frameMedia && product.frameMedia.length > 0 
       ? product.frameMedia[0].mediaUrl 
       : null
   );
+
+  // --- LOGIC PREORDER Má»šI Tá»ª BACKEND ---
+  const preorderInfo = product.preorderInfo || null;
+  const isPreorder = preorderInfo !== null;
+  const isOutOfStock = product.stockQuantity <= 0 && !isPreorder;
 
   useEffect(() => {
     if (thumbnailUrl) return;
@@ -1994,16 +2002,10 @@ function ProductCard({ product }) {
     fetchThumbnail();
   }, [product, thumbnailUrl]);
 
-  // XÃ¡c Ä‘á»‹nh tráº¡ng thÃ¡i hÃ ng
-  const isOutOfStock =
-    product.stockQuantity <= 0 ||
-    product.status === "OutOfStock" ||
-    product.status === "outofstock";
-
   return (
     <div
       style={{
-        border: `1px solid ${isOutOfStock ? "#fecaca" : "#ddd"}`,
+        border: `1px solid ${isPreorder ? "#93c5fd" : isOutOfStock ? "#fecaca" : "#ddd"}`,
         padding: "14px",
         width: "230px",
         borderRadius: "12px",
@@ -2023,25 +2025,27 @@ function ProductCard({ product }) {
       }}
     >
       {/* Badge tráº¡ng thÃ¡i gÃ³c trÃªn */}
-      {isOutOfStock && (
+      {isPreorder ? (
         <div
           style={{
-            position: "absolute",
-            top: "10px",
-            left: "10px",
-            backgroundColor: "#ef4444", // Äá»
-            color: "white",
-            fontSize: "11px",
-            fontWeight: "bold",
-            padding: "3px 8px",
-            borderRadius: "20px",
-            letterSpacing: "0.3px",
-            zIndex: 2,
+            position: "absolute", top: "10px", left: "10px", backgroundColor: "#2563eb",
+            color: "white", fontSize: "11px", fontWeight: "bold", padding: "3px 8px",
+            borderRadius: "20px", letterSpacing: "0.3px", zIndex: 2,
+          }}
+        >
+          â±ï¸ Pre-order
+        </div>
+      ) : isOutOfStock ? (
+        <div
+          style={{
+            position: "absolute", top: "10px", left: "10px", backgroundColor: "#ef4444",
+            color: "white", fontSize: "11px", fontWeight: "bold", padding: "3px 8px",
+            borderRadius: "20px", letterSpacing: "0.3px", zIndex: 2,
           }}
         >
           Out of Stock
         </div>
-      )}
+      ) : null}
 
       {/* áº¢nh sáº£n pháº©m */}
       <div style={{ position: "relative" }}>
@@ -2051,27 +2055,16 @@ function ProductCard({ product }) {
             alt={product.frameName || "KÃ­nh"}
             onError={(e) => { e.target.style.display = "none"; }}
             style={{
-              width: "100%",
-              height: "150px",
-              objectFit: "contain",
-              marginBottom: "10px",
-              opacity: isOutOfStock ? 0.75 : 1,
-              transition: "opacity 0.2s",
+              width: "100%", height: "150px", objectFit: "contain", marginBottom: "10px",
+              opacity: isOutOfStock ? 0.75 : 1, transition: "opacity 0.2s",
             }}
           />
         ) : (
           <div
             style={{
-              width: "100%",
-              height: "150px",
-              backgroundColor: "#f9fafb",
-              marginBottom: "10px",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#ccc",
-              fontSize: "12px",
+              width: "100%", height: "150px", backgroundColor: "#f9fafb",
+              marginBottom: "10px", borderRadius: "8px", display: "flex",
+              alignItems: "center", justifyContent: "center", color: "#ccc", fontSize: "12px",
             }}
           >
             Äang táº£i áº£nh...
@@ -2080,29 +2073,20 @@ function ProductCard({ product }) {
       </div>
 
       {/* GiÃ¡ & Rating */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "6px",
-        }}
-      >
-        <span style={{ fontSize: "20px", fontWeight: "bold" }}>
-          ${product.basePrice || product.price || 0}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+        <span style={{ fontSize: "20px", fontWeight: "bold", color: isPreorder ? "#2563eb" : "#000" }}>
+          ${isPreorder ? preorderInfo.campaignPrice : (product.basePrice || product.price || 0)}
         </span>
+        
+        {isPreorder && (
+          <span style={{ fontSize: "13px", textDecoration: "line-through", color: "#9ca3af" }}>
+             ${product.basePrice || product.price || 0}
+          </span>
+        )}
       </div>
 
       {/* TÃªn sáº£n pháº©m */}
-      <p
-        style={{
-          fontWeight: "500",
-          margin: "5px 0",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
+      <p style={{ fontWeight: "500", margin: "5px 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {product.frameName || product.name || "ChÆ°a cÃ³ tÃªn"}
       </p>
 
@@ -2112,34 +2096,16 @@ function ProductCard({ product }) {
       </p>
 
       {/* DÃ²ng tráº¡ng thÃ¡i tá»“n kho */}
-      {isOutOfStock ? (
-        <div
-          style={{
-            marginTop: "6px",
-            padding: "5px 10px",
-            backgroundColor: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: "6px",
-            fontSize: "12px",
-            color: "#dc2626", // Chá»¯ Ä‘á»
-            fontWeight: "bold",
-            textAlign: "center",
-          }}
-        >
+      {isPreorder ? (
+        <div style={{ marginTop: "6px", padding: "5px 10px", backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "6px", fontSize: "11px", color: "#1d4ed8", fontWeight: "bold", textAlign: "center" }}>
+          {/* ÄÃƒ Sá»¬A: estimatedDeliveryDate */}
+          Giao: {new Date(preorderInfo.estimatedDeliveryDate).toLocaleDateString("vi-VN")}
+        </div>
+      ) : isOutOfStock ? (
+        <div style={{ marginTop: "6px", padding: "5px 10px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: "6px", fontSize: "12px", color: "#dc2626", fontWeight: "bold", textAlign: "center" }}>
           Háº¿t hÃ ng (Out of Stock)
         </div>
-      ) : (
-        <div
-          style={{
-            marginTop: "6px",
-            fontSize: "12px",
-            color: product.stockQuantity <= (product.reorderLevel || 5) ? "#d97706" : "#10b981",
-            fontWeight: "500",
-          }}
-        >
-          {/* Äá»ƒ trá»‘ng hoáº·c hiá»ƒn thá»‹ "Sáº¯p háº¿t" náº¿u muá»‘n */}
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -2468,7 +2434,6 @@ import LensSelectionModal from "../ui/LensSelectionModal";
 import Modal from "../ui/Modal";
 import "./ProductDetail.css";
 
-
 const fallbackImage = "https://placehold.co/600x400/eeeeee/999999?text=No+Image";
 
 const ImageGallery = ({ images }) => {
@@ -2555,26 +2520,44 @@ export default function ProductDetail() {
     fetchProductData();
   }, [id]);
 
-  const handleConfirmAddToCart = (cartDataOptions) => {
-    console.log("Dá»® LIá»†U Tá»ª MODAL TRUYá»€N RA:", cartDataOptions);
+  if (isLoading) return <p className="center-msg">â³ Äang táº£i thÃ´ng tin sáº£n pháº©m...</p>;
+  if (error || !product) return <div className="center-msg"><h2>âŒ {error}</h2></div>;
 
+  // --- LOGIC Äá»ŒC TRá»°C TIáº¾P Tá»ª BACKEND ---
+  const preorderInfo = product.preorderInfo || null;
+  const isPreorder = preorderInfo !== null;
+  
+  const currentStock = selectedColor ? (selectedColor.stockQuantity || 0) : 0;
+  const inStock = currentStock > 0;
+  
+  const canBuy = inStock || isPreorder;
+  const maxAllowedQuantity = isPreorder ? preorderInfo.maxQuantityPerOrder : currentStock;
+  const displayPrice = isPreorder ? preorderInfo.campaignPrice : product.basePrice;
+
+  const productForModal = { ...product, basePrice: displayPrice };
+
+  const handleConfirmAddToCart = (cartDataOptions) => {
     const colorObj = selectedColor?.color || selectedColor || {};
 
     const itemData = {
       id: product.id || product.frameId,
       name: product.frameName,
-      price: cartDataOptions.finalPrice, // Äáº£m báº£o finalPrice nÃ y tá»« Modal Ä‘Ã£ cá»™ng tá»•ng tiá»n Gá»ng + TrÃ²ng
+      price: cartDataOptions.finalPrice, 
       image: images[0],
       color: colorObj.colorName || "Máº·c Ä‘á»‹nh",
       colorId: colorObj.id || colorObj.colorId || null,
       quantity: quantity,
+      
+      // Dá»¯ liá»‡u cho giá» hÃ ng
+      isPreorder: isPreorder,
+      campaignId: isPreorder ? preorderInfo.campaignId : null,
+      // ÄÃƒ Sá»¬A: estimatedDeliveryDate
+      estimatedDeliveryDate: isPreorder ? preorderInfo.estimatedDeliveryDate : null,
+
       lensInfo: cartDataOptions.lensIncluded ? {
-        // âš¡ FIX: Báº¯t buá»™c pháº£i cÃ³ 3 ID nÃ y Ä‘á»ƒ CheckoutPage gá»­i Ä‘Æ°á»£c cho Backend
         typeId: cartDataOptions.lensDetails.typeId,
         featureId: cartDataOptions.lensDetails.featureId,
         prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
-
-        // ThÃ´ng tin Ä‘á»ƒ hiá»ƒn thá»‹ UI (Giá»¯ nguyÃªn nhÆ° cÅ©)
         type: cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
         feature: cartDataOptions.lensDetails.lensFeature?.featureSpecification || "KhÃ´ng cÃ³",
         typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0,
@@ -2587,30 +2570,37 @@ export default function ProductDetail() {
     setIsSuccessModalOpen(true);
   };
 
-  if (isLoading) return <p className="center-msg">â³ Äang táº£i thÃ´ng tin sáº£n pháº©m...</p>;
-  if (error || !product) return <div className="center-msg"><h2>âŒ {error}</h2></div>;
-
-  const currentStock = selectedColor ? (selectedColor.stockQuantity || 0) : 0;
-  const inStock = currentStock > 0;
-
   return (
     <>
       <LensSelectionModal
         isOpen={isLensModalOpen}
         onClose={() => setIsLensModalOpen(false)}
-        product={product}
-        supportedLensTypes={supportedLensTypes} /* âš¡ TRUYá»€N DANH SÃCH XUá»NG MODAL */
+        product={productForModal} 
+        supportedLensTypes={supportedLensTypes}
         onConfirmAddToCart={handleConfirmAddToCart}
       />
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} />
 
       <div className="product-detail-container">
-        <ImageGallery images={images} />
+         <ImageGallery images={images} />
 
         <div className="product-info-col">
           <h2 className="product-title">{product.frameName}</h2>
           <p className="product-brand">ThÆ°Æ¡ng hiá»‡u: <strong>{product.brand?.brandName || "N/A"}</strong></p>
-          <p className="product-price">${product.basePrice}</p>
+          
+          <p className="product-price" style={{ color: isPreorder ? "#2563eb" : "#000000" }}>
+            ${displayPrice}
+            {isPreorder && (
+                <span style={{ fontSize: "20px", textDecoration: "line-through", color: "#9ca3af", marginLeft: "15px" }}>
+                  ${product.basePrice}
+                </span>
+            )}
+          </p>
+          {isPreorder && (
+             <div style={{ display: 'inline-block', backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>
+                ðŸ”¥ Æ¯u Ä‘Ã£i Ä‘áº·t trÆ°á»›c
+             </div>
+          )}
 
           <div className="product-color-selector" style={{ margin: '15px 0' }}>
             <h4 style={{ marginBottom: '10px', fontSize: '15px' }}>MÃ u sáº¯c cÃ³ sáºµn:</h4>
@@ -2634,30 +2624,39 @@ export default function ProductDetail() {
           </div>
 
           <div className="product-status">
-            Tráº¡ng thÃ¡i: <span className={inStock ? "status-in-stock" : "status-out-stock"}>
-              {inStock ? `CÃ²n hÃ ng (${currentStock})` : "Háº¿t hÃ ng"}
-            </span>
+            Tráº¡ng thÃ¡i: 
+            {isPreorder ? (
+               <span style={{ color: '#2563eb', fontWeight: 'bold', marginLeft: '8px' }}>
+                 â±ï¸ Äang má»Ÿ Ä‘áº·t trÆ°á»›c (Tá»‘i Ä‘a {maxAllowedQuantity} cÃ¡i/Ä‘Æ¡n)
+                 <div style={{ fontSize: '13px', marginTop: '5px', color: '#4b5563' }}>
+                    {/* ÄÃƒ Sá»¬A: estimatedDeliveryDate */}
+                    ðŸ“¦ Dá»± kiáº¿n giao hÃ ng: {new Date(preorderInfo.estimatedDeliveryDate).toLocaleDateString('vi-VN')}
+                 </div>
+               </span>
+            ) : (
+               <span className={inStock ? "status-in-stock" : "status-out-stock"} style={{ marginLeft: '8px' }}>
+                 {inStock ? `CÃ²n hÃ ng (${currentStock})` : "Háº¿t hÃ ng"}
+               </span>
+            )}
           </div>
 
           <div className="quantity-wrapper">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty" disabled={!inStock}>-</button>
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty" disabled={!canBuy}>-</button>
             <span className="qty-value">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!inStock || quantity >= currentStock}>+</button>
+            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!canBuy || quantity >= maxAllowedQuantity}>+</button>
           </div>
 
           <button
             onClick={() => setIsLensModalOpen(true)}
-            className={`btn-add-cart ${inStock ? 'active' : ''}`}
-            disabled={!inStock}
-            style={!inStock ? {
-              backgroundColor: '#e5e7eb',
-              color: '#9ca3af',
-              cursor: 'not-allowed',
-              boxShadow: 'none',
-              border: '1px solid #d1d5db'
+            className={`btn-add-cart ${canBuy ? 'active' : ''}`}
+            disabled={!canBuy}
+            style={!canBuy ? {
+              backgroundColor: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed', boxShadow: 'none', border: '1px solid #d1d5db'
+            } : isPreorder ? {
+              backgroundColor: '#2563eb', 
             } : {}}
           >
-            {inStock ? "ðŸ›’ ThÃªm vÃ o giá» hÃ ng" : "ðŸš« Out of stock"}
+            {isPreorder ? "â±ï¸ Äáº·t trÆ°á»›c ngay (Pre-order)" : inStock ? "ðŸ›’ ThÃªm vÃ o giá» hÃ ng" : "ðŸš« Out of stock"}
           </button>
 
           <div className="product-info-grid">
@@ -2667,18 +2666,9 @@ export default function ProductDetail() {
                 <h3>Chi tiáº¿t sáº£n pháº©m</h3>
               </div>
               <div className="info-card-body">
-                <div className="info-row">
-                  <span className="info-label">Cháº¥t liá»‡u:</span>
-                  <span className="info-value">{product.material?.materialName}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Kiá»ƒu dÃ¡ng:</span>
-                  <span className="info-value">{product.shape?.shapeName}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">KÃ­ch cá»¡ (Size):</span>
-                  <span className="info-value text-capitalize">{product.size}</span>
-                </div>
+                <div className="info-row"><span className="info-label">Cháº¥t liá»‡u:</span><span className="info-value">{product.material?.materialName}</span></div>
+                <div className="info-row"><span className="info-label">Kiá»ƒu dÃ¡ng:</span><span className="info-value">{product.shape?.shapeName}</span></div>
+                <div className="info-row"><span className="info-label">KÃ­ch cá»¡ (Size):</span><span className="info-value text-capitalize">{product.size}</span></div>
 
                 {supportedLensTypes.length > 0 && (
                   <div className="lens-types-section" style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
@@ -8934,6 +8924,536 @@ export default function RegisterPage() {
 
 
 ========================================
+FILE: pages\ShippingPage.css
+========================================
+
+.shipping-page-container {
+  padding: 30px;
+  background-color: #f3f4f6;
+  min-height: 100vh;
+}
+
+.shipping-header {
+  font-size: 26px;
+  color: #111827;
+  margin-top: 0;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 12px;
+}
+
+.shipping-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.shipping-table th {
+  background-color: #f9fafb;
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.shipping-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #4b5563;
+  vertical-align: middle;
+}
+
+.shipping-table tr:hover {
+  background-color: #f9fafb;
+}
+
+.badge-tracking {
+  background-color: #dbeafe;
+  color: #1e40af;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.actions-group {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-manual, .btn-goship {
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.btn-manual {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+.btn-manual:hover { background-color: #d1d5db; }
+
+.btn-goship {
+  background-color: #2563eb;
+  color: white;
+}
+.btn-goship:hover { background-color: #1d4ed8; }
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modal-title {
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+  color: #111827;
+  font-size: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: bold;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  box-sizing: border-box;
+  font-size: 14px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #2563eb;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-confirm {
+  padding: 10px 20px;
+  background-color: #111827;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.btn-confirm:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Rate Card cho GoShip */
+.rate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+.rate-card {
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+}
+.rate-card:hover { border-color: #93c5fd; background-color: #eff6ff; }
+.rate-card.active { border: 2px solid #2563eb; background-color: #eff6ff; }
+.rate-carrier { font-weight: bold; color: #111827; }
+.rate-price { font-weight: bold; color: #10b981; }
+
+
+
+========================================
+FILE: pages\ShippingPage.jsx
+========================================
+
+import React, { useState, useEffect, useContext } from "react";
+import { UserContext } from "../context/UserContext";
+import "./ShippingPage.css";
+
+export default function ShippingPage() {
+  const { user } = useContext(UserContext);
+  const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // ================= STATES CHO MODAL MANUAL TRACKING =================
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [selectedOrderForManual, setSelectedOrderForManual] = useState(null);
+  const [manualForm, setManualForm] = useState({ trackingNumber: "", carrier: "VNPost" });
+  const [isSubmittingManual, setIsSubmittingManual] = useState(false);
+
+  // ================= STATES CHO MODAL GOSHIP =================
+  const [showGoShipModal, setShowGoShipModal] = useState(false);
+  const [selectedOrderForGoShip, setSelectedOrderForGoShip] = useState(null);
+  const [goShipForm, setGoShipForm] = useState({
+    toName: "", toPhone: "", toStreet: "", toWard: "", toDistrict: "", toCity: "",
+    cod: 0, weight: 500, width: 20, height: 10, length: 15
+  });
+  const [rates, setRates] = useState([]);
+  const [selectedRateId, setSelectedRateId] = useState("");
+  const [isFetchingRates, setIsFetchingRates] = useState(false);
+  const [isCreatingShipment, setIsCreatingShipment] = useState(false);
+
+  // Láº¥y danh sÃ¡ch Ä‘Æ¡n hÃ ng
+  const fetchOrders = async () => {
+    setIsLoading(true);
+    setErrorMsg("");
+    try {
+      const res = await fetch("https://myspectra.runasp.net/api/Orders?page=1&pageSize=50", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(data.items || data || []);
+      } else {
+        setErrorMsg("KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u Ä‘Æ¡n hÃ ng.");
+      }
+    } catch (err) {
+      setErrorMsg("Lá»—i káº¿t ná»‘i máº¡ng.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) fetchOrders();
+    else { setIsLoading(false); setErrorMsg("Báº¡n chÆ°a Ä‘Äƒng nháº­p hoáº·c khÃ´ng cÃ³ quyá»n."); }
+  }, [token]);
+
+  // ================= LOGIC MANUAL TRACKING =================
+  const openManualModal = (order) => {
+    setSelectedOrderForManual(order);
+    setManualForm({ trackingNumber: order.trackingNumber || "", carrier: order.shippingCarrier || "VNPost" });
+    setShowManualModal(true);
+  };
+
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingManual(true);
+    try {
+      const res = await fetch(`https://myspectra.runasp.net/api/Shipping/orders/${selectedOrderForManual.id || selectedOrderForManual.orderId}/tracking`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ trackingNumber: manualForm.trackingNumber, carrier: manualForm.carrier })
+      });
+      if (res.ok) {
+        alert("Cáº­p nháº­t mÃ£ váº­n Ä‘Æ¡n thá»§ cÃ´ng thÃ nh cÃ´ng!");
+        setShowManualModal(false);
+        fetchOrders();
+      } else {
+        const err = await res.json();
+        alert("Lá»—i: " + (err.message || "Cáº­p nháº­t tháº¥t báº¡i"));
+      }
+    } catch (err) { alert("Lá»—i máº¡ng."); } 
+    finally { setIsSubmittingManual(false); }
+  };
+
+  // ================= LOGIC GOSHIP =================
+  const openGoShipModal = (order) => {
+    // BÃ³c tÃ¡ch thÃ´ng tin thÃ´ tá»« chuá»—i address cá»§a Ä‘Æ¡n hÃ ng
+    let name = order.fullName || order.customerName || order.receiverName || "KhÃ¡ch hÃ ng";
+    let phone = order.phoneNumber || order.phone || "";
+    let street = order.shippingAddress || "";
+    
+    const matchOld = street.match(/^\[(.*?) - (.*?)\]\s*(.*)$/);
+    const matchNew = street.match(/^\[(.*?) - (.*?) - (.*?)\]\s*(.*)$/);
+
+    if (matchNew) { name = matchNew[1]; phone = matchNew[2]; street = matchNew[4]; }
+    else if (matchOld) { name = matchOld[1]; phone = matchOld[2]; street = matchOld[3]; }
+
+    setGoShipForm({
+      toName: name, toPhone: phone, toStreet: street,
+      toWard: "", toDistrict: "", toCity: "Há»“ ChÃ­ Minh",
+      cod: order.paymentMethod === 'COD' ? (order.totalAmount || order.totalPrice || 0) * 25400 : 0, 
+      weight: 500, width: 20, height: 10, length: 15
+    });
+    
+    setSelectedOrderForGoShip(order);
+    setRates([]);
+    setSelectedRateId("");
+    setShowGoShipModal(true);
+  };
+
+  const handleFetchRates = async () => {
+    if (!goShipForm.toWard || !goShipForm.toDistrict || !goShipForm.toCity) {
+      alert("Vui lÃ²ng Ä‘iá»n Ä‘á»§ PhÆ°á»ng/XÃ£, Quáº­n/Huyá»‡n, Tá»‰nh/ThÃ nh phá»‘!");
+      return;
+    }
+    setIsFetchingRates(true);
+    try {
+      const payload = {
+        addressFrom: {
+          name: "Spectra Store", phone: "0901234567", street: "123 Nguyá»…n Huá»‡", ward: "PhÆ°á»ng Báº¿n NghÃ©", district: "Quáº­n 1", city: "Há»“ ChÃ­ Minh"
+        },
+        addressTo: {
+          name: goShipForm.toName, phone: goShipForm.toPhone, street: goShipForm.toStreet, ward: goShipForm.toWard, district: goShipForm.toDistrict, city: goShipForm.toCity
+        },
+        parcel: {
+          cod: Number(goShipForm.cod), weight: Number(goShipForm.weight), width: Number(goShipForm.width), height: Number(goShipForm.height), length: Number(goShipForm.length), metadata: ""
+        }
+      };
+
+      const res = await fetch("https://myspectra.runasp.net/api/Shipping/goship/rates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRates(data.data || []);
+      } else {
+        alert("Lá»—i khi láº¥y giÃ¡ cÆ°á»›c tá»« GoShip!");
+      }
+    } catch (err) { alert("Lá»—i káº¿t ná»‘i máº¡ng."); } 
+    finally { setIsFetchingRates(false); }
+  };
+
+  const handleCreateShipment = async () => {
+    if (!selectedRateId) { alert("Báº¡n chÆ°a chá»n hÃ£ng váº­n chuyá»ƒn!"); return; }
+    setIsCreatingShipment(true);
+    try {
+      const payload = {
+        rateId: selectedRateId,
+        orderId: selectedOrderForGoShip.id || selectedOrderForGoShip.orderId,
+        addressFrom: { name: "Spectra Store", phone: "0901234567", street: "123 Nguyá»…n Huá»‡", ward: "PhÆ°á»ng Báº¿n NghÃ©", district: "Quáº­n 1", city: "Há»“ ChÃ­ Minh" },
+        addressTo: { name: goShipForm.toName, phone: goShipForm.toPhone, street: goShipForm.toStreet, ward: goShipForm.toWard, district: goShipForm.toDistrict, city: goShipForm.toCity },
+        parcel: { cod: Number(goShipForm.cod), weight: Number(goShipForm.weight), width: Number(goShipForm.width), height: Number(goShipForm.height), length: Number(goShipForm.length), metadata: "" }
+      };
+
+      const res = await fetch("https://myspectra.runasp.net/api/Shipping/goship/shipments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert("Táº¡o Ä‘Æ¡n giao hÃ ng tá»± Ä‘á»™ng thÃ nh cÃ´ng! Tráº¡ng thÃ¡i Ä‘Æ¡n Ä‘Ã£ Ä‘á»•i sang Shipped.");
+        setShowGoShipModal(false);
+        fetchOrders();
+      } else {
+        const err = await res.json();
+        alert("Lá»—i táº¡o Ä‘Æ¡n: " + (err.message || "Kiá»ƒm tra láº¡i dá»¯ liá»‡u GoShip"));
+      }
+    } catch (err) { alert("Lá»—i káº¿t ná»‘i máº¡ng."); } 
+    finally { setIsCreatingShipment(false); }
+  };
+
+  return (
+    <div className="shipping-page-container">
+      <h2 className="shipping-header"> Quáº£n lÃ½ Váº­n chuyá»ƒn & Giao hÃ ng</h2>
+
+      {errorMsg ? ( <div style={{ color: "red", padding: "20px" }}>{errorMsg}</div> ) : isLoading ? ( <p> Äang táº£i dá»¯ liá»‡u...</p> ) : (
+        <table className="shipping-table">
+          <thead>
+            <tr>
+              <th>MÃ£ ÄÆ¡n HÃ ng</th>
+              <th>KhÃ¡ch HÃ ng</th>
+              <th>Tráº¡ng ThÃ¡i</th>
+              <th>MÃ£ Váº­n ÄÆ¡n</th>
+              <th>Thao TÃ¡c</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.length === 0 ? (
+              <tr><td colSpan="5" style={{ textAlign: "center", padding: "30px" }}>ChÆ°a cÃ³ Ä‘Æ¡n hÃ ng nÃ o.</td></tr>
+            ) : (
+              orders.map((order) => {
+                const rawId = order.orderId || order.id;
+                return (
+                  <tr key={rawId}>
+                    <td><strong>#{String(rawId).substring(0, 8)}</strong></td>
+                    <td>
+                      <div style={{fontWeight: 'bold'}}>{order.fullName || order.customerName || order.receiverName || "KhÃ¡ch hÃ ng"}</div>
+                      <div style={{fontSize: '12px', color: '#6b7280'}}>{order.phoneNumber || order.phone}</div>
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: "bold", textTransform: "capitalize", color: order.status === "shipped" || order.status === "delivered" ? "#059669" : "#d97706" }}>
+                        {order.status || "N/A"}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={order.trackingNumber ? "badge-tracking" : ""}>
+                        {order.trackingNumber ? `${order.shippingCarrier || 'N/A'} - ${order.trackingNumber}` : "ChÆ°a cÃ³"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="actions-group">
+                        <button className="btn-manual" onClick={() => openManualModal(order)} title="GÃ¡n mÃ£ báº±ng tay">Nháº­p mÃ£</button>
+                        <button className="btn-goship" onClick={() => openGoShipModal(order)} title="Táº¡o váº­n Ä‘Æ¡n tá»± Ä‘á»™ng qua GoShip">GoShip</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      )}
+
+      {/* ================= MODAL MANUAL TRACKING ================= */}
+      {showManualModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{maxWidth: '450px'}}>
+            <h3 className="modal-title">Cáº­p Nháº­t MÃ£ Váº­n ÄÆ¡n Thá»§ CÃ´ng</h3>
+            <form onSubmit={handleManualSubmit}>
+              <div className="form-group">
+                <label>HÃ£ng váº­n chuyá»ƒn (Carrier):</label>
+                <input type="text" value={manualForm.carrier} onChange={e => setManualForm({...manualForm, carrier: e.target.value})} required placeholder="VD: Giao HÃ ng Nhanh, Viettel Post" />
+              </div>
+              <div className="form-group">
+                <label>MÃ£ váº­n Ä‘Æ¡n (Tracking Number):</label>
+                <input type="text" value={manualForm.trackingNumber} onChange={e => setManualForm({...manualForm, trackingNumber: e.target.value})} required placeholder="Nháº­p mÃ£ váº­n Ä‘Æ¡n tá»« hÃ£ng" />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowManualModal(false)}>Há»§y</button>
+                <button type="submit" className="btn-confirm" disabled={isSubmittingManual}>
+                  {isSubmittingManual ? "Äang lÆ°u..." : "XÃ¡c Nháº­n"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL GOSHIP Táº O ÄÆ N ================= */}
+      {showGoShipModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title"> LÃªn ÄÆ¡n Tá»± Äá»™ng (GoShip)</h3>
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '10px' }}>
+              <h4 style={{ marginBottom: '10px', fontSize: '15px' }}>1. ThÃ´ng tin KhÃ¡ch HÃ ng</h4>
+              <div className="grid-2">
+                <div className="form-group"><label>NgÆ°á»i nháº­n:</label><input type="text" value={goShipForm.toName} onChange={e => setGoShipForm({...goShipForm, toName: e.target.value})} /></div>
+                <div className="form-group"><label>SÄT:</label><input type="text" value={goShipForm.toPhone} onChange={e => setGoShipForm({...goShipForm, toPhone: e.target.value})} /></div>
+              </div>
+              <div className="form-group"><label>Sá»‘ nhÃ  / TÃªn Ä‘Æ°á»ng:</label><input type="text" value={goShipForm.toStreet} onChange={e => setGoShipForm({...goShipForm, toStreet: e.target.value})} /></div>
+              
+              <div className="grid-2">
+                <div className="form-group"><label>PhÆ°á»ng/XÃ£ (Ward):</label><input type="text" value={goShipForm.toWard} onChange={e => setGoShipForm({...goShipForm, toWard: e.target.value})} placeholder="VD: PhÆ°á»ng 1" required /></div>
+                <div className="form-group"><label>Quáº­n/Huyá»‡n (District):</label><input type="text" value={goShipForm.toDistrict} onChange={e => setGoShipForm({...goShipForm, toDistrict: e.target.value})} placeholder="VD: Quáº­n 3" required /></div>
+              </div>
+              <div className="form-group"><label>Tá»‰nh/ThÃ nh Phá»‘ (City):</label><input type="text" value={goShipForm.toCity} onChange={e => setGoShipForm({...goShipForm, toCity: e.target.value})} required /></div>
+
+              <h4 style={{ marginBottom: '10px', fontSize: '15px', marginTop: '20px' }}>2. ThÃ´ng tin Kiá»‡n HÃ ng</h4>
+              <div className="grid-2">
+                <div className="form-group"><label>Tiá»n thu há»™ COD (VNÄ):</label><input type="number" value={goShipForm.cod} onChange={e => setGoShipForm({...goShipForm, cod: e.target.value})} /></div>
+                <div className="form-group"><label>CÃ¢n náº·ng (gram):</label><input type="number" value={goShipForm.weight} onChange={e => setGoShipForm({...goShipForm, weight: e.target.value})} /></div>
+              </div>
+              <div style={{display: 'flex', gap: '10px'}}>
+                 <div className="form-group" style={{flex: 1}}><label>DÃ i (cm):</label><input type="number" value={goShipForm.length} onChange={e => setGoShipForm({...goShipForm, length: e.target.value})} /></div>
+                 <div className="form-group" style={{flex: 1}}><label>Rá»™ng (cm):</label><input type="number" value={goShipForm.width} onChange={e => setGoShipForm({...goShipForm, width: e.target.value})} /></div>
+                 <div className="form-group" style={{flex: 1}}><label>Cao (cm):</label><input type="number" value={goShipForm.height} onChange={e => setGoShipForm({...goShipForm, height: e.target.value})} /></div>
+              </div>
+
+              {rates.length > 0 && (
+                <>
+                  <h4 style={{ marginBottom: '10px', fontSize: '15px', marginTop: '20px', color: '#059669' }}>3. Chá»n HÃ£ng Váº­n Chuyá»ƒn</h4>
+                  <div className="rate-list">
+                    {rates.map(rate => (
+                      <div key={rate.id} className={`rate-card ${selectedRateId === rate.id ? 'active' : ''}`} onClick={() => setSelectedRateId(rate.id)}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <input type="radio" checked={selectedRateId === rate.id} readOnly />
+                          <div>
+                            <div className="rate-carrier">{rate.carrier_name} - {rate.service}</div>
+                            <div style={{fontSize: '12px', color: '#6b7280'}}>Dá»± kiáº¿n: {rate.expected}</div>
+                          </div>
+                        </div>
+                        <div className="rate-price">{new Intl.NumberFormat("vi-VN").format(rate.total_fee_after_discount || rate.total_fee)} VNÄ</div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="modal-actions">
+              <button type="button" className="btn-cancel" onClick={() => setShowGoShipModal(false)}>Há»§y bá»</button>
+              
+              {rates.length === 0 ? (
+                <button type="button" className="btn-confirm" onClick={handleFetchRates} disabled={isFetchingRates}>
+                  {isFetchingRates ? "Äang láº¥y giÃ¡..." : "Láº¥y GiÃ¡ CÆ°á»›c GoShip"}
+                </button>
+              ) : (
+                <button type="button" className="btn-confirm" onClick={handleCreateShipment} disabled={!selectedRateId || isCreatingShipment} style={{ backgroundColor: '#059669' }}>
+                  {isCreatingShipment ? "Äang Ä‘áº©y Ä‘Æ¡n..." : "XÃ¡c Nháº­n Táº¡o ÄÆ¡n Giao HÃ ng"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+========================================
 FILE: pages\UserProfile.css
 ========================================
 
@@ -9678,11 +10198,11 @@ import AdminLayout from "../components/layout/AdminLayout";
 // --- IMPORT CÃC TRANG KHÃCH HÃ€NG ---
 import MainPage from "../pages/MainPage";
 import OrderHistory from "../pages/OrderHistory";
-import PreorderDetail from "../pages/PreorderDetail";
+
 import OrderDetail from "../pages/OrderDetail";
 import CartPage from "../pages/CartPage";
 
-import CheckoutPreorderPage from "../pages/CheckoutPreorderPage";
+
 import CheckoutPage from "../pages/CheckoutPage";
 import CheckoutSuccess from "../pages/CheckoutSuccess";
 import ProductDetail from "../components/product/ProductDetail";
@@ -9696,6 +10216,7 @@ import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
 import AdminPreorderCampaigns from "../pages/AdminPreorderCampaigns";
+import ShippingPage from "../pages/ShippingPage";
 
 // VNPay
 import VNPayReturnPage from "../pages/VNPayReturnPage";
@@ -9728,6 +10249,8 @@ export default function AppRouter() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="campaigns" element={<AdminPreorderCampaigns />} />
+            <Route path="/admin/shipping" element={<ShippingPage />} />
+            
           </Route>
         </Route>
 
@@ -9737,14 +10260,14 @@ export default function AppRouter() {
           <Route path="/products/:id" element={<ProductDetail />} />
           
           <Route path="/orders" element={<OrderHistory />} />
-          <Route path="/preorders/:id" element={<PreorderDetail />} />
+          
           <Route path="/orders/:id" element={<OrderDetail />} />
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           
           
-          <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
+          
 
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
           <Route path="/payment/return" element={<VNPayReturnPage />} />
