@@ -2,6 +2,11 @@
 .admin-orders-header { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
 .admin-orders-title { margin: 0; color: #111827; }
 
+/* Tabs */
+.admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { padding: 10px 20px; border: none; background-color: #f3f4f6; color: #4b5563; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+.tab-btn.active { background-color: #111827; color: #fff; }
+
 .table-container { background-color: white; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
 .admin-table { width: 100%; border-collapse: collapse; text-align: left; }
 .admin-table thead { background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; }
@@ -15,12 +20,18 @@
 .col-price { color: #10b981; font-weight: bold; }
 .col-action { text-align: right; }
 
-.status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
+.status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; text-align: center; }
 .status-pending { background-color: #fef3c7; color: #d97706; }
+.status-confirmed { background-color: #e0e7ff; color: #4338ca; }
+.status-paid { background-color: #dcfce7; color: #15803d; }
 .status-processing { background-color: #e0e7ff; color: #4338ca; }
 .status-shipped { background-color: #f3e8ff; color: #7e22ce; }
-.status-delivered { background-color: #d1fae5; color: #059669; }
+.status-delivered, .status-converted { background-color: #d1fae5; color: #059669; }
 .status-cancelled { background-color: #fee2e2; color: #b91c1c; }
+
+/* Status Dropdown in Table */
+.status-select { padding: 6px 10px; border-radius: 6px; border: 1px solid #d1d5db; outline: none; font-size: 13px; font-weight: 600; cursor: pointer; background-color: #f9fafb; transition: 0.2s; }
+.status-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
 
 .btn-view { padding: 8px 16px; background-color: #111827; color: white; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; font-weight: 500; }
 .btn-view:hover { background-color: #374151; }

@@ -65,7 +65,7 @@ function ProductCard({ product }) {
             borderRadius: "20px", letterSpacing: "0.3px", zIndex: 2,
           }}
         >
-          ⏱️ Pre-order
+          Pre-order
         </div>
       ) : isOutOfStock ? (
         <div
