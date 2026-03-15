@@ -407,10 +407,10 @@ export default function AdminProducts() {
       {/* 4 NÚT THUỘC TÍNH NẰM TRÊN HEADER BẢNG */}
       <div className="admin-products-header" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <h2 className="admin-products-title" style={{ marginRight: 'auto' }}>Quản Lý Kính</h2>
-        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowBrandModal(true)}>🏷️ Thương hiệu</button>
-        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowMaterialModal(true)}>💎 Chất liệu</button>
-        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowColorModal(true)}>🎨 Màu sắc</button>
-        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowShapeModal(true)}>📐 Kiểu dáng</button>
+        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowBrandModal(true)}>Thương hiệu</button>
+        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowMaterialModal(true)}>Chất liệu</button>
+        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowColorModal(true)}>Màu sắc</button>
+        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowShapeModal(true)}>Kiểu dáng</button>
         <button className="btn-add" onClick={openAddModal}>+ Thêm Kính Mới</button>
       </div>
 
