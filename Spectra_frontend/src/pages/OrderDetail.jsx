@@ -52,14 +52,11 @@ export default function OrderDetail() {
       </div>
     );
 
-  // ⚡ HÀM FORMAT TIỀN TỆ ĐỒNG BỘ Y HỆT CHECKOUT SUCCESS
   const EXCHANGE_RATE = 25400;
   const formatPrice = (n) => {
-    const usd = new Intl.NumberFormat("en-US", { 
-      style: "currency", 
-      currency: "USD", 
-      minimumFractionDigits: 0, 
-      maximumFractionDigits: 0 
+    const usd = new Intl.NumberFormat("en-US", {
+      style: "currency", currency: "USD",
+      minimumFractionDigits: 0, maximumFractionDigits: 0
     }).format(n || 0);
     const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE);
     return `${usd}(${vnd} VND)`;
@@ -85,37 +82,35 @@ export default function OrderDetail() {
     );
   };
 
-  let receiverName    = (order.user?.fullName || "—").replace("Nh?t", "Nhật");
+  // Bóc tách thông tin người nhận từ shippingAddress
+  let receiverName    = (order.user?.fullName || "—");
   let receiverPhone   = order.user?.phone     || "—";
   let receiverEmail   = order.user?.email     || "—";
   let shippingAddress = order.shippingAddress || "—";
   const orderNote     = order.note            || "Không có";
 
-  // 2. ⚡ TRICK: Bóc tách với nhiều kịch bản (Fallback)
-  // Kịch bản 1: Chuẩn mới nhất [Tên - SĐT - Email] Địa chỉ
-  const matchNew = shippingAddress.match(/^\[(.*?) - (.*?) - (.*?)\] (.*)$/);
-  // Kịch bản 2: Bị lỗi dư ngoặc [Tên - SĐT] Email] Địa chỉ (như trong ảnh của bạn)
+  const matchNew   = shippingAddress.match(/^\[(.*?) - (.*?) - (.*?)\] (.*)$/);
   const matchError = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*?)] (.*)$/);
-  // Kịch bản 3: Chuẩn cũ ngày xưa [Tên - SĐT] Địa chỉ
-  const matchOld = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*)$/);
+  const matchOld   = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*)$/);
 
   if (matchNew) {
-    receiverName    = matchNew[1];
-    receiverPhone   = matchNew[2];
-    receiverEmail   = matchNew[3];
-    shippingAddress = matchNew[4];
+    receiverName = matchNew[1]; receiverPhone = matchNew[2];
+    receiverEmail = matchNew[3]; shippingAddress = matchNew[4];
   } else if (matchError) {
-    receiverName    = matchError[1];
-    receiverPhone   = matchError[2];
-    receiverEmail   = matchError[3].trim();
-    shippingAddress = matchError[4];
+    receiverName = matchError[1]; receiverPhone = matchError[2];
+    receiverEmail = matchError[3].trim(); shippingAddress = matchError[4];
   } else if (matchOld) {
-    receiverName    = matchOld[1];
-    receiverPhone   = matchOld[2];
+    receiverName = matchOld[1]; receiverPhone = matchOld[2];
     shippingAddress = matchOld[3];
   }
 
   const itemsList = order.items || order.orderItems || [];
+
+  // Thông tin vận chuyển — được gán sau khi staff nhập mã hoặc dùng GoShip
+  const trackingNumber  = order.trackingNumber  || null;
+  const shippingCarrier = order.shippingCarrier || null;
+  const shippedAt       = order.shippedAt       || null;
+  const hasTracking     = !!trackingNumber;
 
   return (
     <div style={{ maxWidth: "860px", margin: "40px auto", padding: "20px", fontFamily: "sans-serif" }}>
@@ -137,7 +132,7 @@ export default function OrderDetail() {
         </div>
 
         {/* 2 cột thông tin */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "28px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
 
           {/* Thông tin đơn hàng */}
           <div style={{ backgroundColor: "#f9fafb", padding: "18px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
@@ -153,7 +148,6 @@ export default function OrderDetail() {
                 <b>Ngày nhận hàng:</b> {new Date(order.arrivalDate).toLocaleString("vi-VN")}
               </p>
             )}
-            
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
               <b>Ghi chú:</b> {orderNote}
             </p>
@@ -170,7 +164,6 @@ export default function OrderDetail() {
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
               <b>Số điện thoại:</b> {receiverPhone}
             </p>
-            {/* ⚡ THÊM DÒNG NÀY ĐỂ HIỂN THỊ EMAIL */}
             {receiverEmail !== "—" && (
               <p style={{ margin: "6px 0", fontSize: "14px" }}>
                 <b>Email:</b> {receiverEmail}
@@ -181,6 +174,57 @@ export default function OrderDetail() {
             </p>
           </div>
         </div>
+
+        {/* ── MÃ VẬN ĐƠN — hiển thị khi đơn đã được gán tracking ── */}
+        {hasTracking && (
+          <div style={{
+            backgroundColor: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            borderRadius: "10px",
+            padding: "16px 18px",
+            marginBottom: "20px",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "14px",
+          }}>
+            <span style={{ fontSize: "24px", lineHeight: 1 }}>🚚</span>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: "0 0 10px 0", fontSize: "15px", color: "#1e40af" }}>
+                Thông tin vận chuyển
+              </h4>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+                {shippingCarrier && (
+                  <p style={{ margin: 0, fontSize: "14px", color: "#1e3a8a" }}>
+                    <b>Hãng vận chuyển:</b>{" "}
+                    <span style={{ fontWeight: "bold" }}>{shippingCarrier}</span>
+                  </p>
+                )}
+                <p style={{ margin: 0, fontSize: "14px", color: "#1e3a8a" }}>
+                  <b>Mã vận đơn:</b>{" "}
+                  <span style={{
+                    fontFamily: "monospace",
+                    fontSize: "15px",
+                    fontWeight: "bold",
+                    backgroundColor: "#dbeafe",
+                    padding: "2px 10px",
+                    borderRadius: "6px",
+                    letterSpacing: "0.5px",
+                  }}>
+                    {trackingNumber}
+                  </span>
+                </p>
+                {shippedAt && (
+                  <p style={{ margin: 0, fontSize: "14px", color: "#1e3a8a" }}>
+                    <b>Ngày gửi:</b> {new Date(shippedAt).toLocaleString("vi-VN")}
+                  </p>
+                )}
+              </div>
+              <p style={{ margin: "8px 0 0 0", fontSize: "12px", color: "#6b7280", fontStyle: "italic" }}>
+                Dùng mã vận đơn để tra cứu trạng thái giao hàng trên trang của hãng vận chuyển.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Danh sách sản phẩm */}
         <h3 style={{ borderBottom: "1px solid #f3f4f6", paddingBottom: "10px", marginBottom: "16px", fontSize: "17px" }}>
@@ -194,26 +238,18 @@ export default function OrderDetail() {
         ) : (
           <div style={{ marginBottom: "24px" }}>
             {itemsList.map((item, index) => {
-              const frameName   = item.frame?.frameName || "Gọng kính";
-              const frameColor  = item.selectedColor    || item.frame?.color || null;
-              const qty         = item.quantity         || 1;
+              const frameName      = item.frame?.frameName || "Gọng kính";
+              const frameColor     = item.selectedColor    || item.frame?.color || null;
+              const qty            = item.quantity         || 1;
               const prescriptionUrl = item.prescription?.imageUrl || null;
-              
-              // ⚡ CẬP NHẬT TÊN BIẾN ĐÚNG THEO PRODUCT DETAIL (lensSpecification, featureSpecification)
-              const lensType    = item.lensType?.lensSpecification || null;
-              
-              // Support cả 2 trường hợp tên object API trả về: lensFeature hoặc feature
+              const lensType       = item.lensType?.lensSpecification || null;
               const lensFeatureObj = item.lensFeature || item.feature;
-              const lensFeature = lensFeatureObj?.featureSpecification || null;
-              
-              // ⚡ BÓC TÁCH GIÁ TIỀN TỪ BACKEND (Sử dụng extraPrice cho tính năng tròng)
-              const framePrice = item.frame?.basePrice || 0;
-              const typePrice = item.lensType?.basePrice || 0;
-              const featurePrice = lensFeatureObj?.extraPrice || 0;
-              const totalLensPrice = typePrice + featurePrice; 
-
-              // ⚡ Tự tính giá đơn vị
-              const unitPrice = item.orderPrice || item.unitPrice || item.price || (framePrice + totalLensPrice);
+              const lensFeature    = lensFeatureObj?.featureSpecification || null;
+              const framePrice     = item.frame?.basePrice || 0;
+              const typePrice      = item.lensType?.basePrice || 0;
+              const featurePrice   = lensFeatureObj?.extraPrice || 0;
+              const totalLensPrice = typePrice + featurePrice;
+              const unitPrice      = item.orderPrice || item.unitPrice || item.price || (framePrice + totalLensPrice);
               const calculatedFramePrice = framePrice > 0 ? framePrice : (unitPrice - totalLensPrice);
 
               return (
@@ -221,23 +257,21 @@ export default function OrderDetail() {
                   key={item.orderItemId || index}
                   style={{ display: "flex", flexDirection: "column", padding: "16px 0", borderBottom: "1px dashed #e5e7eb", gap: "12px" }}
                 >
-                  {/* HÀNG 1: TÊN GỌNG KÍNH + GIÁ GỌNG */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", width: "100%" }}>
                     <div style={{ flex: 1 }}>
                       <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: "16px" }}>
-                        {frameName} {frameColor && <span style={{fontSize: "13px", color: "#6b7280", fontWeight: "normal"}}>- Màu: {frameColor}</span>}
+                        {frameName}{" "}
+                        {frameColor && <span style={{ fontSize: "13px", color: "#6b7280", fontWeight: "normal" }}>- Màu: {frameColor}</span>}
                       </p>
                       <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#374151" }}>
                         Số lượng: <b>x{qty}</b>
                       </p>
                     </div>
-                    {/* GIÁ GỌNG KÍNH */}
                     <div style={{ fontWeight: "bold", fontSize: "15px", color: "#111827", whiteSpace: "nowrap", textAlign: "right" }}>
                       {formatPrice(calculatedFramePrice)}
                     </div>
                   </div>
 
-                  {/* HÀNG 2: THÔNG TIN TRÒNG KÍNH + GIÁ TRÒNG (Chỉ hiện khi có chọn tròng) */}
                   {(lensType || lensFeature) && (
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", backgroundColor: "#f8fafc", padding: "10px 12px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
                       <div style={{ flex: 1 }}>
@@ -251,18 +285,15 @@ export default function OrderDetail() {
                           </a>
                         )}
                       </div>
-                      {/* GIÁ TRÒNG KÍNH + TÍNH NĂNG */}
                       <div style={{ fontWeight: "bold", fontSize: "14px", color: "#475569", whiteSpace: "nowrap", textAlign: "right" }}>
                         {totalLensPrice > 0 ? `+ ${formatPrice(totalLensPrice)}` : "Đang cập nhật"}
                       </div>
                     </div>
                   )}
 
-                  {/* TỔNG TIỀN CHO SẢN PHẨM NÀY (Bao gồm nhân với số lượng) */}
                   <div style={{ textAlign: "right", marginTop: "4px", fontSize: "14px", color: "#059669", fontWeight: "bold" }}>
                     Tạm tính: {formatPrice(unitPrice * qty)}
                   </div>
-
                 </div>
               );
             })}
@@ -276,6 +307,7 @@ export default function OrderDetail() {
             {formatPrice(order.totalAmount)}
           </strong>
         </div>
+
       </div>
     </div>
   );

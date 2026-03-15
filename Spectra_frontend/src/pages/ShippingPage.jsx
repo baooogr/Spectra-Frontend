@@ -2,47 +2,80 @@ import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../context/UserContext";
 import "./ShippingPage.css";
 
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+function parseAddress(shippingAddress) {
+  if (!shippingAddress) return { name: "", phone: "", street: "" };
+  const matchNew = shippingAddress.match(/^\[(.*?) - (.*?) - (.*?)\]\s*(.*)$/);
+  const matchOld = shippingAddress.match(/^\[(.*?) - (.*?)\]\s*(.*)$/);
+  if (matchNew) return { name: matchNew[1], phone: matchNew[2], street: matchNew[4] };
+  if (matchOld) return { name: matchOld[1], phone: matchOld[2], street: matchOld[3] };
+  return { name: "", phone: "", street: shippingAddress };
+}
+
+function StatusBadge({ status }) {
+  const map = {
+    pending:    { label: "Chờ xác nhận", color: "#d97706", bg: "#fef3c7" },
+    confirmed:  { label: "Đã xác nhận",  color: "#2563eb", bg: "#dbeafe" },
+    processing: { label: "Đang xử lý",   color: "#7c3aed", bg: "#ede9fe" },
+    shipped:    { label: "Đang giao",    color: "#0891b2", bg: "#cffafe" },
+    delivered:  { label: "Đã giao",      color: "#059669", bg: "#d1fae5" },
+    cancelled:  { label: "Đã huỷ",      color: "#dc2626", bg: "#fee2e2" },
+  };
+  const s = map[status?.toLowerCase()] || { label: status || "N/A", color: "#6b7280", bg: "#f3f4f6" };
+  return (
+    <span style={{
+      backgroundColor: s.bg, color: s.color,
+      padding: "3px 10px", borderRadius: "12px",
+      fontWeight: 600, fontSize: "13px", whiteSpace: "nowrap",
+    }}>
+      {s.label}
+    </span>
+  );
+}
+
+const CARRIERS = [
+  "Giao Hàng Nhanh",
+  "Giao Hàng Tiết Kiệm",
+  "J&T Express",
+  "VNPost",
+];
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+
 export default function ShippingPage() {
   const { user } = useContext(UserContext);
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+  const authHeaders = { "Content-Type": "application/json", "Authorization": `Bearer ${token}` };
 
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders]       = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg]   = useState("");
+  const [activeTab, setActiveTab] = useState("active"); // "active" | "shipped" | "all"
 
-  // ================= STATES CHO MODAL MANUAL TRACKING =================
-  const [showManualModal, setShowManualModal] = useState(false);
-  const [selectedOrderForManual, setSelectedOrderForManual] = useState(null);
-  const [manualForm, setManualForm] = useState({ trackingNumber: "", carrier: "VNPost" });
+  // ─── MODAL: Manual tracking ───
+  const [showManualModal, setShowManualModal]       = useState(false);
+  const [selectedForManual, setSelectedForManual]   = useState(null);
+  const [manualForm, setManualForm]                 = useState({ trackingNumber: "", carrier: "" });
   const [isSubmittingManual, setIsSubmittingManual] = useState(false);
 
-  // ================= STATES CHO MODAL GOSHIP =================
-  const [showGoShipModal, setShowGoShipModal] = useState(false);
-  const [selectedOrderForGoShip, setSelectedOrderForGoShip] = useState(null);
-  const [goShipForm, setGoShipForm] = useState({
-    toName: "", toPhone: "", toStreet: "", toWard: "", toDistrict: "", toCity: "",
-    cod: 0, weight: 500, width: 20, height: 10, length: 15
-  });
-  const [rates, setRates] = useState([]);
-  const [selectedRateId, setSelectedRateId] = useState("");
-  const [isFetchingRates, setIsFetchingRates] = useState(false);
-  const [isCreatingShipment, setIsCreatingShipment] = useState(false);
+  // ─── FETCH ORDERS ─────────────────────────────────────────────────────────
 
-  // Lấy danh sách đơn hàng
   const fetchOrders = async () => {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      const res = await fetch("https://myspectra.runasp.net/api/Orders?page=1&pageSize=50", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+      const res = await fetch(
+        "https://myspectra.runasp.net/api/Orders?page=1&pageSize=100",
+        { headers: authHeaders }
+      );
       if (res.ok) {
         const data = await res.json();
         setOrders(data.items || data || []);
       } else {
         setErrorMsg("Không thể tải dữ liệu đơn hàng.");
       }
-    } catch (err) {
+    } catch {
       setErrorMsg("Lỗi kết nối mạng.");
     } finally {
       setIsLoading(false);
@@ -54,265 +87,297 @@ export default function ShippingPage() {
     else { setIsLoading(false); setErrorMsg("Bạn chưa đăng nhập hoặc không có quyền."); }
   }, [token]);
 
-  // ================= LOGIC MANUAL TRACKING =================
-  const openManualModal = (order) => {
-    setSelectedOrderForManual(order);
-    setManualForm({ trackingNumber: order.trackingNumber || "", carrier: order.shippingCarrier || "VNPost" });
-    setShowManualModal(true);
-  };
+  // ─── STATUS UPDATE (Delivered) ────────────────────────────────────────────
 
-  const handleManualSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmittingManual(true);
+  const handleMarkDelivered = async (order) => {
+    const id = order.orderId || order.id;
+    if (!window.confirm(`Xác nhận đơn #${String(id).substring(0, 8)} đã giao thành công?`)) return;
     try {
-      const res = await fetch(`https://myspectra.runasp.net/api/Shipping/orders/${selectedOrderForManual.id || selectedOrderForManual.orderId}/tracking`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ trackingNumber: manualForm.trackingNumber, carrier: manualForm.carrier })
+      const res = await fetch(`https://myspectra.runasp.net/api/Orders/${id}/status`, {
+        method: "PUT",
+        headers: authHeaders,
+        body: JSON.stringify({ status: "delivered" }),
       });
       if (res.ok) {
-        alert("Cập nhật mã vận đơn thủ công thành công!");
-        setShowManualModal(false);
+        alert("Đã cập nhật trạng thái: Đã giao hàng ✓");
         fetchOrders();
       } else {
         const err = await res.json();
         alert("Lỗi: " + (err.message || "Cập nhật thất bại"));
       }
-    } catch (err) { alert("Lỗi mạng."); } 
-    finally { setIsSubmittingManual(false); }
+    } catch { alert("Lỗi mạng."); }
   };
 
-  // ================= LOGIC GOSHIP =================
-  const openGoShipModal = (order) => {
-    // Bóc tách thông tin thô từ chuỗi address của đơn hàng
-    let name = order.fullName || order.customerName || order.receiverName || "Khách hàng";
-    let phone = order.phoneNumber || order.phone || "";
-    let street = order.shippingAddress || "";
-    
-    const matchOld = street.match(/^\[(.*?) - (.*?)\]\s*(.*)$/);
-    const matchNew = street.match(/^\[(.*?) - (.*?) - (.*?)\]\s*(.*)$/);
+  // ─── MANUAL TRACKING ──────────────────────────────────────────────────────
 
-    if (matchNew) { name = matchNew[1]; phone = matchNew[2]; street = matchNew[4]; }
-    else if (matchOld) { name = matchOld[1]; phone = matchOld[2]; street = matchOld[3]; }
-
-    setGoShipForm({
-      toName: name, toPhone: phone, toStreet: street,
-      toWard: "", toDistrict: "", toCity: "Hồ Chí Minh",
-      cod: order.paymentMethod === 'COD' ? (order.totalAmount || order.totalPrice || 0) * 25400 : 0, 
-      weight: 500, width: 20, height: 10, length: 15
+  const openManualModal = (order) => {
+    setSelectedForManual(order);
+    setManualForm({
+      trackingNumber: order.trackingNumber || "",
+      carrier: order.shippingCarrier || "",
     });
-    
-    setSelectedOrderForGoShip(order);
-    setRates([]);
-    setSelectedRateId("");
-    setShowGoShipModal(true);
+    setShowManualModal(true);
   };
 
-  const handleFetchRates = async () => {
-    if (!goShipForm.toWard || !goShipForm.toDistrict || !goShipForm.toCity) {
-      alert("Vui lòng điền đủ Phường/Xã, Quận/Huyện, Tỉnh/Thành phố!");
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    if (!manualForm.trackingNumber.trim() || !manualForm.carrier) {
+      alert("Vui lòng chọn hãng vận chuyển và điền mã vận đơn.");
       return;
     }
-    setIsFetchingRates(true);
+    const id = selectedForManual.orderId || selectedForManual.id;
+    setIsSubmittingManual(true);
     try {
-      const payload = {
-        addressFrom: {
-          name: "Spectra Store", phone: "0901234567", street: "123 Nguyễn Huệ", ward: "Phường Bến Nghé", district: "Quận 1", city: "Hồ Chí Minh"
-        },
-        addressTo: {
-          name: goShipForm.toName, phone: goShipForm.toPhone, street: goShipForm.toStreet, ward: goShipForm.toWard, district: goShipForm.toDistrict, city: goShipForm.toCity
-        },
-        parcel: {
-          cod: Number(goShipForm.cod), weight: Number(goShipForm.weight), width: Number(goShipForm.width), height: Number(goShipForm.height), length: Number(goShipForm.length), metadata: ""
+      // Bước 1: Gán mã vận đơn + carrier
+      const trackRes = await fetch(
+        `https://myspectra.runasp.net/api/Shipping/orders/${id}/tracking`,
+        {
+          method: "PATCH",
+          headers: authHeaders,
+          body: JSON.stringify({
+            trackingNumber: manualForm.trackingNumber.trim(),
+            carrier: manualForm.carrier,
+          }),
         }
-      };
-
-      const res = await fetch("https://myspectra.runasp.net/api/Shipping/goship/rates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setRates(data.data || []);
-      } else {
-        alert("Lỗi khi lấy giá cước từ GoShip!");
+      );
+      if (!trackRes.ok) {
+        const err = await trackRes.json();
+        alert("Lỗi: " + (err.message || "Cập nhật thất bại. Kiểm tra trạng thái đơn hàng."));
+        return;
       }
-    } catch (err) { alert("Lỗi kết nối mạng."); } 
-    finally { setIsFetchingRates(false); }
+
+      // Bước 2: Đảm bảo status được đổi sang shipped
+      // (backend tự đổi khi đơn đang processing, gọi thêm để chắc chắn)
+      const trackData = await trackRes.json();
+      if (trackData.status?.toLowerCase() !== "shipped") {
+        await fetch(`https://myspectra.runasp.net/api/Orders/${id}/status`, {
+          method: "PUT",
+          headers: authHeaders,
+          body: JSON.stringify({ status: "shipped" }),
+        });
+      }
+
+      alert("Cập nhật mã vận đơn thành công! Trạng thái đơn → Shipped ✓");
+      setShowManualModal(false);
+      fetchOrders();
+    } catch {
+      alert("Lỗi mạng.");
+    } finally {
+      setIsSubmittingManual(false);
+    }
   };
 
-  const handleCreateShipment = async () => {
-    if (!selectedRateId) { alert("Bạn chưa chọn hãng vận chuyển!"); return; }
-    setIsCreatingShipment(true);
-    try {
-      const payload = {
-        rateId: selectedRateId,
-        orderId: selectedOrderForGoShip.id || selectedOrderForGoShip.orderId,
-        addressFrom: { name: "Spectra Store", phone: "0901234567", street: "123 Nguyễn Huệ", ward: "Phường Bến Nghé", district: "Quận 1", city: "Hồ Chí Minh" },
-        addressTo: { name: goShipForm.toName, phone: goShipForm.toPhone, street: goShipForm.toStreet, ward: goShipForm.toWard, district: goShipForm.toDistrict, city: goShipForm.toCity },
-        parcel: { cod: Number(goShipForm.cod), weight: Number(goShipForm.weight), width: Number(goShipForm.width), height: Number(goShipForm.height), length: Number(goShipForm.length), metadata: "" }
-      };
+  // ─── FILTER LOGIC ─────────────────────────────────────────────────────────
 
-      const res = await fetch("https://myspectra.runasp.net/api/Shipping/goship/shipments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify(payload)
-      });
+  const filteredOrders = orders.filter(o => {
+    const s = o.status?.toLowerCase();
+    if (activeTab === "active")  return s === "processing"; // chỉ processing
+    if (activeTab === "shipped") return s === "shipped";
+    return true; // "all"
+  });
 
-      if (res.ok) {
-        alert("Tạo đơn giao hàng tự động thành công! Trạng thái đơn đã đổi sang Shipped.");
-        setShowGoShipModal(false);
-        fetchOrders();
-      } else {
-        const err = await res.json();
-        alert("Lỗi tạo đơn: " + (err.message || "Kiểm tra lại dữ liệu GoShip"));
-      }
-    } catch (err) { alert("Lỗi kết nối mạng."); } 
-    finally { setIsCreatingShipment(false); }
-  };
+  // ─── RENDER ───────────────────────────────────────────────────────────────
+
+  const tabStyle = (tab) => ({
+    padding: "9px 20px",
+    border: "none",
+    cursor: "pointer",
+    fontWeight: "bold",
+    fontSize: "14px",
+    borderBottom: activeTab === tab ? "3px solid #2563eb" : "3px solid transparent",
+    backgroundColor: activeTab === tab ? "white" : "#f3f4f6",
+    color: activeTab === tab ? "#1d4ed8" : "#6b7280",
+    borderRadius: "6px 6px 0 0",
+    transition: "all 0.15s",
+  });
+
+  const activeCount  = orders.filter(o => o.status?.toLowerCase() === "processing").length;
+  const shippedCount = orders.filter(o => o.status?.toLowerCase() === "shipped").length;
 
   return (
     <div className="shipping-page-container">
-      <h2 className="shipping-header"> Quản lý Vận chuyển & Giao hàng</h2>
+      <h2 className="shipping-header">🚚 Quản Lý Vận Chuyển & Giao Hàng</h2>
 
-      {errorMsg ? ( <div style={{ color: "red", padding: "20px" }}>{errorMsg}</div> ) : isLoading ? ( <p> Đang tải dữ liệu...</p> ) : (
-        <table className="shipping-table">
-          <thead>
-            <tr>
-              <th>Mã Đơn Hàng</th>
-              <th>Khách Hàng</th>
-              <th>Trạng Thái</th>
-              <th>Mã Vận Đơn</th>
-              <th>Thao Tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 ? (
-              <tr><td colSpan="5" style={{ textAlign: "center", padding: "30px" }}>Chưa có đơn hàng nào.</td></tr>
-            ) : (
-              orders.map((order) => {
-                const rawId = order.orderId || order.id;
-                return (
-                  <tr key={rawId}>
-                    <td><strong>#{String(rawId).substring(0, 8)}</strong></td>
-                    <td>
-                      <div style={{fontWeight: 'bold'}}>{order.fullName || order.customerName || order.receiverName || "Khách hàng"}</div>
-                      <div style={{fontSize: '12px', color: '#6b7280'}}>{order.phoneNumber || order.phone}</div>
-                    </td>
-                    <td>
-                      <span style={{ fontWeight: "bold", textTransform: "capitalize", color: order.status === "shipped" || order.status === "delivered" ? "#059669" : "#d97706" }}>
-                        {order.status || "N/A"}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={order.trackingNumber ? "badge-tracking" : ""}>
-                        {order.trackingNumber ? `${order.shippingCarrier || 'N/A'} - ${order.trackingNumber}` : "Chưa có"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="actions-group">
-                        <button className="btn-manual" onClick={() => openManualModal(order)} title="Gán mã bằng tay">Nhập mã</button>
-                        <button className="btn-goship" onClick={() => openGoShipModal(order)} title="Tạo vận đơn tự động qua GoShip">GoShip</button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      )}
+      {/* Ghi chú luồng */}
+      <div style={{
+        backgroundColor: "#eff6ff", border: "1px solid #bfdbfe",
+        borderRadius: "8px", padding: "12px 16px", marginBottom: "20px",
+        fontSize: "13px", color: "#1e40af", lineHeight: "1.7",
+      }}>
+        <b>Luồng xử lý:</b>&nbsp;
+        <span style={{ color: "#7c3aed" }}>Confirmed</span> → đổi sang{" "}
+        <span style={{ color: "#7c3aed" }}>Processing</span> (trong Quản lý Đơn hàng) →&nbsp;
+        Nhập mã vận đơn thủ công → status tự chuyển sang{" "}
+        <span style={{ color: "#0891b2" }}>Shipped</span> →&nbsp;
+        Bấm <b>Đã giao</b> khi khách nhận hàng → <span style={{ color: "#059669" }}>Delivered</span>
+      </div>
 
-      {/* ================= MODAL MANUAL TRACKING ================= */}
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: "4px", borderBottom: "1px solid #e5e7eb", marginBottom: 0 }}>
+        <button style={tabStyle("active")}  onClick={() => setActiveTab("active")}>
+          📦 Chờ giao ({activeCount})
+        </button>
+        <button style={tabStyle("shipped")} onClick={() => setActiveTab("shipped")}>
+          🚚 Đang vận chuyển ({shippedCount})
+        </button>
+        <button style={tabStyle("all")}     onClick={() => setActiveTab("all")}>
+          📋 Tất cả ({orders.length})
+        </button>
+      </div>
+
+      {/* Table */}
+      <div style={{
+        backgroundColor: "white", border: "1px solid #e5e7eb",
+        borderTop: "none", borderRadius: "0 0 8px 8px", overflow: "hidden",
+      }}>
+        {errorMsg ? (
+          <div style={{ color: "#dc2626", padding: "24px" }}>{errorMsg}</div>
+        ) : isLoading ? (
+          <p style={{ padding: "24px", color: "#6b7280" }}>⏳ Đang tải...</p>
+        ) : (
+          <table className="shipping-table">
+            <thead>
+              <tr>
+                <th>Mã Đơn</th>
+                <th>Khách Hàng</th>
+                <th>Trạng Thái</th>
+                <th>Mã Vận Đơn</th>
+                <th>Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center", padding: "32px", color: "#9ca3af" }}>
+                    Không có đơn nào trong mục này.
+                  </td>
+                </tr>
+              ) : (
+                filteredOrders.map((order) => {
+                  const rawId       = order.orderId || order.id;
+                  const status      = order.status?.toLowerCase();
+                  const canManual   = status === "processing";
+                  const canDeliver  = status === "shipped";
+                  const hasTracking = !!order.trackingNumber;
+
+                  return (
+                    <tr key={rawId}>
+                      {/* Mã đơn */}
+                      <td>
+                        <strong style={{ fontFamily: "monospace", fontSize: "13px" }}>
+                          #{String(rawId).substring(0, 8)}
+                        </strong>
+                      </td>
+
+                      {/* Khách hàng */}
+                      <td>
+                        <div style={{ fontWeight: "bold" }}>
+                          {order.receiverName || order.customerName || "Khách hàng"}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                          {order.phoneNumber || order.phone || "—"}
+                        </div>
+                      </td>
+
+                      {/* Trạng thái */}
+                      <td><StatusBadge status={order.status} /></td>
+
+                      {/* Mã vận đơn + hãng ship */}
+                      <td>
+                        {hasTracking ? (
+                          <div>
+                            {order.shippingCarrier && (
+                              <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "2px" }}>
+                                {order.shippingCarrier}
+                              </div>
+                            )}
+                            <span className="badge-tracking">
+                              {order.trackingNumber}
+                            </span>
+                          </div>
+                        ) : (
+                          <span style={{ color: "#9ca3af", fontSize: "13px" }}>Chưa có</span>
+                        )}
+                      </td>
+
+                      {/* Thao tác */}
+                      <td>
+                        <div className="actions-group">
+                          {/* Nhập mã thủ công – chỉ khi processing */}
+                          {canManual && (
+                            <button
+                              className="btn-manual"
+                              onClick={() => openManualModal(order)}
+                              title="Gán mã vận đơn thủ công → Shipped"
+                            >
+                              ✏️ Nhập mã
+                            </button>
+                          )}
+
+                          {/* Xác nhận đã giao – chỉ khi shipped */}
+                          {canDeliver && (
+                            <button
+                              className="btn-confirm"
+                              onClick={() => handleMarkDelivered(order)}
+                              style={{ padding: "8px 14px", fontSize: "13px" }}
+                              title="Xác nhận khách đã nhận hàng → Delivered"
+                            >
+                              ✅ Đã giao
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* ══ MODAL: MANUAL TRACKING ══ */}
       {showManualModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{maxWidth: '450px'}}>
-            <h3 className="modal-title">Cập Nhật Mã Vận Đơn Thủ Công</h3>
+          <div className="modal-content" style={{ maxWidth: "440px" }}>
+            <h3 className="modal-title">✏️ Nhập Mã Vận Đơn Thủ Công</h3>
+            <p style={{ fontSize: "13px", color: "#6b7280", marginTop: "-10px", marginBottom: "16px" }}>
+              Đơn: <b>#{String(selectedForManual?.orderId || selectedForManual?.id).substring(0, 8)}</b>
+              &nbsp;·&nbsp; Trạng thái sẽ chuyển thành <b>Shipped</b>
+            </p>
             <form onSubmit={handleManualSubmit}>
               <div className="form-group">
-                <label>Hãng vận chuyển (Carrier):</label>
-                <input type="text" value={manualForm.carrier} onChange={e => setManualForm({...manualForm, carrier: e.target.value})} required placeholder="VD: Giao Hàng Nhanh, Viettel Post" />
+                <label>Hãng vận chuyển:</label>
+                <select
+                  value={manualForm.carrier}
+                  onChange={e => setManualForm({ ...manualForm, carrier: e.target.value })}
+                  required
+                >
+                  <option value="">-- Chọn hãng ship --</option>
+                  {CARRIERS.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>Mã vận đơn (Tracking Number):</label>
-                <input type="text" value={manualForm.trackingNumber} onChange={e => setManualForm({...manualForm, trackingNumber: e.target.value})} required placeholder="Nhập mã vận đơn từ hãng" />
+                <input
+                  type="text"
+                  value={manualForm.trackingNumber}
+                  onChange={e => setManualForm({ ...manualForm, trackingNumber: e.target.value })}
+                  required
+                  placeholder="VD: GHN123456789"
+                />
               </div>
               <div className="modal-actions">
-                <button type="button" className="btn-cancel" onClick={() => setShowManualModal(false)}>Hủy</button>
+                <button type="button" className="btn-cancel" onClick={() => setShowManualModal(false)}>
+                  Huỷ
+                </button>
                 <button type="submit" className="btn-confirm" disabled={isSubmittingManual}>
                   {isSubmittingManual ? "Đang lưu..." : "Xác Nhận"}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL GOSHIP TẠO ĐƠN ================= */}
-      {showGoShipModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 className="modal-title"> Lên Đơn Tự Động (GoShip)</h3>
-            <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '10px' }}>
-              <h4 style={{ marginBottom: '10px', fontSize: '15px' }}>1. Thông tin Khách Hàng</h4>
-              <div className="grid-2">
-                <div className="form-group"><label>Người nhận:</label><input type="text" value={goShipForm.toName} onChange={e => setGoShipForm({...goShipForm, toName: e.target.value})} /></div>
-                <div className="form-group"><label>SĐT:</label><input type="text" value={goShipForm.toPhone} onChange={e => setGoShipForm({...goShipForm, toPhone: e.target.value})} /></div>
-              </div>
-              <div className="form-group"><label>Số nhà / Tên đường:</label><input type="text" value={goShipForm.toStreet} onChange={e => setGoShipForm({...goShipForm, toStreet: e.target.value})} /></div>
-              
-              <div className="grid-2">
-                <div className="form-group"><label>Phường/Xã (Ward):</label><input type="text" value={goShipForm.toWard} onChange={e => setGoShipForm({...goShipForm, toWard: e.target.value})} placeholder="VD: Phường 1" required /></div>
-                <div className="form-group"><label>Quận/Huyện (District):</label><input type="text" value={goShipForm.toDistrict} onChange={e => setGoShipForm({...goShipForm, toDistrict: e.target.value})} placeholder="VD: Quận 3" required /></div>
-              </div>
-              <div className="form-group"><label>Tỉnh/Thành Phố (City):</label><input type="text" value={goShipForm.toCity} onChange={e => setGoShipForm({...goShipForm, toCity: e.target.value})} required /></div>
-
-              <h4 style={{ marginBottom: '10px', fontSize: '15px', marginTop: '20px' }}>2. Thông tin Kiện Hàng</h4>
-              <div className="grid-2">
-                <div className="form-group"><label>Tiền thu hộ COD (VNĐ):</label><input type="number" value={goShipForm.cod} onChange={e => setGoShipForm({...goShipForm, cod: e.target.value})} /></div>
-                <div className="form-group"><label>Cân nặng (gram):</label><input type="number" value={goShipForm.weight} onChange={e => setGoShipForm({...goShipForm, weight: e.target.value})} /></div>
-              </div>
-              <div style={{display: 'flex', gap: '10px'}}>
-                 <div className="form-group" style={{flex: 1}}><label>Dài (cm):</label><input type="number" value={goShipForm.length} onChange={e => setGoShipForm({...goShipForm, length: e.target.value})} /></div>
-                 <div className="form-group" style={{flex: 1}}><label>Rộng (cm):</label><input type="number" value={goShipForm.width} onChange={e => setGoShipForm({...goShipForm, width: e.target.value})} /></div>
-                 <div className="form-group" style={{flex: 1}}><label>Cao (cm):</label><input type="number" value={goShipForm.height} onChange={e => setGoShipForm({...goShipForm, height: e.target.value})} /></div>
-              </div>
-
-              {rates.length > 0 && (
-                <>
-                  <h4 style={{ marginBottom: '10px', fontSize: '15px', marginTop: '20px', color: '#059669' }}>3. Chọn Hãng Vận Chuyển</h4>
-                  <div className="rate-list">
-                    {rates.map(rate => (
-                      <div key={rate.id} className={`rate-card ${selectedRateId === rate.id ? 'active' : ''}`} onClick={() => setSelectedRateId(rate.id)}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <input type="radio" checked={selectedRateId === rate.id} readOnly />
-                          <div>
-                            <div className="rate-carrier">{rate.carrier_name} - {rate.service}</div>
-                            <div style={{fontSize: '12px', color: '#6b7280'}}>Dự kiến: {rate.expected}</div>
-                          </div>
-                        </div>
-                        <div className="rate-price">{new Intl.NumberFormat("vi-VN").format(rate.total_fee_after_discount || rate.total_fee)} VNĐ</div>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="modal-actions">
-              <button type="button" className="btn-cancel" onClick={() => setShowGoShipModal(false)}>Hủy bỏ</button>
-              
-              {rates.length === 0 ? (
-                <button type="button" className="btn-confirm" onClick={handleFetchRates} disabled={isFetchingRates}>
-                  {isFetchingRates ? "Đang lấy giá..." : "Lấy Giá Cước GoShip"}
-                </button>
-              ) : (
-                <button type="button" className="btn-confirm" onClick={handleCreateShipment} disabled={!selectedRateId || isCreatingShipment} style={{ backgroundColor: '#059669' }}>
-                  {isCreatingShipment ? "Đang đẩy đơn..." : "Xác Nhận Tạo Đơn Giao Hàng"}
-                </button>
-              )}
-            </div>
           </div>
         </div>
       )}

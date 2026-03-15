@@ -49,6 +49,7 @@
   border-radius: 12px;
   font-weight: 600;
   font-size: 13px;
+  display: inline-block;
 }
 
 .actions-group {
@@ -56,7 +57,7 @@
   gap: 8px;
 }
 
-.btn-manual, .btn-goship {
+.btn-manual {
   border: none;
   padding: 8px 14px;
   border-radius: 6px;
@@ -64,19 +65,10 @@
   transition: 0.2s;
   font-weight: 600;
   font-size: 13px;
-}
-
-.btn-manual {
   background-color: #e5e7eb;
   color: #374151;
 }
 .btn-manual:hover { background-color: #d1d5db; }
-
-.btn-goship {
-  background-color: #2563eb;
-  color: white;
-}
-.btn-goship:hover { background-color: #1d4ed8; }
 
 /* Modals */
 .modal-overlay {
@@ -122,7 +114,8 @@
   margin-bottom: 6px;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
   width: 100%;
   padding: 10px;
   border-radius: 6px;
@@ -130,16 +123,13 @@
   box-sizing: border-box;
   font-size: 14px;
   outline: none;
+  background-color: white;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
   border-color: #2563eb;
-}
-
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
 }
 
 .modal-actions {
@@ -171,25 +161,3 @@
   background-color: #9ca3af;
   cursor: not-allowed;
 }
-
-/* Rate Card cho GoShip */
-.rate-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 15px;
-}
-.rate-card {
-  border: 1px solid #e5e7eb;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: 0.2s;
-}
-.rate-card:hover { border-color: #93c5fd; background-color: #eff6ff; }
-.rate-card.active { border: 2px solid #2563eb; background-color: #eff6ff; }
-.rate-carrier { font-weight: bold; color: #111827; }
-.rate-price { font-weight: bold; color: #10b981; }
