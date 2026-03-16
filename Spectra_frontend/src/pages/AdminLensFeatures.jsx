@@ -90,7 +90,7 @@ export default function AdminLensFeatures() {
   return (
     <div className="admin-lens-container">
       <div className="admin-lens-header">
-        <h2 className="admin-lens-title">✨ Quản Lý Tính Năng Tròng (Lens Features)</h2>
+        <h2 className="admin-lens-title">Quản Lý Tính Năng Tròng (Lens Features)</h2>
         <button onClick={() => handleOpenModal()} className="btn-add">+ Thêm Tính Năng</button>
       </div>
 
@@ -124,7 +124,7 @@ export default function AdminLensFeatures() {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 className="modal-title">{isEditing ? "✏️ Sửa Tính Năng" : "✨ Thêm Tính Năng Mới"}</h3>
+            <h3 className="modal-title">{isEditing ? "Sửa Tính Năng" : "Thêm Tính Năng Mới"}</h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label>Mô tả tính năng / Lớp phủ (Specification):</label>

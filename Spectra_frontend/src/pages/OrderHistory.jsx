@@ -13,6 +13,18 @@ export default function OrderHistory() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // "all" | "orders" | "preorders"
 
+  // ⚡ HÀM FORMAT TIỀN TỆ
+  const EXCHANGE_RATE = 25400;
+  const formatPrice = (n) => {
+    const usd = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+    }).format(n);
+    const vnd = new Intl.NumberFormat("vi-VN").format(n * EXCHANGE_RATE) + " VND";
+    return `${usd} (${vnd})`;
+  };
+
   useEffect(() => {
     const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
     if (!token) {
@@ -73,8 +85,11 @@ export default function OrderHistory() {
     if (s === "delivered" || s === "completed") return { text: "Thành công", color: "#10b981" };
     if (s === "cancelled") return { text: "Đã huỷ", color: "#ef4444" };
     if (s === "awaiting_payment" || s === "awaitingpayment") return { text: "Chờ thanh toán", color: "#f97316" };
+    if (s === "confirmed") return { text: "Đã xác nhận", color: "#059669" };
+    if (s === "paid")       return { text: "Đã thanh toán", color: "#059669" };
+    if (s === "converted")  return { text: "Đang xử lý",    color: "#3b82f6" };
     return { text: status || "Không rõ", color: "gray" };
-  };
+      };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -102,7 +117,7 @@ export default function OrderHistory() {
     transition: "all 0.2s",
   });
 
-  // Render một card đơn hàng thường
+  // ===== RENDER CARD ĐƠN THƯỜNG (GIỮ NGUYÊN - KHÔNG ĐỘNG VÀO) =====
   const OrderCard = ({ order }) => {
     const statusObj = translateStatus(order.status);
     const itemsList = order.orderDetails || order.orderItems || order.items || [];
@@ -161,7 +176,7 @@ export default function OrderHistory() {
             <p style={{ margin: "0 0 4px 0" }}>
               Tổng tiền:{" "}
               <strong style={{ color: "#111827", fontSize: "18px" }}>
-                ${order.totalAmount || order.totalPrice || 0}
+                {formatPrice(order.totalAmount || order.totalPrice || 0)}
               </strong>
             </p>
             <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
@@ -188,47 +203,63 @@ export default function OrderHistory() {
     );
   };
 
-  // Render một card đơn đặt trước (PRE-ORDER)
+  // ===== RENDER CARD ĐƠN PRE-ORDER (ĐÃ SỬA) =====
   const PreorderCard = ({ order }) => {
-    const statusObj = translateStatus(order.status);
-    const itemsList = order.preorderDetails || order.items || [];
-    const totalQty = itemsList.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    
-    // State lưu tổng tiền để có thể update bất đồng bộ
+  // Nếu preorder đã convert → tìm Order liên kết để lấy status thật
+  const linkedOrder = order.status?.toLowerCase() === "converted"
+    ? orders.find(o => o.convertedFromPreorderId === (order.id || order.preorderId))
+    : null;
+  const displayStatus = linkedOrder ? linkedOrder.status : order.status;
+  const statusObj = translateStatus(displayStatus);
+
+    // Lấy danh sách items — hỗ trợ nhiều field name BE có thể trả về
+    const itemsList = (
+      order.preorderItems  ||
+      order.preorderDetails ||
+      order.orderItems     ||
+      order.items          ||
+      []
+    ).filter(Boolean);
+
+    const totalQty = itemsList.reduce(
+      (sum, item) => sum + (item.quantity || item.qty || 1),
+      0
+    );
+
+    // Tổng tiền: ưu tiên từ data, fallback tính từ items
     const [finalAmount, setFinalAmount] = useState(
-      order.totalAmount || order.totalPrice ||
+      order.totalAmount ||
+      order.totalPrice  ||
       itemsList.reduce((sum, item) => {
-        const itemPrice = item.unitPrice || item.price || 0;
-        const itemQty = item.quantity || item.qty || 1;
-        return sum + (itemPrice * itemQty);
+        const price = item.unitPrice || item.orderPrice || item.preorderPrice || 0;
+        const qty   = item.quantity  || item.qty        || 1;
+        return sum + price * qty;
       }, 0)
     );
 
-    // ⚡ FIX: Nếu tổng tiền vẫn bằng 0 (do BE thiếu data), gọi API Payment để lấy số tiền đã trả
+    // Nếu vẫn = 0 thì gọi Payment API để lấy số tiền đã thanh toán (fallback)
     useEffect(() => {
+      if (finalAmount > 0) return;
       const fetchPaymentAmount = async () => {
-        if (finalAmount === 0 || !finalAmount) {
-          try {
-            const token = JSON.parse(localStorage.getItem("user"))?.token;
-            const preId = order.id || order.preorderId;
-            const res = await fetch(`https://myspectra.runasp.net/api/Payments/preorder/${preId}`, {
-              headers: { "Authorization": `Bearer ${token}` }
-            });
-            if (res.ok) {
-              const data = await res.json();
-              // API có thể trả về 1 mảng các payment hoặc 1 object, ta lấy amount
-              if (data && data.length > 0 && data[0].amount) {
-                setFinalAmount(data[0].amount);
-              } else if (data && data.amount) {
-                setFinalAmount(data.amount);
-              }
+        try {
+          const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+          const preId = order.id || order.preorderId;
+          const res = await fetch(
+            `https://myspectra.runasp.net/api/Payments/preorder/${preId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data[0]?.amount) {
+              setFinalAmount(data[0].amount);
+            } else if (data?.amount) {
+              setFinalAmount(data.amount);
             }
-          } catch (err) {
-            console.error("Lỗi lấy thông tin Payment:", err);
           }
+        } catch (err) {
+          console.error("Lỗi lấy thông tin Payment:", err);
         }
       };
-
       fetchPaymentAmount();
     }, [order, finalAmount]);
 
@@ -299,13 +330,49 @@ export default function OrderHistory() {
           </span>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+        {/* Danh sách tên sản phẩm (nếu BE trả về items trong list) */}
+        {itemsList.length > 0 && (
+          <div
+            style={{
+              borderBottom: "1px solid #dbeafe",
+              paddingBottom: "10px",
+              marginBottom: "12px",
+            }}
+          >
+            {itemsList.slice(0, 3).map((item, idx) => {
+              const frameName = item.frame?.frameName || item.frameName || "Gọng kính";
+              const qty       = item.quantity || item.qty || 1;
+              return (
+                <p
+                  key={item.preorderItemId || item.orderItemId || idx}
+                  style={{ margin: "3px 0", fontSize: "14px", color: "#1e3a8a" }}
+                >
+                  • {frameName} <span style={{ color: "#1e40af" }}>x{qty}</span>
+                </p>
+              );
+            })}
+            {itemsList.length > 3 && (
+              <p style={{ margin: "3px 0", fontSize: "13px", color: "#6b7280" }}>
+                ...và {itemsList.length - 3} sản phẩm khác
+              </p>
+            )}
+          </div>
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
           <div>
             <p style={{ margin: "0 0 4px 0" }}>
               Tổng tiền:{" "}
-              {/* Hiển thị giá lấy được từ Payment hoặc tính toán */}
               <strong style={{ color: "#1e40af", fontSize: "18px" }}>
-                ${finalAmount}
+                {formatPrice(finalAmount || 0)}
               </strong>
             </p>
             {totalQty > 0 && (
@@ -314,10 +381,10 @@ export default function OrderHistory() {
               </p>
             )}
           </div>
-          
-         <Link 
-             to={`/preorders/${order.id || order.preorderId}`}
-             style={{
+
+          <Link
+            to={`/preorders/${order.id || order.preorderId}`}
+            style={{
               padding: "8px 18px",
               border: "1px solid #93c5fd",
               borderRadius: "6px",
@@ -327,7 +394,7 @@ export default function OrderHistory() {
               fontSize: "14px",
               backgroundColor: "white",
               cursor: "pointer",
-              display: "inline-block" // Giúp link giữ đúng kích thước nút
+              display: "inline-block",
             }}
           >
             Xem chi tiết →

@@ -91,7 +91,7 @@ export default function AdminLens() {
   return (
     <div className="admin-lens-container">
       <div className="admin-lens-header">
-        <h2 className="admin-lens-title">👓 Quản Lý Loại Tròng Kính (Lens Types)</h2>
+        <h2 className="admin-lens-title">Quản Lý Loại Tròng Kính (Lens Types)</h2>
         <button onClick={() => handleOpenModal()} className="btn-add">+ Thêm Loại Tròng</button>
       </div>
 
@@ -113,8 +113,8 @@ export default function AdminLens() {
                   <td className="col-name">{lens.lensSpecification}</td>
                   <td>
                     {lens.requiresPrescription 
-                      ? <span className="badge-yes">⚠️ Bắt buộc có toa</span> 
-                      : <span className="badge-no">✅ Không cần toa</span>}
+                      ? <span className="badge-yes">Bắt buộc có toa</span> 
+                      : <span className="badge-no">Không cần toa</span>}
                   </td>
                   <td className="col-price">${lens.basePrice}</td>
                   <td className="col-action">
@@ -130,7 +130,7 @@ export default function AdminLens() {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3 className="modal-title">{isEditing ? "✏️ Sửa Loại Tròng" : "✨ Thêm Loại Tròng"}</h3>
+            <h3 className="modal-title">{isEditing ? "Sửa Loại Tròng" : "Thêm Loại Tròng"}</h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label>Tên / Thông số tròng (VD: Tròng chống lóa 1.56):</label>

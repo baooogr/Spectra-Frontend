@@ -9,8 +9,8 @@ const fallbackImage = "https://placehold.co/600x400/eeeeee/999999?text=No+Image"
 
 const ImageGallery = ({ images }) => {
   const [mainImg, setMainImg] = useState(images[0] || fallbackImage);
-  const [isZoomed, setIsZoomed] = useState(false); 
-  
+  const [isZoomed, setIsZoomed] = useState(false);
+
   useEffect(() => {
     setMainImg(images[0] || fallbackImage);
   }, [images]);
@@ -19,13 +19,12 @@ const ImageGallery = ({ images }) => {
     <div className="product-gallery">
       <div className="main-image-container" onClick={() => setIsZoomed(true)}>
         <img src={mainImg} alt="Main Product" className="main-image" />
-        <div className="zoom-hint">🔍 Nhấp để phóng to</div>
+    
       </div>
-      
       <div className="thumbnail-row">
         {images.map((img, idx) => (
-          <div 
-            key={idx} 
+          <div
+            key={idx}
             className={`thumbnail-wrapper ${mainImg === img ? "active" : ""}`}
             onClick={() => setMainImg(img)}
           >
@@ -33,7 +32,6 @@ const ImageGallery = ({ images }) => {
           </div>
         ))}
       </div>
-
       {isZoomed && (
         <div className="image-zoom-overlay" onClick={() => setIsZoomed(false)}>
           <button className="close-zoom-btn" onClick={() => setIsZoomed(false)}>✕</button>
@@ -48,106 +46,137 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  
+
   const [product, setProduct] = useState(null);
+  const [allMedia, setAllMedia] = useState([]); // lưu toàn bộ media để filter theo màu
+  const [supportedLensTypes, setSupportedLensTypes] = useState([]);
   const [images, setImages] = useState([fallbackImage]);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-
+  const [selectedColor, setSelectedColor] = useState(null);
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [isPreordering, setIsPreordering] = useState(false);
 
   useEffect(() => {
-    const fetchProductDetails = async () => {
+    const fetchProductData = async () => {
+      setIsLoading(true);
       try {
-        const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`);
-        if (!res.ok) throw new Error("Không thể tải thông tin sản phẩm");
-        const data = await res.json();
-        setProduct(data);
-        
-        let fetchedImages = [];
-        if (data.mediaUrl) {
-          fetchedImages.push(data.mediaUrl);
-        } else if (data.imageUrl) {
-          fetchedImages.push(data.imageUrl);
-        } else if (data.imageUrls && data.imageUrls.length > 0) {
-          fetchedImages = data.imageUrls;
-        } else if (data.frameMedia && data.frameMedia.length > 0) {
-          fetchedImages = data.frameMedia.map(m => m.mediaUrl).filter(Boolean);
+        const [productRes, lensRes] = await Promise.all([
+          fetch(`https://myspectra.runasp.net/api/Frames/${id}`),
+          fetch(`https://myspectra.runasp.net/api/Frames/${id}/lens-types`)
+        ]);
+
+        if (!productRes.ok) throw new Error("Không thể tải thông tin sản phẩm");
+
+        const productData = await productRes.json();
+        setProduct(productData);
+
+        if (lensRes.ok) {
+          const lensData = await lensRes.json();
+          setSupportedLensTypes(lensData.supportedLensTypes || []);
         }
-        
-        if (fetchedImages.length > 0) {
-          setImages(fetchedImages);
-        } else {
-          setImages([fallbackImage]);
+
+        // Lưu toàn bộ media (có colorId để filter)
+        const media = productData.frameMedia || [];
+        setAllMedia(media);
+
+        // Chọn màu đầu tiên và hiển thị ảnh tương ứng
+        if (productData.frameColors?.length > 0) {
+          const firstColor = productData.frameColors[0];
+          setSelectedColor(firstColor);
+          applyColorImages(media, firstColor.colorId);
+        } else if (media.length > 0) {
+          setImages(media.map(m => m.mediaUrl).filter(Boolean));
         }
-      } catch (err) { 
-        setError(err.message); 
-      } finally { 
-        setIsLoading(false); 
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchProductDetails();
+    fetchProductData();
   }, [id]);
 
-  const handleOpenLensSelection = () => {
-    setIsPreordering(false); 
-    setIsLensModalOpen(true);
-  };
+  // Lọc ảnh theo colorId, fallback về tất cả ảnh nếu không có ảnh cho màu đó
+  const applyColorImages = (media, colorId) => {
+    const colorSpecificImages = media
+      .filter(m => m.colorId === colorId)
+      .map(m => m.mediaUrl)
+      .filter(Boolean);
 
-  const handleOpenPreorderSelection = () => {
-    setIsPreordering(true); 
-    setIsLensModalOpen(true);
-  };
-
- const handleConfirmAddToCart = (cartDataOptions) => {
-    const itemData = { 
-      id: product.id || product.frameId, 
-      name: product.frameName, 
-      price: cartDataOptions.finalPrice, 
-      image: [images[0]],
-      color: product.color || "Default",
-      quantity: quantity,
-      lensInfo: cartDataOptions.lensIncluded ? cartDataOptions.lensDetails : null
-    };
-
-    if (isPreordering) {
-      setIsLensModalOpen(false); 
-      const token = JSON.parse(localStorage.getItem("user"))?.token;
-      if (!token) {
-        alert("Bạn cần đăng nhập để thực hiện Đặt Trước (Pre-order).");
-        navigate("/login");
-        return;
-      }
-      navigate("/checkout-preorder", { state: { preorderItem: itemData } });
+    if (colorSpecificImages.length > 0) {
+      setImages(colorSpecificImages);
     } else {
-      addToCart(itemData, quantity); 
-      setIsLensModalOpen(false); 
-      setIsSuccessModalOpen(true); 
+      // Màu chưa có ảnh riêng → fallback về ảnh không gắn màu, hoặc tất cả ảnh
+      const noColorImages = media
+        .filter(m => !m.colorId)
+        .map(m => m.mediaUrl)
+        .filter(Boolean);
+      setImages(noColorImages.length > 0 ? noColorImages : media.map(m => m.mediaUrl).filter(Boolean));
     }
   };
 
-  if (isLoading) return <p className="center-msg" style={{color: "#666", textAlign: "center", padding: "50px"}}>⏳ Đang tải thông tin sản phẩm...</p>;
-  if (error || !product) return (
-    <div className="center-msg" style={{textAlign: "center", padding: "50px"}}>
-      <h2 className="error-text" style={{color: "red"}}>❌ {error}</h2>
-      <button onClick={() => navigate("/")} className="btn-back-home" style={{padding: "10px 20px", marginTop: "20px"}}>Quay lại Trang chủ</button>
-    </div>
-  );
+  const handleColorSelect = (fc) => {
+    setSelectedColor(fc);
+    setQuantity(1);
+    applyColorImages(allMedia, fc.colorId);
+  };
 
-  const inStock = product.stockQuantity > 0;
+  if (isLoading) return <p className="center-msg">⏳ Đang tải thông tin sản phẩm...</p>;
+  if (error || !product) return <div className="center-msg"><h2>❌ {error}</h2></div>;
+
+  const preorderInfo = product.preorderInfo || null;
+  const isPreorder = preorderInfo !== null;
+
+  const currentStock = selectedColor ? (selectedColor.stockQuantity || 0) : 0;
+  const inStock = currentStock > 0;
+
+  const canBuy = inStock || isPreorder;
+  const maxAllowedQuantity = isPreorder ? preorderInfo.maxQuantityPerOrder : currentStock;
+  const displayPrice = isPreorder ? preorderInfo.campaignPrice : product.basePrice;
+
+  const productForModal = { ...product, basePrice: displayPrice };
+
+  const handleConfirmAddToCart = (cartDataOptions) => {
+    const colorObj = selectedColor?.color || selectedColor || {};
+
+    const itemData = {
+      id: product.id || product.frameId,
+      name: product.frameName,
+      price: cartDataOptions.finalPrice,
+      image: images[0],
+      color: colorObj.colorName || "Mặc định",
+      colorId: colorObj.id || colorObj.colorId || null,
+      quantity: quantity,
+      isPreorder: isPreorder,
+      campaignId: isPreorder ? preorderInfo.campaignId : null,
+      estimatedDeliveryDate: isPreorder ? preorderInfo.estimatedDeliveryDate : null,
+      lensInfo: cartDataOptions.lensIncluded ? {
+        typeId: cartDataOptions.lensDetails.typeId,
+        featureId: cartDataOptions.lensDetails.featureId,
+        prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
+        type: cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
+        feature: cartDataOptions.lensDetails.lensFeature?.featureSpecification || "Không có",
+        typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0,
+        featurePrice: cartDataOptions.lensDetails.lensFeature?.extraPrice || 0
+      } : null
+    };
+
+    addToCart(itemData, quantity);
+    setIsLensModalOpen(false);
+    setIsSuccessModalOpen(true);
+  };
 
   return (
     <>
-      <LensSelectionModal 
-        isOpen={isLensModalOpen} 
+      <LensSelectionModal
+        isOpen={isLensModalOpen}
         onClose={() => setIsLensModalOpen(false)}
-        product={product}
+        product={productForModal}
+        supportedLensTypes={supportedLensTypes}
         onConfirmAddToCart={handleConfirmAddToCart}
       />
-
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} />
 
       <div className="product-detail-container">
@@ -155,74 +184,141 @@ export default function ProductDetail() {
 
         <div className="product-info-col">
           <h2 className="product-title">{product.frameName}</h2>
-          
-          <p className="product-brand">Thương hiệu: <strong>{product.brand?.brandName || "Đang cập nhật"}</strong></p>
-          <p className="product-price">${product.basePrice}</p>
+          <p className="product-brand">Thương hiệu: <strong>{product.brand?.brandName || "N/A"}</strong></p>
 
-          <div className="product-status">
-            Trạng thái: <span className={inStock ? "status-in-stock" : "status-out-stock"}>
-              {inStock ? `Còn hàng (${product.stockQuantity})` : "Hết hàng (Hỗ trợ Đặt trước)"}
-            </span>
-          </div>
-
-          <div className="quantity-wrapper">
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty">-</button>
-            <span className="qty-value">{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={inStock && quantity >= product.stockQuantity}>+</button>
-          </div>
-
-          {inStock ? (
-             <button onClick={handleOpenLensSelection} className="btn-add-cart active">
-               🛒 Thêm vào giỏ hàng
-             </button>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-              <button disabled className="btn-add-cart disabled" style={{ opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#9ca3af' }}>
-                🚫 Out of Stock
-              </button>
-              <button onClick={handleOpenPreorderSelection} className="btn-add-cart active" style={{ backgroundColor: '#2563eb' }}>
-                🚀 Đặt Trước (Pre-Order)
-              </button>
+          <p className="product-price" style={{ color: isPreorder ? "#2563eb" : "#000000" }}>
+            ${displayPrice}
+            {/*
+            {isPreorder && (
+              <span style={{ fontSize: "20px", textDecoration: "line-through", color: "#9ca3af", marginLeft: "15px" }}>
+                ${product.basePrice}
+              </span>
+            )}
+            */}
+          </p>
+          {isPreorder && (
+            <div style={{ display: 'inline-block', backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>
+              Ưu đãi đặt trước
             </div>
           )}
 
-          <div className="product-description-box">
-            <h3>Chi tiết sản phẩm</h3>
-            <ul style={{ listStyleType: 'none', padding: 0, lineHeight: '1.8' }}>
-              <li><strong>Chất liệu:</strong> {product.material?.materialName || "Chưa cập nhật"}</li>
-              
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <strong>Màu sắc:</strong> 
-                {product.frameColors?.length > 0 ? (
-                  product.frameColors.map((c, idx) => {
-                    const colorData = c.color || c;
-                    return (
-                      <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#f3f4f6', padding: '2px 8px', borderRadius: '12px', fontSize: '14px' }}>
-                        {colorData.hexCode && (
-                          <span style={{ width: '12px', height: '12px', backgroundColor: colorData.hexCode, borderRadius: '50%', border: '1px solid #d1d5db', display: 'inline-block' }}></span>
-                        )}
-                        {colorData.colorName || "Không tên"}
-                      </span>
-                    );
-                  })
-                ) : (
-                  <span>Chưa cập nhật</span>
+          <div className="product-color-selector" style={{ margin: '15px 0' }}>
+            <h4 style={{ marginBottom: '10px', fontSize: '15px' }}>Màu sắc có sẵn:</h4>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {product.frameColors?.map(fc => {
+                // Đếm số ảnh gắn với màu này để hiển thị indicator
+                const hasColorImages = allMedia.some(m => m.colorId === fc.colorId);
+                return (
+                  <button
+                    key={fc.colorId}
+                    onClick={() => handleColorSelect(fc)}
+                    className={selectedColor?.colorId === fc.colorId ? "color-btn active" : "color-btn"}
+                    style={{
+                      padding: '8px 16px', borderRadius: '6px', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      border: selectedColor?.colorId === fc.colorId ? '2px solid #2563eb' : '1px solid #d1d5db',
+                      backgroundColor: selectedColor?.colorId === fc.colorId ? '#eff6ff' : '#ffffff',
+                      position: 'relative'
+                    }}
+                  >
+                    <span style={{
+                      width: '16px', height: '16px',
+                      backgroundColor: fc.color?.hexCode || '#ccc',
+                      borderRadius: '50%', border: '1px solid #999'
+                    }}></span>
+                    {fc.color?.colorName}
+                    {hasColorImages && (
+                      <span style={{
+                        fontSize: '10px', color: '#10b981',
+                        marginLeft: '2px'
+                      }} title="Có ảnh riêng cho màu này"></span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Thông báo nếu màu được chọn chưa có ảnh riêng */}
+            {selectedColor && !allMedia.some(m => m.colorId === selectedColor.colorId) && allMedia.length > 0 && (
+              <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '6px', fontStyle: 'italic' }}>
+               
+              </p>
+            )}
+          </div>
+
+          <div className="product-status">
+            Trạng thái:
+            {isPreorder ? (
+              <span style={{ color: '#2563eb', fontWeight: 'bold', marginLeft: '8px' }}>
+                Đang mở đặt trước (Tối đa {maxAllowedQuantity} cái/đơn)
+                <div style={{ fontSize: '13px', marginTop: '5px', color: '#4b5563' }}>
+                  Dự kiến giao hàng: {new Date(preorderInfo.estimatedDeliveryDate).toLocaleDateString('vi-VN')}
+                </div>
+              </span>
+            ) : (
+              <span className={inStock ? "status-in-stock" : "status-out-stock"} style={{ marginLeft: '8px' }}>
+                {inStock ? `Còn hàng (${currentStock})` : "Hết hàng"}
+              </span>
+            )}
+          </div>
+
+          <div className="quantity-wrapper">
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="btn-qty" disabled={!canBuy}>-</button>
+            <span className="qty-value">{quantity}</span>
+            <button onClick={() => setQuantity(quantity + 1)} className="btn-qty" disabled={!canBuy || quantity >= maxAllowedQuantity}>+</button>
+          </div>
+
+          <button
+            onClick={() => setIsLensModalOpen(true)}
+            className={`btn-add-cart ${canBuy ? 'active' : ''}`}
+            disabled={!canBuy}
+            style={!canBuy ? {
+              backgroundColor: '#e5e7eb', color: '#9ca3af', cursor: 'not-allowed', boxShadow: 'none', border: '1px solid #d1d5db'
+            } : isPreorder ? {
+              backgroundColor: '#2563eb',
+            } : {}}
+          >
+            {isPreorder ? "🛒 Đặt trước ngay (Pre-order)" : inStock ? "🛒 Thêm vào giỏ hàng" : "Out of stock"}
+          </button>
+
+          <div className="product-info-grid">
+            <div className="info-card">
+              <div className="info-card-header">
+                <h3>Chi tiết sản phẩm</h3>
+              </div>
+              <div className="info-card-body">
+                <div className="info-row"><span className="info-label">Chất liệu:</span><span className="info-value">{product.material?.materialName}</span></div>
+                <div className="info-row"><span className="info-label">Kiểu dáng:</span><span className="info-value">{product.shape?.shapeName}</span></div>
+                <div className="info-row"><span className="info-label">Kích cỡ (Size):</span><span className="info-value text-capitalize">{product.size}</span></div>
+
+                {supportedLensTypes.length > 0 && (
+                  <div className="lens-types-section" style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                    <h4 style={{ fontSize: '13px', marginBottom: '10px', color: '#111827', fontWeight: '700' }}>
+                      LOẠI TRÒNG KÍNH HỖ TRỢ:
+                    </h4>
+                    {supportedLensTypes.map((lt) => (
+                      <div className="info-row" key={lt.id || lt.lensTypeId} style={{ padding: '8px 0' }}>
+                        <span style={{ fontWeight: '700', textDecoration: 'underline', fontSize: '14px' }}>
+                          {lt.lensSpecification || lt.typeName}
+                        </span>
+                        <span className="info-value">Yes</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </li>
-              
-              {/* CẬP NHẬT KIỂU DÁNG THEO OBJECT */}
-              <li><strong>Kiểu dáng:</strong> {product.shape?.shapeName || product.shape || "Chưa cập nhật"}</li>
-              <li><strong>Kích cỡ (Size):</strong> <span style={{ textTransform: 'capitalize' }}>{product.size || "Chưa cập nhật"}</span></li>
-              
-              {/* TÁCH BIỆT THÔNG SỐ KÍNH */}
-              <li style={{ marginTop: '15px' }}><strong>Thông số kỹ thuật:</strong></li>
-              <ul style={{ listStyleType: 'square', paddingLeft: '20px', marginTop: '5px' }}>
-                <li><strong>Rộng tròng (Lens Width):</strong> {product.lensWidth} mm</li>
-                <li><strong>Cầu kính (Bridge Width):</strong> {product.bridgeWidth} mm</li>
-                <li><strong>Càng kính (Temple Length):</strong> {product.templeLength} mm</li>
-                <li><strong>Rộng khung (Frame Width):</strong> {product.frameWidth} mm</li>
-              </ul>
-            </ul>
+              </div>
+            </div>
+
+            <div className="info-card">
+              <div className="info-card-header">
+                <h3>Thông số kỹ thuật</h3>
+              </div>
+              <div className="info-card-body">
+                <div className="info-row"><span className="info-label">Rộng tròng:</span><span className="info-value">{product.lensWidth} mm</span></div>
+                <div className="info-row"><span className="info-label">Cầu kính:</span><span className="info-value">{product.bridgeWidth} mm</span></div>
+                <div className="info-row"><span className="info-label">Càng kính:</span><span className="info-value">{product.templeLength} mm</span></div>
+                <div className="info-row"><span className="info-label">Rộng khung:</span><span className="info-value">{product.frameWidth} mm</span></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

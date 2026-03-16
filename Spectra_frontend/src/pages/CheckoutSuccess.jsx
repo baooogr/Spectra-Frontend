@@ -14,12 +14,29 @@ export default function CheckoutSuccess() {
   }, [location.state]);
 
   const customer = location.state?.customer;
-  const total = location.state?.total;
+  const total = location.state?.total; // Giả sử total này đang là USD
 
-  const formatVND = (n) =>
-    typeof n === "number"
-      ? n.toLocaleString("vi-VN", { style: "currency", currency: "VND" })
-      : null;
+  // Hàm chuyển đổi tỷ giá và format ra định dạng "$100 (2.625.000 ₫)"
+  const formatCurrency = (amountInUSD) => {
+    if (typeof amountInUSD !== "number") return null;
+
+    const EXCHANGE_RATE = 25400; 
+    
+    // 1. Format USD: bỏ phần thập phân .00 nếu là số chẵn
+    const formattedUSD = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amountInUSD);
+
+    // 2. Format VND: Chỉ lấy phần số (để có dấu chấm 4.593.750), không dùng style "currency" để tránh bị dính ký hiệu ₫
+    const amountInVND = amountInUSD * EXCHANGE_RATE;
+    const formattedVND = new Intl.NumberFormat("vi-VN").format(amountInVND);
+
+    // 3. Ghép chuỗi: Ép sát ngoặc đơn vào USD và thêm chữ VND
+    return `${formattedUSD}(${formattedVND} VND)`;
+  };
 
   return (
     <div className="success">
@@ -59,10 +76,11 @@ export default function CheckoutSuccess() {
               </div>
             )}
 
+            {/* Đã sửa dòng này để gọi hàm formatCurrency mới */}
             {typeof total === "number" && (
               <div className="info-row info-row--total">
                 <span>Tổng tiền</span>
-                <span>{formatVND(total)}</span>
+                <span>{formatCurrency(total)}</span>
               </div>
             )}
           </div>
@@ -77,9 +95,7 @@ export default function CheckoutSuccess() {
           </button>
         </div>
 
-        <small className="success__note">
-          * Demo UI (không tích hợp thanh toán thật).
-        </small>
+        
       </div>
     </div>
   );

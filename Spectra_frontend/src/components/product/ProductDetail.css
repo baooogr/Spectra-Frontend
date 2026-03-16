@@ -220,3 +220,83 @@
     height: 400px;
   }
 }
+
+/* Container chính chia 2 cột */
+.product-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 25px;
+  width: 100%;
+}
+
+/* Style cho từng chiếc Card */
+.info-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden; /* Để header không bị tràn khỏi góc bo */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Phần tiêu đề Card (Nền xám nhạt) */
+.info-card-header {
+  background-color: #f7f7f7; /* Màu xám nhạt như hình */
+  padding: 12px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-card-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.info-icon {
+  font-size: 16px;
+}
+
+/* Phần nội dung bên trong Card */
+.info-card-body {
+  padding: 10px 15px;
+}
+
+/* Từng dòng thông tin (Căn đều 2 bên) */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.info-row:last-child {
+  border-bottom: none; /* Dòng cuối không cần gạch chân */
+}
+
+.info-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #000;
+  font-weight: 600;
+}
+
+.text-capitalize {
+  text-transform: capitalize;
+}
+
+/* Responsive cho điện thoại */
+@media (max-width: 768px) {
+  .product-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
