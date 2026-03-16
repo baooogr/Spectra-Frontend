@@ -172,12 +172,7 @@ function PaymentInfoBlock({ paymentList }) {
       {method && (
         <p style={{ margin: 0, fontSize: '14px' }}>
           <b>Phương thức:</b>{' '}
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '4px',
-            backgroundColor: method.bg, color: method.color,
-            padding: '2px 10px', borderRadius: '20px',
-            fontWeight: 'bold', fontSize: '13px',
-          }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: method.bg, color: method.color, padding: '2px 10px', borderRadius: '20px', fontWeight: 'bold', fontSize: '13px' }}>
             {method.icon} {method.label}
           </span>
         </p>
@@ -185,12 +180,7 @@ function PaymentInfoBlock({ paymentList }) {
       {pStatus && (
         <p style={{ margin: 0, fontSize: '14px' }}>
           <b>Trạng thái TT:</b>{' '}
-          <span style={{
-            display: 'inline-block',
-            backgroundColor: pStatus.bg, color: pStatus.color,
-            padding: '2px 10px', borderRadius: '20px',
-            fontWeight: 'bold', fontSize: '13px',
-          }}>
+          <span style={{ display: 'inline-block', backgroundColor: pStatus.bg, color: pStatus.color, padding: '2px 10px', borderRadius: '20px', fontWeight: 'bold', fontSize: '13px' }}>
             {pStatus.label}
           </span>
         </p>
@@ -283,8 +273,8 @@ export default function AdminOrders() {
 
     try {
       const [orderRes, paymentRes] = await Promise.all([
-        fetch(`https://myspectra.runasp.net/api/${orderEndpoint}`,  { headers }),
-        fetch(`https://myspectra.runasp.net/api/${paymentEndpoint}`, { headers }),
+        fetch(`https://myspectra.runasp.net/api/${orderEndpoint}`,   { headers }),
+        fetch(`https://myspectra.runasp.net/api/${paymentEndpoint}`,  { headers }),
       ]);
 
       if (orderRes.ok) {
@@ -309,36 +299,55 @@ export default function AdminOrders() {
 
   // ---------------------------------------------------------------------------
   // handleUpdateStatus
-  // FIX: Đổi tên "Convert to Order" → "Processing" (value vẫn là 'converted')
-  //      Tự lấy shippingAddress từ data preorder, không dùng prompt()
   // ---------------------------------------------------------------------------
   const handleUpdateStatus = async (id, isPreorder, newStatus) => {
     if (!window.confirm(`Bạn có chắc chắn muốn đổi trạng thái thành "${newStatus}"?`)) return;
 
     if (isPreorder && newStatus === 'converted') {
-      // Lấy địa chỉ từ data preorder đã fetch về, không cần nhập lại
-      const orderObj = preorders.find(p => (p.id || p.preorderId) === id);
-      const addr = orderObj?.shippingAddress || orderObj?.address || '';
-
-      if (!addr) {
-        alert("Không tìm thấy địa chỉ giao hàng trong đơn pre-order. Vui lòng kiểm tra lại.");
-        return;
-      }
-
-      if (!window.confirm(`Xác nhận chuyển sang Processing?\nĐịa chỉ giao hàng: ${addr}`)) return;
-
       try {
-        const res = await fetch(`https://myspectra.runasp.net/api/Preorders/${id}/convert`, {
+        // Bước 1: Lấy địa chỉ — ưu tiên từ list state, fallback fetch detail
+        let addr = preorders.find(p => (p.id || p.preorderId) === id)?.shippingAddress || '';
+
+        if (!addr) {
+          const detailRes = await fetch(`https://myspectra.runasp.net/api/Preorders/${id}`, { headers });
+          if (detailRes.ok) {
+            const detail = await detailRes.json();
+            addr = detail?.shippingAddress || detail?.address || '';
+          }
+        }
+
+        if (!addr) {
+          alert("Không tìm thấy địa chỉ giao hàng trong đơn pre-order. Vui lòng kiểm tra lại.");
+          return;
+        }
+
+        if (!window.confirm(`Xác nhận chuyển sang Processing?\nĐịa chỉ giao hàng: ${addr}`)) return;
+
+        // Bước 2: Convert preorder → tạo Order mới (status: pending)
+        const convertRes = await fetch(`https://myspectra.runasp.net/api/Preorders/${id}/convert`, {
           method: "POST", headers, body: JSON.stringify({ shippingAddress: addr })
         });
-        if (res.ok) {
-          alert("Chuyển đổi thành công! Đơn hàng mới đã được tạo với trạng thái Processing.");
-          fetchOrdersData();
-          if (isModalOpen) setIsModalOpen(false);
-        } else {
-          const err = await res.json();
+
+        if (!convertRes.ok) {
+          const err = await convertRes.json();
           alert("Lỗi chuyển đổi: " + (err.message || "Kiểm tra lại trạng thái đơn (cần Paid hoặc Confirmed)"));
+          return;
         }
+
+        const newOrder = await convertRes.json();
+
+        // Bước 3: Tự động đổi Order mới sang processing để vào ShippingPage
+        // (Convert tạo Order với status pending, ShippingPage chỉ hiện processing)
+        const newOrderId = newOrder.orderId || newOrder.id;
+        if (newOrderId) {
+          await fetch(`https://myspectra.runasp.net/api/Orders/${newOrderId}/status`, {
+            method: "PUT", headers, body: JSON.stringify({ status: "processing" })
+          });
+        }
+
+        alert("Chuyển đổi thành công! Đơn hàng đã được tạo và chuyển sang Processing → có thể thấy trong Quản lý Vận chuyển.");
+        fetchOrdersData();
+        if (isModalOpen) setIsModalOpen(false);
       } catch { alert("Lỗi mạng!"); }
       return;
     }
@@ -357,19 +366,18 @@ export default function AdminOrders() {
   };
 
   // ---------------------------------------------------------------------------
-  // getStatusBadge
-  // FIX: 'converted' hiển thị badge "Processing" thay vì "Converted"
+  // getStatusBadge — 'converted' hiển thị badge "Processing"
   // ---------------------------------------------------------------------------
   const getStatusBadge = (status) => {
     const s = status?.toLowerCase() || '';
-    if (s === 'pending')              return <span className="status-badge status-pending">Pending</span>;
-    if (s === 'confirmed')            return <span className="status-badge status-confirmed">Confirmed</span>;
-    if (s === 'paid')                 return <span className="status-badge status-paid">Paid</span>;
-    if (s === 'processing')           return <span className="status-badge status-processing">Processing</span>;
-    if (s === 'converted')            return <span className="status-badge status-processing">Processing</span>; // ← FIX
-    if (s === 'shipped')              return <span className="status-badge status-shipped">Shipped</span>;
-    if (s === 'delivered')            return <span className="status-badge status-delivered">Delivered</span>;
-    if (s === 'cancelled')            return <span className="status-badge status-cancelled">Cancelled</span>;
+    if (s === 'pending')    return <span className="status-badge status-pending">Pending</span>;
+    if (s === 'confirmed')  return <span className="status-badge status-confirmed">Confirmed</span>;
+    if (s === 'paid')       return <span className="status-badge status-paid">Paid</span>;
+    if (s === 'processing') return <span className="status-badge status-processing">Processing</span>;
+    if (s === 'converted')  return <span className="status-badge status-processing">Processing</span>;
+    if (s === 'shipped')    return <span className="status-badge status-shipped">Shipped</span>;
+    if (s === 'delivered')  return <span className="status-badge status-delivered">Delivered</span>;
+    if (s === 'cancelled')  return <span className="status-badge status-cancelled">Cancelled</span>;
     return <span className="status-badge" style={{ background: '#eee', color: '#333' }}>{status || 'Chưa rõ'}</span>;
   };
 
@@ -407,7 +415,6 @@ export default function AdminOrders() {
 
     return (
       <>
-        {/* ── THÔNG TIN CHUNG ── */}
         <div className="info-grid">
           <div className="info-card">
             <h4>Thông tin khách hàng</h4>
@@ -440,7 +447,6 @@ export default function AdminOrders() {
           </div>
         </div>
 
-        {/* ── DANH SÁCH SẢN PHẨM ── */}
         <h4>Sản phẩm đã mua</h4>
         {itemsList.length === 0 ? (
           <p style={{ color: '#9ca3af', fontStyle: 'italic', textAlign: 'center', padding: '16px 0' }}>
@@ -557,7 +563,6 @@ export default function AdminOrders() {
                                   <option value="pending">Pending</option>
                                   <option value="confirmed">Confirmed</option>
                                   <option value="paid">Paid</option>
-                                  {/* FIX: Label "Processing" nhưng value vẫn là "converted" */}
                                   <option value="converted">Processing</option>
                                   <option value="cancelled">Cancelled</option>
                                 </>

@@ -133,10 +133,11 @@ export default function CheckoutPreorderPage() {
 
       // 2. Payload tạo đơn ĐẶT TRƯỚC (TUÂN THỦ API Swagger)
       const payload = {
-        campaignId: items[0].campaignId,
-        expectedDate: items[0].estimatedDeliveryDate || new Date().toISOString(),
-        items: formattedItems
-      };
+  campaignId: items[0].campaignId,
+  expectedDate: items[0].estimatedDeliveryDate || new Date().toISOString(),
+  shippingAddress: `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${form.address.trim()}`,
+  items: formattedItems
+};
 
       const res = await fetch("https://myspectra.runasp.net/api/Preorders", {
         method: "POST",
