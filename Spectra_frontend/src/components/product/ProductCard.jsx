@@ -109,12 +109,13 @@ function ProductCard({ product }) {
         <span style={{ fontSize: "20px", fontWeight: "bold", color: isPreorder ? "#2563eb" : "#000" }}>
           ${isPreorder ? preorderInfo.campaignPrice : (product.basePrice || product.price || 0)}
         </span>
-        
+        {/*
         {isPreorder && (
           <span style={{ fontSize: "13px", textDecoration: "line-through", color: "#9ca3af" }}>
              ${product.basePrice || product.price || 0}
           </span>
         )}
+        */}
       </div>
 
       {/* Tên sản phẩm */}

@@ -14,7 +14,7 @@ export default function AdminPreorderCampaigns() {
 
   // --- STATE CHO CREATE ---
   const initialForm = {
-    campaignName: "", description: "", startDate: "", endDate: "",
+    campaignName: "", startDate: "", endDate: "",
     maxSlots: 100, estimatedDeliveryDate: "", frames: [] 
   };
   const [formData, setFormData] = useState(initialForm);
@@ -23,7 +23,7 @@ export default function AdminPreorderCampaigns() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentEditId, setCurrentEditId] = useState(null);
   const [editFormData, setEditFormData] = useState({
-    campaignName: "", description: "", maxSlots: 100, estimatedDeliveryDate: ""
+    campaignName: "", maxSlots: 100, estimatedDeliveryDate: ""
   });
 
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
@@ -74,9 +74,9 @@ export default function AdminPreorderCampaigns() {
       setFormData(prev => ({
         ...prev,
         frames: [...prev.frames, {
-          frameId: frame.id || frame.frameId, frameName: frame.frameName,
-          basePrice: frame.basePrice, campaignPrice: frame.basePrice, maxQuantityPerOrder: 2 
-        }]
+        frameId: frame.id || frame.frameId, frameName: frame.frameName,
+        basePrice: frame.basePrice, maxQuantityPerOrder: 2
+}]
       }));
     }
   };
@@ -100,10 +100,10 @@ export default function AdminPreorderCampaigns() {
     const formatDt = (dt) => dt.length === 16 ? dt + ":00" : dt;
 
     const payload = {
-      campaignName: formData.campaignName, description: formData.description,
+      campaignName: formData.campaignName, 
       startDate: formatDt(formData.startDate), endDate: formatDt(formData.endDate),
       maxSlots: Number(formData.maxSlots), estimatedDeliveryDate: formatDt(formData.estimatedDeliveryDate),
-      frames: formData.frames.map(f => ({ frameId: f.frameId, campaignPrice: f.campaignPrice, maxQuantityPerOrder: f.maxQuantityPerOrder }))
+      frames: formData.frames.map(f => ({ frameId: f.frameId, campaignPrice: f.basePrice, maxQuantityPerOrder: f.maxQuantityPerOrder }))
     };
 
     try {
@@ -129,7 +129,6 @@ export default function AdminPreorderCampaigns() {
 
     setEditFormData({
       campaignName: camp.campaignName || "",
-      description: camp.description || "",
       maxSlots: camp.maxSlots || 100,
       estimatedDeliveryDate: estDate
     });
@@ -143,7 +142,6 @@ export default function AdminPreorderCampaigns() {
 
     const payload = {
       campaignName: editFormData.campaignName,
-      description: editFormData.description,
       maxSlots: Number(editFormData.maxSlots),
       estimatedDeliveryDate: formatDt(editFormData.estimatedDeliveryDate)
     };
@@ -271,10 +269,7 @@ export default function AdminPreorderCampaigns() {
                   <label style={{display: 'block', fontWeight: 'bold', marginBottom: '5px'}}>Tổng Số Suất Cho Phép (*)</label>
                   <input type="number" required min="1" value={formData.maxSlots} onChange={e => setFormData({...formData, maxSlots: e.target.value})} style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '14px'}} />
                 </div>
-                <div style={{gridColumn: '1 / span 2'}}>
-                  <label style={{display: 'block', fontWeight: 'bold', marginBottom: '5px'}}>Mô tả chiến dịch (Tùy chọn)</label>
-                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', minHeight: '60px', fontFamily: 'inherit'}} placeholder="Khách hàng sẽ nhận được mức giá cực sốc..." />
-                </div>
+                
                 <div>
                   <label style={{display: 'block', fontWeight: 'bold', marginBottom: '5px', color: '#047857'}}>Ngày Bắt Đầu Mở Bán (*)</label>
                   <input type="datetime-local" required value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} style={{width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #047857', backgroundColor: '#f0fdf4'}} />
@@ -291,12 +286,12 @@ export default function AdminPreorderCampaigns() {
 
               <div style={{borderTop: '2px solid #f3f4f6', paddingTop: '20px', marginBottom: '25px'}}>
                 <h3 style={{margin: '0 0 10px 0'}}>📦 Chọn Sản Phẩm (Kho Đang Báo Hết Hàng)</h3>
-                <p style={{fontSize: '13px', color: '#6b7280', margin: '0 0 15px 0'}}>Tích chọn sản phẩm để đưa vào đợt Pre-order, tự thiết lập giá ưu đãi và Giới hạn mua.</p>
+                <p style={{fontSize: '13px', color: '#6b7280', margin: '0 0 15px 0'}}>Tích chọn sản phẩm để đưa vào đợt Pre-order.</p>
                 <div style={{maxHeight: '250px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px', backgroundColor: '#f9fafb'}}>
                   {outOfStockFrames.length === 0 ? (
                     <div style={{padding: '20px', textAlign: 'center', color: '#9ca3af', fontWeight: 'bold'}}>Không có sản phẩm nào hết hàng để chạy chiến dịch lúc này.</div>
                   ) : (
-                    outOfStockFrames.map(frame => {
+                    outOfStockFrames.map(frame => { 
                       const isChecked = formData.frames.some(f => f.frameId === (frame.id || frame.frameId));
                       const frameConfig = formData.frames.find(f => f.frameId === (frame.id || frame.frameId));
                       return (
@@ -310,7 +305,7 @@ export default function AdminPreorderCampaigns() {
                             <div style={{display: 'flex', gap: '15px'}}>
                               <div>
                                 <label style={{fontSize: '11px', display: 'block', fontWeight: 'bold', color: '#059669'}}>Giá KM Pre-order ($)</label>
-                                <input type="number" step="0.01" min="0" value={frameConfig?.campaignPrice || 0} onChange={(e) => handleFrameConfigChange(frame.id || frame.frameId, 'campaignPrice', e.target.value)} style={{width: '120px', padding: '8px', borderRadius: '4px', border: '2px solid #059669', outline: 'none', fontWeight: 'bold', color: '#059669'}} />
+                                
                               </div>
                               <div>
                                 <label style={{fontSize: '11px', display: 'block', fontWeight: 'bold'}}>Giới hạn Mua/Đơn</label>

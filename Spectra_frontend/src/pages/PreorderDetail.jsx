@@ -7,6 +7,7 @@ export default function PreorderDetail() {
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
   const [order, setOrder] = useState(null);
+  const [linkedOrder, setLinkedOrder] = useState(null); // Order liên kết nếu đã convert
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,6 +26,26 @@ export default function PreorderDetail() {
         if (res.ok) {
           const data = await res.json();
           setOrder(data);
+
+          // FIX: Nếu preorder đã convert → fetch Orders/my để lấy status thật của order liên kết
+          if (data.status?.toLowerCase() === "converted") {
+            try {
+              const ordersRes = await fetch(
+                "https://myspectra.runasp.net/api/Orders/my?page=1&pageSize=100",
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              if (ordersRes.ok) {
+                const ordersData = await ordersRes.json();
+                const list = ordersData.items || ordersData || [];
+                const linked = list.find(
+                  (o) => o.convertedFromPreorderId === (data.id || data.preorderId)
+                );
+                if (linked) setLinkedOrder(linked);
+              }
+            } catch {
+              // Không cần xử lý lỗi, chỉ là fallback hiển thị
+            }
+          }
         } else if (res.status === 404) {
           setError("Không tìm thấy đơn đặt trước này.");
         } else {
@@ -54,7 +75,7 @@ export default function PreorderDetail() {
       </div>
     );
 
-  // ===== HÀM FORMAT TIỀN: USD + VND (đồng bộ với OrderDetail) =====
+  // ===== HÀM FORMAT TIỀN: USD + VND =====
   const EXCHANGE_RATE = 25400;
   const formatPrice = (n) => {
     const usd = new Intl.NumberFormat("en-US", {
@@ -76,6 +97,8 @@ export default function PreorderDetail() {
       pending:          { text: "Chờ xác nhận",   color: "#d97706", bg: "#fef3c7" },
       confirmed:        { text: "Đã xác nhận",    color: "#059669", bg: "#d1fae5" },
       processing:       { text: "Đang xử lý",     color: "#4338ca", bg: "#ede9fe" },
+      // FIX: converted hiển thị "Đang xử lý" (linked order đang processing)
+      converted:        { text: "Đang xử lý",     color: "#4338ca", bg: "#ede9fe" },
       awaiting_payment: { text: "Chờ thanh toán", color: "#f97316", bg: "#fff7ed" },
       awaitingpayment:  { text: "Chờ thanh toán", color: "#f97316", bg: "#fff7ed" },
       paid:             { text: "Đã thanh toán",  color: "#059669", bg: "#d1fae5" },
@@ -101,8 +124,10 @@ export default function PreorderDetail() {
     );
   };
 
-  // ===== BÓC TÁCH THÔNG TIN NGƯỜI NHẬN (đồng bộ với OrderDetail) =====
-  // Ưu tiên: lấy từ user object trước, sau đó thử parse từ shippingAddress
+  // FIX: Dùng status của linked order nếu preorder đã convert
+  const displayStatus = linkedOrder ? linkedOrder.status : order.status;
+
+  // ===== BÓC TÁCH THÔNG TIN NGƯỜI NHẬN =====
   let receiverName    = order.user?.fullName || "—";
   let receiverPhone   = order.user?.phone    || "—";
   let receiverEmail   = order.user?.email    || "—";
@@ -113,7 +138,6 @@ export default function PreorderDetail() {
     order.user?.address   ||
     "—";
 
-  // Fallback: Nếu shippingAddress có dạng [Tên - SĐT - Email] Địa chỉ thì parse ra
   const matchNew   = shippingAddress.match(/^\[(.*?) - (.*?) - (.*?)\] (.*)$/);
   const matchError = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*?)] (.*)$/);
   const matchOld   = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*)$/);
@@ -203,7 +227,8 @@ export default function PreorderDetail() {
               Mã đơn: <b style={{ color: "#1e40af" }}>#{order.preorderId || order.id}</b>
             </p>
           </div>
-          {getStatusBadge(order.status)}
+          {/* FIX: dùng displayStatus thay vì order.status */}
+          {getStatusBadge(displayStatus)}
         </div>
 
         {/* ===== 2 CỘT THÔNG TIN ===== */}
@@ -322,18 +347,14 @@ export default function PreorderDetail() {
               const qty        = item.quantity || 1;
               const unitPrice  = item.orderPrice || item.preorderPrice || item.unitPrice || 0;
 
-              // Brand: API có thể trả về dạng string hoặc object
               const brand =
                 (typeof item.frame?.brand === "string"
                   ? item.frame.brand
                   : item.frame?.brand?.brandName) || null;
 
-              // Thông tin tròng kính (đồng bộ với OrderDetail)
               const lensType       = item.lensType?.lensSpecification || null;
               const lensFeatureObj = item.lensFeature || item.feature;
               const lensFeature    = lensFeatureObj?.featureSpecification || null;
-
-              // Đơn thuốc
               const prescriptionUrl = item.prescription?.imageUrl || null;
 
               return (
@@ -360,15 +381,8 @@ export default function PreorderDetail() {
                       <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: "16px" }}>
                         {frameName}
                         {frameColor && (
-                          <span
-                            style={{
-                              fontSize: "13px",
-                              color: "#6b7280",
-                              fontWeight: "normal",
-                            }}
-                          >
-                            {" "}
-                            - Màu: {frameColor}
+                          <span style={{ fontSize: "13px", color: "#6b7280", fontWeight: "normal" }}>
+                            {" "}- Màu: {frameColor}
                           </span>
                         )}
                       </p>
@@ -381,7 +395,6 @@ export default function PreorderDetail() {
                         Số lượng: <b>x{qty}</b>
                       </p>
                     </div>
-                    {/* ĐƠN GIÁ (campaign price cho toàn bộ item) */}
                     <div
                       style={{
                         fontWeight: "bold",
@@ -395,7 +408,7 @@ export default function PreorderDetail() {
                     </div>
                   </div>
 
-                  {/* HÀNG 2: THÔNG TIN TRÒNG KÍNH (nếu có) */}
+                  {/* HÀNG 2: THÔNG TIN TRÒNG KÍNH */}
                   {(lensType || lensFeature) && (
                     <div
                       style={{
@@ -410,16 +423,8 @@ export default function PreorderDetail() {
                       }}
                     >
                       <div style={{ flex: 1 }}>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: "14px",
-                            color: "#4338ca",
-                            fontWeight: "500",
-                          }}
-                        >
-                          🔭 Tròng kính:{" "}
-                          {lensType || "Không có"}
+                        <p style={{ margin: 0, fontSize: "14px", color: "#4338ca", fontWeight: "500" }}>
+                          🔭 Tròng kính: {lensType || "Không có"}
                           {lensFeature ? ` — ${lensFeature}` : ""}
                         </p>
                         {prescriptionUrl && (

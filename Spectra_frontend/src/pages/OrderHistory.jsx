@@ -86,9 +86,10 @@ export default function OrderHistory() {
     if (s === "cancelled") return { text: "Đã huỷ", color: "#ef4444" };
     if (s === "awaiting_payment" || s === "awaitingpayment") return { text: "Chờ thanh toán", color: "#f97316" };
     if (s === "confirmed") return { text: "Đã xác nhận", color: "#059669" };
-    if (s === "paid") return { text: "Đã thanh toán", color: "#059669" };
+    if (s === "paid")       return { text: "Đã thanh toán", color: "#059669" };
+    if (s === "converted")  return { text: "Đang xử lý",    color: "#3b82f6" };
     return { text: status || "Không rõ", color: "gray" };
-  };
+      };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -204,7 +205,12 @@ export default function OrderHistory() {
 
   // ===== RENDER CARD ĐƠN PRE-ORDER (ĐÃ SỬA) =====
   const PreorderCard = ({ order }) => {
-    const statusObj = translateStatus(order.status);
+  // Nếu preorder đã convert → tìm Order liên kết để lấy status thật
+  const linkedOrder = order.status?.toLowerCase() === "converted"
+    ? orders.find(o => o.convertedFromPreorderId === (order.id || order.preorderId))
+    : null;
+  const displayStatus = linkedOrder ? linkedOrder.status : order.status;
+  const statusObj = translateStatus(displayStatus);
 
     // Lấy danh sách items — hỗ trợ nhiều field name BE có thể trả về
     const itemsList = (

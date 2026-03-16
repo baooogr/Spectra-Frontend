@@ -188,11 +188,13 @@ export default function ProductDetail() {
 
           <p className="product-price" style={{ color: isPreorder ? "#2563eb" : "#000000" }}>
             ${displayPrice}
+            {/*
             {isPreorder && (
               <span style={{ fontSize: "20px", textDecoration: "line-through", color: "#9ca3af", marginLeft: "15px" }}>
                 ${product.basePrice}
               </span>
             )}
+            */}
           </p>
           {isPreorder && (
             <div style={{ display: 'inline-block', backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', marginBottom: '15px' }}>
