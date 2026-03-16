@@ -36,6 +36,9 @@ import AdminOrders from "../pages/AdminOrders";
 import AdminPreorderCampaigns from "../pages/AdminPreorderCampaigns";
 import ShippingPage from "../pages/ShippingPage";
 
+import ComplaintManagementPage from "../pages/ComplaintManagementPage";
+import ComplaintPage from "../pages/ComplaintPage";
+
 
 // VNPay
 import VNPayReturnPage from "../pages/VNPayReturnPage";
@@ -71,6 +74,8 @@ export default function AppRouter() {
             <Route path="campaigns" element={<AdminPreorderCampaigns />} />
             <Route path="/admin/shipping" element={<ShippingPage />} />
 
+            <Route path="complaints" element={<ComplaintManagementPage />} />
+
           </Route>
         </Route>
 
@@ -81,6 +86,7 @@ export default function AppRouter() {
 
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/orders/:id" element={<OrderDetail />} />
+          <Route path="/complaint" element={<ComplaintPage />} />
 
           {/* ✅ THÊM MỚI: Route cho trang chi tiết đơn đặt trước */}
           <Route path="/preorders/:id" element={<PreorderDetail />} />

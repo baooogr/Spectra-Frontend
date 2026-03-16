@@ -19,3 +19,125 @@
 .profile-btn-save:disabled { background-color: #6b7280; cursor: not-allowed; }
 .profile-btn-save:not(:disabled):hover { background-color: #333; }
 
+.complaint-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.complaint-history-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.complaint-history-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.complaint-history-title {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.complaint-history-meta {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.complaint-history-body {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.complaint-history-text {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.complaint-history-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.complaint-action-btn {
+  display: inline-block;
+  padding: 10px 14px;
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.complaint-action-btn:hover {
+  opacity: 0.9;
+}
+
+.complaint-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.complaint-empty-box {
+  background: white;
+  border: 1px dashed #d1d5db;
+  padding: 18px;
+  border-radius: 8px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.complaint-error-box {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 14px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.complaint-status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: bold;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.complaint-status.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.complaint-status.processing {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.complaint-status.resolved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.complaint-status.rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
