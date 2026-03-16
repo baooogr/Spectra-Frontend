@@ -41,6 +41,11 @@ export default function ComplaintPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const getRequestTypeLabel = (value) => {
+    const found = requestTypeOptions.find((item) => item.value === value);
+    return found ? found.label : value;
+  };
+
   const handleCreateComplaint = async (complaintData) => {
     setErrorMsg("");
     setSuccessMsg("");
@@ -141,6 +146,27 @@ export default function ComplaintPage() {
     });
 
     if (result) {
+      const complaintDataForSuccessPage = {
+        id: result?.id || result?.complaintId || result?.requestId || null,
+        title:
+          result?.title ||
+          `${getRequestTypeLabel(formData.requestType)} cho đơn hàng ${formData.orderItemId}`,
+        requestType: result?.requestType || formData.requestType,
+        requestTypeLabel: getRequestTypeLabel(result?.requestType || formData.requestType),
+        content: result?.content || result?.reason || formData.reason,
+        description: result?.description || "",
+        reason: result?.reason || formData.reason,
+        mediaUrl: result?.mediaUrl || formData.mediaUrl || "",
+        status: result?.status || "Pending",
+        createdAt: result?.createdAt || new Date().toISOString(),
+        orderItemId: result?.orderItemId || formData.orderItemId,
+        customer: {
+          fullName: userProfile.fullName,
+          phone: userProfile.phone,
+          email: userProfile.email,
+        },
+      };
+
       setFormData((prev) => ({
         ...prev,
         requestType: "complaint",
@@ -148,9 +174,17 @@ export default function ComplaintPage() {
         mediaUrl: "",
       }));
 
-      setTimeout(() => {
-        navigate("/complaint-history");
-      }, 1200);
+      navigate("/checkout-success", {
+        state: {
+          complaintId: complaintDataForSuccessPage.id,
+          title: complaintDataForSuccessPage.title,
+          requestType: complaintDataForSuccessPage.requestTypeLabel,
+          content: complaintDataForSuccessPage.content,
+          createdAt: complaintDataForSuccessPage.createdAt,
+          status: complaintDataForSuccessPage.status,
+          complaint: complaintDataForSuccessPage,
+        },
+      });
     }
   };
 
@@ -160,9 +194,6 @@ export default function ComplaintPage() {
         <div className="complaint-topbar">
           <Link to="/orders" className="back-link">
             ← Quay lại đơn hàng
-          </Link>
-          <Link to="/complaint-history" className="history-link">
-            Lịch sử khiếu nại
           </Link>
         </div>
 

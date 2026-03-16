@@ -23,7 +23,6 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 
 import ComplaintPage from "../pages/ComplaintPage";
-import ComplaintHistoryPage from "../pages/ComplaintHistoryPage";
 
 // --- IMPORT CÁC TRANG ADMIN ---
 import AdminUsers from "../pages/AdminUsers";
@@ -82,7 +81,7 @@ export default function AppRouter() {
           <Route path="/checkout" element={<CheckoutPage />} />
 
           <Route path="/complaint" element={<ComplaintPage />} />
-          <Route path="/complaint-history" element={<ComplaintHistoryPage />} />
+          
           
           <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
