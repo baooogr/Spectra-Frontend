@@ -64,12 +64,13 @@ export default function AdminUsers() {
       } else if (res.status === 403) {
 
         alert("Lỗi 403: Tài khoản của bạn không đủ quyền trên Server (Backend chặn)!");
-
       } else {
         try {
           const errorData = await res.json();
           alert("Lỗi khi cập nhật quyền: " + (errorData.message || "Kiểm tra lại Backend"));
-} catch {
+
+        } catch {
+
            alert("Lỗi khi cập nhật quyền: Server trả về lỗi " + res.status);
         }
       }

@@ -58,7 +58,8 @@ export default function CheckoutPage() {
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   // ⚡ ĐỒNG BỘ ĐỊNH DẠNG FORMAT GIÁ TIỀN ÉP SÁT NGOẶC ($175(4.593.750 VND))
-  const EXCHANGE_RATE = 26250; 
+
+  const EXCHANGE_RATE = 25400; 
   const formatPrice = (n) => {
     const usd = new Intl.NumberFormat("en-US", { 
       style: "currency", 
@@ -122,7 +123,8 @@ export default function CheckoutPage() {
 
       // 2. Payload tạo đơn hàng
       const payload = {
-        shippingAddress: form.address.trim(),
+        // ⚡ TRICK: Nhồi Họ tên, SĐT và Email vào đầu chuỗi địa chỉ
+        shippingAddress: `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${form.address.trim()}`,
         shippingMethod: "standard",
         items: formattedItems
       };
@@ -154,7 +156,6 @@ export default function CheckoutPage() {
                 clearCart();
                 window.location.href = paymentData.paymentUrl;
                 return;
-
               } else { alert("Lỗi: Backend không trả về Link VNPay!"); }
             } else { alert("Lỗi kết nối tạo VNPay!"); }
           } catch (err) { alert("Lỗi mạng khi tạo thanh toán VNPay"); }
@@ -179,10 +180,8 @@ export default function CheckoutPage() {
         }
       } else {
         const errData = await res.json();
-
         const detailedError = errData.errors ? JSON.stringify(errData.errors) : errData.message;
         setErrorMsg(detailedError || "Lỗi tạo đơn hàng từ Server.");
-
       }
     } catch (err) {
       setErrorMsg("Lỗi mạng! Không thể kết nối tới Server.");
@@ -192,7 +191,6 @@ export default function CheckoutPage() {
   };
 
   if (items.length === 0) return <div style={{ textAlign: "center", padding: "50px" }}>Giỏ hàng trống. Không thể thanh toán.</div>;
-
 
   return (
     <div className="checkout">
@@ -218,7 +216,6 @@ export default function CheckoutPage() {
                   name="phone"
                   value={form.phone}
                   readOnly
-
                   style={{ backgroundColor: '#e5e7eb', color: '#6b7280', cursor: 'not-allowed', outline: 'none' }}
                   title="Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
                   placeholder={form.phone ? "" : "Đang tải SĐT..."}
@@ -281,7 +278,6 @@ export default function CheckoutPage() {
                   </div>
                   <div className="item__price" style={{ fontWeight: 'bold', color: '#10b981' }}>
                     {formatPrice(item.price * item.quantity)}
-
                   </div>
                 </div>
               ))}
@@ -295,7 +291,6 @@ export default function CheckoutPage() {
 
             <button type="submit" disabled={isSubmitting} className="checkout__btn" style={{ width: '100%', padding: '15px', backgroundColor: isSubmitting ? '#9ca3af' : '#111827', color: 'white', fontWeight: 'bold', border: 'none', borderRadius: '8px', marginTop: '20px', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontSize: '16px' }}>
               {isSubmitting ? "Đang xử lý..." : `Xác Nhận Đặt Hàng - ${formatPrice(total)}`}
-
             </button>
           </div>
         </form>

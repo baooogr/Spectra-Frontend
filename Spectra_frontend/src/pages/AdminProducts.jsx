@@ -4,15 +4,15 @@ import './AdminProducts.css';
 
 export default function AdminProducts() {
   const { user } = useContext(UserContext);
-  
-  // States lưu trữ danh sách dữ liệu
+
   const [allFrames, setAllFrames] = useState([]);
   const [brands, setBrands] = useState([]);
   const [materials, setMaterials] = useState([]);
   const [colors, setColors] = useState([]);
   const [shapes, setShapes] = useState([]);
-  const [lensTypes, setLensTypes] = useState([]); 
-  
+
+  const [lensTypes, setLensTypes] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [fieldErrors, setFieldErrors] = useState({});
   const [showModal, setShowModal] = useState(false);
@@ -22,16 +22,18 @@ export default function AdminProducts() {
   const [isUploading, setIsUploading] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
 
-  // States quản lý Modal Thuộc tính (Brand, Material, Color, Shape)
+  // FIX: state chọn màu khi upload ảnh
+  const [uploadColorId, setUploadColorId] = useState('');
+
   const [showBrandModal, setShowBrandModal] = useState(false);
   const [brandForm, setBrandForm] = useState({ brandId: '', brandName: '' });
-  
+
   const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [materialForm, setMaterialForm] = useState({ materialId: '', materialName: '' });
-  
+
   const [showColorModal, setShowColorModal] = useState(false);
   const [colorForm, setColorForm] = useState({ colorId: '', colorName: '', hexCode: '#000000' });
-  
+
   const [showShapeModal, setShowShapeModal] = useState(false);
   const [shapeForm, setShapeForm] = useState({ shapeId: '', shapeName: '' });
 
@@ -40,8 +42,10 @@ export default function AdminProducts() {
     lensWidth: '', bridgeWidth: '', frameWidth: '', templeLength: '',
     basePrice: 0, reorderLevel: 5,
     colorVariants: [],
-    minRx: '', maxRx: '', minPd: '', maxPd: '', 
-    supportedLensTypeIds: [] 
+
+    minRx: '', maxRx: '', minPd: '', maxPd: '',
+    supportedLensTypeIds: []
+
   };
   const [formData, setFormData] = useState(initialForm);
   const sizeOptions = ["Small", "Medium", "Large"];
@@ -61,7 +65,8 @@ export default function AdminProducts() {
     setIsLoading(true);
     try {
       await Promise.all([
-        fetchFrames(), fetchBrands(), fetchMaterials(), 
+
+        fetchFrames(), fetchBrands(), fetchMaterials(),
         fetchColors(), fetchShapes(), fetchLensTypes()
       ]);
     } catch (error) {
@@ -102,13 +107,13 @@ export default function AdminProducts() {
   const fetchLensTypes = async () => {
     const res = await fetch('https://myspectra.runasp.net/api/LensTypes?pageSize=50');
     if (res.ok) {
-        const data = await res.json();
-        setLensTypes(data.items || data || []);
+      const data = await res.json();
+      setLensTypes(data.items || data || []);
     }
   };
 
-  /* ================= LOGIC THUỘC TÍNH (BRAND, MATERIAL, COLOR, SHAPE) ================= */
-  // 1. THƯƠNG HIỆU (BRAND)
+  /* ================= LOGIC THUỘC TÍNH ================= */
+
   const handleAddBrand = async (e) => {
     e.preventDefault();
     if (!brandForm.brandName.trim()) return;
@@ -132,7 +137,6 @@ export default function AdminProducts() {
     } catch (error) { alert("Lỗi kết nối"); }
   };
 
-  // 2. CHẤT LIỆU (MATERIAL)
   const handleAddMaterial = async (e) => {
     e.preventDefault();
     if (!materialForm.materialName.trim()) return;
@@ -156,7 +160,6 @@ export default function AdminProducts() {
     } catch (error) { alert("Lỗi kết nối"); }
   };
 
-  // 3. MÀU SẮC (COLOR)
   const handleAddColor = async (e) => {
     e.preventDefault();
     if (!colorForm.colorName.trim()) return;
@@ -180,7 +183,6 @@ export default function AdminProducts() {
     } catch (error) { alert("Lỗi kết nối"); }
   };
 
-  // 4. KIỂU DÁNG (SHAPE)
   const handleAddShape = async (e) => {
     e.preventDefault();
     if (!shapeForm.shapeName.trim()) return;
@@ -204,8 +206,8 @@ export default function AdminProducts() {
     } catch (error) { alert("Lỗi kết nối"); }
   };
 
+  /* ================= LOGIC FORM KÍNH ================= */
 
-  /* ================= LOGIC FORM KÍNH (FRAMES) ================= */
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
     const newValue = type === 'number' ? (value === '' ? '' : parseFloat(value)) : value;
@@ -226,7 +228,7 @@ export default function AdminProducts() {
   const handleColorStockQuantityChange = (colorId, quantity) => {
     setFormData(prev => ({
       ...prev,
-      colorVariants: prev.colorVariants.map(v => 
+      colorVariants: prev.colorVariants.map(v =>
         v.colorId === colorId ? { ...v, stockQuantity: Number(quantity) } : v
       )
     }));
@@ -234,12 +236,12 @@ export default function AdminProducts() {
 
   const handleLensTypeCheckboxChange = (lensTypeId, isChecked) => {
     setFormData(prev => {
-        const currentIds = prev.supportedLensTypeIds || [];
-        if (isChecked) {
-            return { ...prev, supportedLensTypeIds: [...currentIds, lensTypeId] };
-        } else {
-            return { ...prev, supportedLensTypeIds: currentIds.filter(id => id !== lensTypeId) };
-        }
+      const currentIds = prev.supportedLensTypeIds || [];
+      if (isChecked) {
+        return { ...prev, supportedLensTypeIds: [...currentIds, lensTypeId] };
+      } else {
+        return { ...prev, supportedLensTypeIds: currentIds.filter(id => id !== lensTypeId) };
+      }
     });
   };
 
@@ -250,6 +252,7 @@ export default function AdminProducts() {
     setIsEditing(false);
     setShowModal(true);
     setFieldErrors({});
+    setUploadColorId('');
   };
 
   const openEditModal = async (frame) => {
@@ -260,7 +263,6 @@ export default function AdminProducts() {
       brandId: frame.brand?.brandId || '',
       materialId: frame.material?.materialId || '',
       shapeId: frame.shape?.shapeId || frame.shapeId || '',
-
       size: frame.size || '',
       lensWidth: frame.lensWidth || '',
       bridgeWidth: frame.bridgeWidth || '',
@@ -276,14 +278,17 @@ export default function AdminProducts() {
       maxRx: frame.maxRx !== null && frame.maxRx !== undefined ? frame.maxRx : '',
       minPd: frame.minPd !== null && frame.minPd !== undefined ? frame.minPd : '',
       maxPd: frame.maxPd !== null && frame.maxPd !== undefined ? frame.maxPd : '',
-      supportedLensTypeIds: [] 
+      supportedLensTypeIds: []
     });
-    
+
     setFrameImages(frame.frameMedia || []);
     setCurrentId(targetId);
     setIsEditing(true);
     setShowModal(true);
     setFieldErrors({});
+    // FIX: reset uploadColorId, mặc định chọn màu đầu tiên nếu có
+    const firstColorId = frame.frameColors?.[0]?.colorId || frame.frameColors?.[0]?.color?.colorId || '';
+    setUploadColorId(firstColorId);
 
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Frames/${targetId}/lens-types`);
@@ -298,6 +303,8 @@ export default function AdminProducts() {
   };
 
   /* ================= QUẢN LÝ ẢNH ================= */
+
+  // FIX: Upload ảnh có gắn colorId
   const handleUploadImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -305,16 +312,20 @@ export default function AdminProducts() {
     uploadData.append("file", file);
     setIsUploading(true);
     try {
-      const res = await fetch(`https://myspectra.runasp.net/api/FrameMedia/upload/${currentId}`, {
-        method: "POST", headers: { "Authorization": `Bearer ${getToken()}` }, body: uploadData
-      });
+
+      // Thêm colorId vào query param nếu có chọn màu
+      const colorParam = uploadColorId ? `?colorId=${uploadColorId}` : '';
+      const res = await fetch(
+        `https://myspectra.runasp.net/api/FrameMedia/upload/${currentId}${colorParam}`,
+        { method: "POST", headers: { "Authorization": `Bearer ${getToken()}` }, body: uploadData }
+      );
       if (res.ok) {
         const newMedia = await res.json();
         setFrameImages(prev => [...prev, newMedia]);
         fetchFrames();
-        alert("Tải ảnh lên thành công!");
+        alert("Tải ảnh lên thành công!" + (uploadColorId ? ` (Gắn với màu đã chọn)` : ' (Ảnh chung)'));
       } else { alert("Lỗi upload, kiểm tra backend"); }
-    } catch (error) { alert("Lỗi kết nối"); } 
+    } catch (error) { alert("Lỗi kết nối"); }
     finally { setIsUploading(false); e.target.value = null; }
   };
 
@@ -329,6 +340,17 @@ export default function AdminProducts() {
         fetchFrames();
       } else { alert("Không thể xóa ảnh!"); }
     } catch (error) { alert("Lỗi kết nối."); }
+  };
+
+  // Nhóm ảnh theo màu để hiển thị rõ ràng
+  const groupImagesByColor = () => {
+    const groups = {};
+    frameImages.forEach(img => {
+      const key = img.colorId || '__no_color__';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(img);
+    });
+    return groups;
   };
 
   /* ================= GỬI DỮ LIỆU LÊN BACKEND ================= */
@@ -354,25 +376,28 @@ export default function AdminProducts() {
     const minR = parseFloat(formData.minRx);
     const maxR = parseFloat(formData.maxRx);
     if (!isNaN(minR) && !isNaN(maxR) && minR > maxR) {
-        errors.rxRange = "Độ Rx tối thiểu không được lớn hơn độ Rx tối đa";
+
+      errors.rxRange = "Độ Rx tối thiểu không được lớn hơn độ Rx tối đa";
+
     }
 
     const minP = parseInt(formData.minPd);
     const maxP = parseInt(formData.maxPd);
     if (!isNaN(minP) && !isNaN(maxP) && minP > maxP) {
-        errors.pdRange = "Khoảng cách PD tối thiểu không được lớn hơn PD tối đa";
+
+      errors.pdRange = "Khoảng cách PD tối thiểu không được lớn hơn PD tối đa";
     }
 
-    if (Object.keys(errors).length > 0) { 
-        setFieldErrors(errors); 
-        const firstError = document.querySelector('.modal-content');
-        if(firstError) firstError.scrollTo(0,0);
-        return; 
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstError = document.querySelector('.modal-content');
+      if (firstError) firstError.scrollTo(0, 0);
+      return;
     }
 
     const url = isEditing ? `https://myspectra.runasp.net/api/Frames/${currentId}` : 'https://myspectra.runasp.net/api/Frames';
     const method = isEditing ? 'PUT' : 'POST';
-    const payloadData = { ...formData, stockQuantity: 0 }; 
+    const payloadData = { ...formData, stockQuantity: 0 };
 
     try {
       const response = await fetch(url, {
@@ -403,22 +428,25 @@ export default function AdminProducts() {
     } catch (error) { alert(`Lỗi kết nối: ${error.message}`); }
   };
 
-
   const errorStyle = { color: '#ef4444', fontSize: '13px', marginTop: '4px', display: 'block', fontWeight: 'bold' };
   const toggleRow = (frameId) => setExpandedRows(prev => ({ ...prev, [frameId]: !prev[frameId] }));
+
+  // Lấy danh sách màu của frame đang edit (để hiển thị trong dropdown upload)
+  const currentFrameColors = formData.colorVariants
+    .map(v => colors.find(c => c.colorId === v.colorId))
+    .filter(Boolean);
 
 
   /* ================= RENDER GIAO DIỆN ================= */
   return (
     <div className="admin-products-container">
-      {/* 4 NÚT THUỘC TÍNH NẰM TRÊN HEADER BẢNG */}
 
       <div className="admin-products-header" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
         <h2 className="admin-products-title" style={{ marginRight: 'auto' }}>Quản Lý Kính</h2>
-        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowBrandModal(true)}>🏷️ Thương hiệu</button>
-        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowMaterialModal(true)}>💎 Chất liệu</button>
-        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowColorModal(true)}>🎨 Màu sắc</button>
-        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowShapeModal(true)}>📐 Kiểu dáng</button>
+        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowBrandModal(true)}>Thương hiệu</button>
+        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowMaterialModal(true)}>Chất liệu</button>
+        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowColorModal(true)}>Màu sắc</button>
+        <button className="btn-edit" style={{ padding: '8px' }} onClick={() => setShowShapeModal(true)}>Kiểu dáng</button>
         <button className="btn-add" onClick={openAddModal}>+ Thêm Kính Mới</button>
       </div>
 
@@ -435,11 +463,10 @@ export default function AdminProducts() {
             </tr>
           </thead>
           <tbody>
-
             {allFrames.length > 0 ? (
               allFrames.map(frame => {
                 const isExpanded = expandedRows[frame.frameId || frame.id];
-                const totalStock = frame.stockQuantity || 0; 
+                const totalStock = frame.stockQuantity || 0;
 
                 return (
                   <React.Fragment key={frame.frameId || frame.id}>
@@ -460,7 +487,7 @@ export default function AdminProducts() {
                         <button onClick={() => handleDeleteFrame(frame.frameId || frame.id)} className="btn-delete" style={{ padding: '6px 12px' }}>Xóa kính</button>
                       </td>
                     </tr>
-                    
+
                     {isExpanded && (
                       <tr style={{ backgroundColor: '#f9fafb' }}>
                         <td colSpan="6" style={{ padding: '15px 40px' }}>
@@ -487,13 +514,13 @@ export default function AdminProducts() {
         </table>
       </div>
 
-      {/* ================= MODAL QUẢN LÝ KÍNH (MAIN FORM) ================= */}
+      {/* ================= MODAL QUẢN LÝ KÍNH ================= */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxHeight: '90vh', overflowY: 'auto', width: '800px', maxWidth: '95%' }}>
             <h3>{isEditing ? 'Sửa Thông Tin Kính' : 'Thêm Kính Mới'}</h3>
             <form onSubmit={handleSaveFrame} className="admin-form" noValidate>
-              
+
               <h4 style={{ color: '#111827', borderBottom: '2px solid #e5e7eb', paddingBottom: '8px', marginBottom: '15px' }}>1. Thông tin cơ bản</h4>
               <div className="form-grid">
                 <div className="form-group">
@@ -503,7 +530,8 @@ export default function AdminProducts() {
                 </div>
                 <div className="form-group">
                   <label>Thương Hiệu:</label>
-                  <select name="brandId" value={formData.brandId} onChange={handleInputChange} style={{width:'100%', padding:'10px', borderRadius:'6px', border:'1px solid #d1d5db'}}>
+                  <select name="brandId" value={formData.brandId} onChange={handleInputChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}>
+
                     <option value="">-- Chọn Thương Hiệu --</option>
                     {brands.map(b => <option key={b.brandId || b.id} value={b.brandId || b.id}>{b.brandName}</option>)}
                   </select>
@@ -511,7 +539,9 @@ export default function AdminProducts() {
                 </div>
                 <div className="form-group">
                   <label>Chất Liệu:</label>
-                  <select name="materialId" value={formData.materialId} onChange={handleInputChange} style={{width:'100%', padding:'10px', borderRadius:'6px', border:'1px solid #d1d5db'}}>
+
+                  <select name="materialId" value={formData.materialId} onChange={handleInputChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}>
+
                     <option value="">-- Chọn Chất Liệu --</option>
                     {materials.map(m => <option key={m.materialId || m.id} value={m.materialId || m.id}>{m.materialName}</option>)}
                   </select>
@@ -519,7 +549,9 @@ export default function AdminProducts() {
                 </div>
                 <div className="form-group">
                   <label>Kiểu Dáng:</label>
-                  <select name="shapeId" value={formData.shapeId} onChange={handleInputChange} style={{width:'100%', padding:'10px', borderRadius:'6px', border:'1px solid #d1d5db'}}>
+
+                  <select name="shapeId" value={formData.shapeId} onChange={handleInputChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}>
+
                     <option value="">-- Chọn Kiểu Dáng --</option>
                     {shapes.map(s => <option key={s.shapeId || s.id} value={s.shapeId || s.id}>{s.shapeName}</option>)}
                   </select>
@@ -539,7 +571,9 @@ export default function AdminProducts() {
               <div className="form-grid">
                 <div className="form-group">
                   <label>Kích cỡ quy đổi (Size):</label>
-                  <select name="size" value={sizeOptions.find(s => s.toLowerCase() === (formData.size || '').toLowerCase()) || ''} onChange={handleInputChange} style={{width:'100%', padding:'10px', borderRadius:'6px', border:'1px solid #d1d5db'}}>
+
+                  <select name="size" value={sizeOptions.find(s => s.toLowerCase() === (formData.size || '').toLowerCase()) || ''} onChange={handleInputChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}>
+
                     <option value="">-- Chọn Size --</option>
                     {sizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -571,49 +605,55 @@ export default function AdminProducts() {
               <div className="form-group" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '15px' }}>
                 <label style={{ fontWeight: 'bold', marginBottom: '10px', display: 'block' }}>Khoảng độ cận/viễn hỗ trợ (RX Range)</label>
                 <div style={{ display: 'flex', gap: '15px' }}>
-                    <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '13px', color: '#4b5563' }}>Min RX (VD: -6.0):</label>
-                        <input type="number" step="0.25" name="minRx" value={formData.minRx} onChange={handleInputChange} placeholder="-6.0" />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '13px', color: '#4b5563' }}>Max RX (VD: +6.0):</label>
-                        <input type="number" step="0.25" name="maxRx" value={formData.maxRx} onChange={handleInputChange} placeholder="6.0" />
-                    </div>
+
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: '#4b5563' }}>Min RX (VD: -6.0):</label>
+                    <input type="number" step="0.25" name="minRx" value={formData.minRx} onChange={handleInputChange} placeholder="-6.0" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: '#4b5563' }}>Max RX (VD: +6.0):</label>
+                    <input type="number" step="0.25" name="maxRx" value={formData.maxRx} onChange={handleInputChange} placeholder="6.0" />
+                  </div>
+
                 </div>
                 {fieldErrors.rxRange && <span style={errorStyle}>{fieldErrors.rxRange}</span>}
 
                 <label style={{ fontWeight: 'bold', marginTop: '15px', marginBottom: '10px', display: 'block' }}>Khoảng cách đồng tử hỗ trợ (PD Range)</label>
                 <div style={{ display: 'flex', gap: '15px' }}>
-                    <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '13px', color: '#4b5563' }}>Min PD (mm):</label>
-                        <input type="number" name="minPd" value={formData.minPd} onChange={handleInputChange} placeholder="58" />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: '13px', color: '#4b5563' }}>Max PD (mm):</label>
-                        <input type="number" name="maxPd" value={formData.maxPd} onChange={handleInputChange} placeholder="72" />
-                    </div>
+
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: '#4b5563' }}>Min PD (mm):</label>
+                    <input type="number" name="minPd" value={formData.minPd} onChange={handleInputChange} placeholder="58" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: '#4b5563' }}>Max PD (mm):</label>
+                    <input type="number" name="maxPd" value={formData.maxPd} onChange={handleInputChange} placeholder="72" />
+                  </div>
+
                 </div>
                 {fieldErrors.pdRange && <span style={errorStyle}>{fieldErrors.pdRange}</span>}
               </div>
 
               <div className="form-group" style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                 <label style={{ fontWeight: 'bold', marginBottom: '15px', display: 'block' }}>Loại tròng kính tương thích (Lens Types)</label>
-                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-                    {lensTypes.map(lt => {
-                        const lensId = lt.id || lt.lensTypeId;
-                        const isChecked = formData.supportedLensTypeIds?.includes(lensId);
-                        return (
-                            <label key={lensId} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: isChecked ? '#e0f2fe' : '#fff', padding: '8px', borderRadius: '6px', border: isChecked ? '1px solid #bae6fd' : '1px solid #e5e7eb' }}>
-                                <input 
-                                    type="checkbox" 
-                                    checked={isChecked || false}
-                                    onChange={(e) => handleLensTypeCheckboxChange(lensId, e.target.checked)}
-                                />
-                                <span style={{ fontSize: '14px' }}>{lt.lensSpecification || lt.name || 'Loại tròng'}</span>
-                            </label>
-                        )
-                    })}
-                 </div>
+
+                <label style={{ fontWeight: 'bold', marginBottom: '15px', display: 'block' }}>Loại tròng kính tương thích (Lens Types)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+                  {lensTypes.map(lt => {
+                    const lensId = lt.id || lt.lensTypeId;
+                    const isChecked = formData.supportedLensTypeIds?.includes(lensId);
+                    return (
+                      <label key={lensId} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: isChecked ? '#e0f2fe' : '#fff', padding: '8px', borderRadius: '6px', border: isChecked ? '1px solid #bae6fd' : '1px solid #e5e7eb' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked || false}
+                          onChange={(e) => handleLensTypeCheckboxChange(lensId, e.target.checked)}
+                        />
+                        <span style={{ fontSize: '14px' }}>{lt.lensSpecification || lt.name || 'Loại tròng'}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+
               </div>
 
               <h4 style={{ color: '#111827', borderBottom: '2px solid #e5e7eb', paddingBottom: '8px', marginTop: '25px', marginBottom: '15px' }}>4. Biến thể Màu sắc & Kho</h4>
@@ -625,18 +665,22 @@ export default function AdminProducts() {
                     return (
                       <div key={c.colorId} style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '8px', background: isSelected ? '#fff' : 'transparent', borderRadius: '6px', border: isSelected ? '1px solid #cbd5e1' : '1px solid transparent' }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '130px', cursor: 'pointer', fontWeight: isSelected ? 'bold' : 'normal' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={isSelected} 
+
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
                             onChange={(e) => handleColorCheckboxChange(c.colorId, e.target.checked)}
                           />
-                          <span style={{ display:'inline-block', width:'15px', height:'15px', backgroundColor: c.hexCode || '#ccc', borderRadius:'50%', border:'1px solid #999'}}></span>
+                          <span style={{ display: 'inline-block', width: '15px', height: '15px', backgroundColor: c.hexCode || '#ccc', borderRadius: '50%', border: '1px solid #999' }}></span>
+
                           {c.colorName}
                         </label>
                         {isSelected && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <label style={{ fontSize: '13px', color: '#4b5563', margin: 0 }}>Tồn kho:</label>
-                            <input 
+
+                            <input
+
                               type="number" min="0"
                               value={variant.stockQuantity}
                               onChange={(e) => handleColorStockQuantityChange(c.colorId, e.target.value)}
@@ -645,28 +689,94 @@ export default function AdminProducts() {
                           </div>
                         )}
                       </div>
-                    )
+                    );
                   })}
                 </div>
               </div>
 
+              {/* ================= SECTION 5: ẢNH THEO MÀU (FIX MỚI) ================= */}
               {isEditing && (
                 <>
-                <h4 style={{ color: '#111827', borderBottom: '2px solid #e5e7eb', paddingBottom: '8px', marginTop: '25px', marginBottom: '15px' }}>5. Thư viện hình ảnh</h4>
-                <div className="image-management" style={{ marginBottom: '20px' }}>
-                  <div className="image-list" style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '15px' }}>
-                    {frameImages.map((img, idx) => (
-                      <div key={idx} className="image-item" style={{ position: 'relative', border: '1px solid #ddd', padding: '5px', borderRadius: '8px' }}>
-                        <img src={img.mediaUrl} alt="frame" style={{ width: '100px', height: '100px', objectFit: 'contain' }} />
-                        <button type="button" onClick={() => handleDeleteImage(img.id || img.mediaId)} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#ef4444', color: 'white', borderRadius: '50%', width: '24px', height: '24px', border: 'none', cursor: 'pointer' }}>×</button>
+                  <h4 style={{ color: '#111827', borderBottom: '2px solid #e5e7eb', paddingBottom: '8px', marginTop: '25px', marginBottom: '15px' }}>5. Thư viện hình ảnh theo màu</h4>
+                  <div className="image-management" style={{ marginBottom: '20px' }}>
+
+                    {/* Hiển thị ảnh nhóm theo màu */}
+                    {(() => {
+                      const groups = groupImagesByColor();
+                      const hasImages = frameImages.length > 0;
+                      if (!hasImages) return (
+                        <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '13px', marginBottom: '15px' }}>
+                          Chưa có ảnh nào. Tải lên ảnh bên dưới.
+                        </p>
+                      );
+
+                      return Object.entries(groups).map(([colorId, imgs]) => {
+                        const colorInfo = colorId === '__no_color__'
+                          ? { colorName: 'Ảnh chung (không gắn màu)', hexCode: '#e5e7eb' }
+                          : colors.find(c => c.colorId === colorId) || { colorName: colorId, hexCode: '#ccc' };
+
+                        return (
+                          <div key={colorId} style={{ marginBottom: '16px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                              <span style={{ width: '14px', height: '14px', backgroundColor: colorInfo.hexCode, borderRadius: '50%', border: '1px solid #999', flexShrink: 0 }}></span>
+                              <strong style={{ fontSize: '13px', color: '#374151' }}>{colorInfo.colorName}</strong>
+                              <span style={{ fontSize: '12px', color: '#9ca3af' }}>({imgs.length} ảnh)</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                              {imgs.map((img, idx) => (
+                                <div key={idx} style={{ position: 'relative', border: '1px solid #ddd', padding: '4px', borderRadius: '8px', background: '#fff' }}>
+                                  <img src={img.mediaUrl} alt="frame" style={{ width: '90px', height: '90px', objectFit: 'contain', display: 'block' }} />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteImage(img.id || img.mediaId)}
+                                    style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#ef4444', color: 'white', borderRadius: '50%', width: '22px', height: '22px', border: 'none', cursor: 'pointer', fontSize: '14px', lineHeight: '22px', textAlign: 'center', padding: 0 }}
+                                  >×</button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+
+                    {/* Upload ảnh mới có chọn màu */}
+                    <div style={{ background: '#eff6ff', padding: '14px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+                      <p style={{ margin: '0 0 10px 0', fontSize: '13px', fontWeight: 'bold', color: '#1e40af' }}>
+                        📸 Tải ảnh mới lên
+                      </p>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', color: '#4b5563', fontWeight: 'bold' }}>Gắn với màu:</label>
+                          <select
+                            value={uploadColorId}
+                            onChange={e => setUploadColorId(e.target.value)}
+                            style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #93c5fd', fontSize: '13px', minWidth: '180px' }}
+                          >
+                            <option value="">— Ảnh chung (không gắn màu) —</option>
+                            {currentFrameColors.map(c => (
+                              <option key={c.colorId} value={c.colorId}>
+                                {c.colorName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '12px', color: '#4b5563', fontWeight: 'bold' }}>Chọn file:</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleUploadImage}
+                            disabled={isUploading}
+                            style={{ fontSize: '13px' }}
+                          />
+                        </div>
+                        {isUploading && <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 'bold' }}>⏳ Đang tải lên...</span>}
                       </div>
-                    ))}
+                      <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: '#6b7280' }}>
+                        Chọn màu để ảnh hiển thị đúng khi khách chọn màu đó. Nếu không chọn màu, ảnh sẽ dùng làm ảnh mặc định.
+                      </p>
+                    </div>
                   </div>
-                  <div className="image-upload-area" style={{ background: '#f9fafb', padding: '10px', borderRadius: '6px', display: 'flex', gap: '10px' }}>
-                    <input type="file" accept="image/*" onChange={handleUploadImage} disabled={isUploading} />
-                    {isUploading && <span style={{ fontSize: '13px', color: '#3b82f6', fontWeight: 'bold' }}>⏳ Đang tải lên...</span>}
-                  </div>
-                </div>
                 </>
               )}
 
@@ -679,9 +789,8 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* ================= MODAL CÁC THUỘC TÍNH (ĐƯỢC THÊM LẠI MỚI HOÀN TOÀN) ================= */}
+      {/* MODAL THUỘC TÍNH */}
 
-      {/* MODAL THƯƠNG HIỆU */}
       {showBrandModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ width: '500px', maxWidth: '90%' }}>
@@ -705,7 +814,6 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* MODAL CHẤT LIỆU */}
       {showMaterialModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ width: '500px', maxWidth: '90%' }}>
@@ -729,7 +837,6 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* MODAL KIỂU DÁNG */}
       {showShapeModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ width: '500px', maxWidth: '90%' }}>
@@ -753,14 +860,15 @@ export default function AdminProducts() {
         </div>
       )}
 
-      {/* MODAL MÀU SẮC */}
       {showColorModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ width: '500px', maxWidth: '90%' }}>
             <h3>Quản Lý Màu Sắc</h3>
             <form onSubmit={handleAddColor} style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
               <input type="color" value={colorForm.hexCode} onChange={(e) => setColorForm({ ...colorForm, hexCode: e.target.value })} style={{ width: '40px', height: '40px', padding: '0', border: 'none', cursor: 'pointer' }} />
-              <input type="text" placeholder="Tên màu (VD: Đen nhám)..." value={colorForm.colorName} onChange={(e) => setColorForm({ ...colorForm, colorName: e.target.value })} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+
+              <input type="text" placeholder="Tên màu (VD: Đen nháp)..." value={colorForm.colorName} onChange={(e) => setColorForm({ ...colorForm, colorName: e.target.value })} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+
               <button type="submit" className="btn-add">Thêm</button>
             </form>
             <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '6px', padding: '10px' }}>

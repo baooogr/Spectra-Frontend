@@ -34,6 +34,7 @@ export const CartProvider = ({ children }) => {
       prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item))
     );
   };
+
   const removeItem = (id) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };

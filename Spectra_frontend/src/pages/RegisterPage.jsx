@@ -4,7 +4,6 @@ import { UserContext } from "../context/UserContext";
 import { GoogleLogin } from "@react-oauth/google"; 
 import "./Auth.css";
 
-
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useContext(UserContext); 
