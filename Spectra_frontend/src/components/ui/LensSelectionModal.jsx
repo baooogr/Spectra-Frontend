@@ -23,7 +23,6 @@ const generateOptions = (min, max, step = 0.25) => {
   return options;
 };
 
-
 const sphOptions = generateOptions(-20, 12, 0.25);
 const cylOptions = generateOptions(-6, 6, 0.25);
 const pdOptions = Array.from({ length: 79 - 57 + 1 }, (_, i) => 57 + i);
@@ -51,6 +50,9 @@ export default function LensSelectionModal({ isOpen, onClose, product, supported
     pupillaryDistance: 60, doctorName: "Khách tự nhập", clinicName: "Khách tự nhập"
   });
   const [isSavingNew, setIsSavingNew] = useState(false);
+  
+  // State quản lý ẩn/hiện thông tin tròng kính
+  const [isLensInfoExpanded, setIsLensInfoExpanded] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,6 +65,7 @@ export default function LensSelectionModal({ isOpen, onClose, product, supported
       setSelectedPrescriptionId("");
       setInputMode("saved");
       setValidationErrors({ right: [], left: [], other: [] }); // Reset lỗi khi mở lại
+      setIsLensInfoExpanded(false); // Reset trạng thái đóng khi mở modal
     }
   }, [isOpen]);
 
@@ -252,15 +255,73 @@ export default function LensSelectionModal({ isOpen, onClose, product, supported
                 );
               })}
             </select>
+
+            {/* ---> BẮT ĐẦU PHẦN THÔNG TIN TRÒNG KÍNH THU GỌN <--- */}
+            <div style={{ marginTop: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setIsLensInfoExpanded(!isLensInfoExpanded)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#2563eb',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  outline: 'none',
+                  fontWeight: '500'
+                }}
+              >
+                {isLensInfoExpanded ? "Ẩn thông tin các loại tròng" : "Xem thông tin các loại tròng"}
+                <span style={{ 
+                  fontSize: '10px', 
+                  transition: 'transform 0.3s ease', 
+                  transform: isLensInfoExpanded ? 'rotate(180deg)' : 'rotate(0deg)' 
+                }}>
+                  ▼
+                </span>
+              </button>
+
+              <div style={{
+                maxHeight: isLensInfoExpanded ? '400px' : '0',
+                opacity: isLensInfoExpanded ? 1 : 0,
+                overflow: 'hidden',
+                transition: 'all 0.3s ease-in-out',
+              }}>
+                <div style={{
+                  marginTop: '10px',
+                  padding: '12px',
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  color: '#475569',
+                  lineHeight: '1.6'
+                }}>
+                  <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <li><strong>Tròng đơn (Single Vision):</strong> Điều chỉnh cho một khoảng cách (gần hoặc xa). Đơn kính phổ biến nhất.</li>
+                    <li><strong>Đa tròng (Progressives):</strong> Tầm nhìn liền mạch ở mọi khoảng cách.</li>
+                    <li><strong>Kính đọc sách (Reading):</strong> Tầm nhìn gần cho các hoạt động ở cự ly ngắn.</li>
+                    <li><strong>Hai tròng (Bifocals):</strong> Tầm nhìn gần và xa, được phân tách bởi một đường kẻ rõ rệt.</li>
+                    <li><strong>Không độ (Non-prescription):</strong> Dành cho mục đích thời trang và bảo vệ mắt.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            {/* ---> KẾT THÚC PHẦN THÔNG TIN TRÒNG KÍNH THU GỌN <--- */}
+
           </div>
 
           <div>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>2. Chiết Suất/Tính Năng:</label>
+            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>2. Tính Năng:</label>
             <select style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc', outline: 'none' }} value={selectedLensFeature} onChange={(e) => setSelectedLensFeature(e.target.value)}>
               <option value="">-- Vui lòng chọn --</option>
               {[...lensFeatures].sort((a, b) => a.lensIndex - b.lensIndex).map((feat, idx) => (
                 <option key={idx} value={feat.id || feat.lensFeatureId || feat.featureId}>
-                  Chiết suất {feat.lensIndex} - {feat.featureSpecification || feat.featureName || feat.name} (+${feat.extraPrice || 0})
+                   {feat.lensIndex} {feat.featureSpecification || feat.featureName || feat.name} (+${feat.extraPrice || 0})
                 </option>
               ))}
             </select>
