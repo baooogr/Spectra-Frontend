@@ -191,9 +191,7 @@ export default function CheckoutPreorderPage() {
             <h2>Thông tin liên hệ & Giao hàng</h2>
 
             {/* Thông báo đặc biệt cho đơn Pre-order */}
-            <div style={{ backgroundColor: "#eff6ff", padding: "12px 15px", borderRadius: "6px", marginBottom: "20px", border: "1px solid #bfdbfe", fontSize: "14px", color: "#1e40af", lineHeight: "1.5" }}>
-              ℹ️ <b>Lưu ý:</b> Đây là đơn hàng Đặt trước (Pre-order). Hệ thống sẽ yêu cầu bạn xác nhận lại địa chỉ giao hàng chính thức khi hàng về tới kho.
-            </div>
+            
 
             {errorMsg && <div style={{ color: 'red', backgroundColor: '#fee2e2', padding: '10px', borderRadius: '5px', marginBottom: '15px' }}>{errorMsg}</div>}
 
@@ -223,7 +221,7 @@ export default function CheckoutPreorderPage() {
 
             <div className="form-group">
               <label>Địa chỉ hiện tại <span className="req">*</span></label>
-              <input type="text" name="address" value={form.address} onChange={onChange} required placeholder="Chúng tôi sẽ dùng địa chỉ này làm mặc định" />
+              <input type="text" name="address" value={form.address} onChange={onChange} required placeholder="" />
             </div>
 
             <div className="form-group">

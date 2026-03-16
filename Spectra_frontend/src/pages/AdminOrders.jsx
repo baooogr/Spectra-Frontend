@@ -336,16 +336,19 @@ export default function AdminOrders() {
 
         const newOrder = await convertRes.json();
 
-        // Bước 3: Tự động đổi Order mới sang processing để vào ShippingPage
-        // (Convert tạo Order với status pending, ShippingPage chỉ hiện processing)
-        const newOrderId = newOrder.orderId || newOrder.id;
-        if (newOrderId) {
-          await fetch(`https://myspectra.runasp.net/api/Orders/${newOrderId}/status`, {
-            method: "PUT", headers, body: JSON.stringify({ status: "processing" })
-          });
-        }
+        // Bước 3: Đổi sang processing để hiện trong ShippingPage
+// (Convert trả về status "confirmed", ShippingPage chỉ hiện "processing")
+const newOrderId = newOrder.orderId || newOrder.id;
+if (newOrderId) {
+  await fetch(`https://myspectra.runasp.net/api/Orders/${newOrderId}/status`, {
+    method: "PUT", headers, body: JSON.stringify({ status: "processing" })
+  });
+}
 
-        alert("Chuyển đổi thành công! Đơn hàng đã được tạo và chuyển sang Processing → có thể thấy trong Quản lý Vận chuyển.");
+// Log để debug — xác nhận convertedFromPreorderId khớp với preorder gốc
+console.log("Converted order:", newOrderId, "← from preorder:", newOrder.convertedFromPreorderId);
+
+alert("Chuyển đổi thành công! Đơn hàng đã được tạo và chuyển sang Processing → có thể thấy trong Quản lý Vận chuyển.");
         fetchOrdersData();
         if (isModalOpen) setIsModalOpen(false);
       } catch { alert("Lỗi mạng!"); }

@@ -262,12 +262,23 @@ export default function ShippingPage() {
 
                   return (
                     <tr key={rawId}>
-                      {/* Mã đơn */}
-                      <td>
-                        <strong style={{ fontFamily: "monospace", fontSize: "13px" }}>
-                          #{String(rawId).substring(0, 8)}
-                        </strong>
-                      </td>
+                      {/* Mã đơn — nếu convert từ preorder thì hiện mã preorder gốc */}
+                            <td>
+                              {order.convertedFromPreorderId ? (
+                                <div>
+                                  <strong style={{ fontFamily: "monospace", fontSize: "13px" }}>
+                                    #{String(order.convertedFromPreorderId).substring(0, 8)}
+                                  </strong>
+                                  <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
+                                    Pre-order
+                                  </div>
+                                </div>
+                              ) : (
+                                <strong style={{ fontFamily: "monospace", fontSize: "13px" }}>
+                                  #{String(rawId).substring(0, 8)}
+                                </strong>
+                              )}
+                            </td>
 
                       {/* Khách hàng */}
                       <td>
