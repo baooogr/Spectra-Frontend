@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Outlet,
+} from "react-router-dom";
 
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import UserProfile from "../pages/UserProfile";
@@ -29,17 +34,22 @@ import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
 import AdminPreorderCampaigns from "../pages/AdminPreorderCampaigns";
+import AdminComplaints from "../pages/AdminComplaints";
 import ShippingPage from "../pages/ShippingPage";
+import MyComplaints from "../pages/MyComplaints";
+import ComplaintDetail from "../pages/ComplaintDetail";
+import ComplaintForm from "../pages/ComplaintForm";
+import ComplaintEdit from "../pages/ComplaintEdit";
+import ExchangeSelect from "../pages/ExchangeSelect";
 
 // VNPay
 import VNPayReturnPage from "../pages/VNPayReturnPage";
-
 
 const CustomerLayout = () => {
   return (
     <>
       <Header />
-      <main style={{ minHeight: '60vh' }}>
+      <main style={{ minHeight: "60vh" }}>
         <Outlet />
       </main>
       <Footer />
@@ -51,7 +61,6 @@ export default function AppRouter() {
   return (
     <Router>
       <Routes>
-
         {/* --- ROUTES DÀNH CHO ADMIN & STAFF --- */}
         <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
@@ -62,6 +71,7 @@ export default function AppRouter() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="campaigns" element={<AdminPreorderCampaigns />} />
+            <Route path="complaints" element={<AdminComplaints />} />
             <Route path="/admin/shipping" element={<ShippingPage />} />
           </Route>
         </Route>
@@ -75,6 +85,12 @@ export default function AppRouter() {
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/preorders/:id" element={<PreorderDetail />} />
 
+          <Route path="/complaints" element={<MyComplaints />} />
+          <Route path="/complaints/new" element={<ComplaintForm />} />
+          <Route path="/complaints/:id" element={<ComplaintDetail />} />
+          <Route path="/complaints/:id/edit" element={<ComplaintEdit />} />
+          <Route path="/complaints/:id/exchange" element={<ExchangeSelect />} />
+
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/checkout-preorder" element={<CheckoutPreorderPage />} />
@@ -86,7 +102,6 @@ export default function AppRouter() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<UserProfile />} />
         </Route>
-
       </Routes>
     </Router>
   );
