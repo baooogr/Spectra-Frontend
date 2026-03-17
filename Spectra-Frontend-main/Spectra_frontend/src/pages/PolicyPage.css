@@ -32,3 +32,16 @@
   border: none;
   transition: background-color 0.2s;
 }
+
+.btn-edit { background-color: #3b82f6; color: white; }
+.btn-edit:hover { background-color: #2563eb; }
+.btn-save { background-color: #10b981; color: white; }
+.btn-save:hover { background-color: #059669; }
+
+.policy-card {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
