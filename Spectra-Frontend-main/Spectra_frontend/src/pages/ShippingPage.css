@@ -40,25 +40,3 @@
   background-color: #f9fafb;
 }
 
-.badge-tracking {
-  background-color: #dbeafe;
-  color: #1e40af;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.btn-update-tracking {
-  background-color: #111827;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn-update-tracking:hover {
-  background-color: #374151;
-}
