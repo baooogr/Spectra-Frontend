@@ -144,7 +144,7 @@ export default function AdminComplaints() {
         body: JSON.stringify({ refundAmount: amt }),
       });
       if (res.ok) {
-        setActionMsg("✅ Đã xử lý hoàn tiền thành công.");
+        setActionMsg("✅ Đã thêm số tiền cần hoàn.");
         setRefundAmount("");
         fetchComplaints(activeFilter, page);
       } else {
@@ -569,7 +569,7 @@ export default function AdminComplaints() {
                         step="1000"
                         value={refundAmount}
                         onChange={(e) => setRefundAmount(e.target.value)}
-                        placeholder="Số tiền (VNĐ)"
+                        placeholder="Số tiền"
                         style={{
                           flex: 1,
                           padding: "8px 12px",

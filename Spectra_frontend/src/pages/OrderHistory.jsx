@@ -422,7 +422,7 @@ export default function OrderHistory() {
           Đơn thường ({orders.length})
         </button>
         <button style={tabStyle("preorders")} onClick={() => setActiveTab("preorders")}>
-          🕐 Đặt trước ({preorders.length})
+          Đặt trước ({preorders.length})
         </button>
       </div>
 

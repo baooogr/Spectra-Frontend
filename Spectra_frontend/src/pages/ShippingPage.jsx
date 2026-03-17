@@ -237,27 +237,8 @@ export default function ShippingPage() {
     <div className="shipping-page-container">
       <h2 className="shipping-header">🚚 Quản Lý Vận Chuyển & Giao Hàng</h2>
 
-      {/* Ghi chú luồng */}
-      <div
-        style={{
-          backgroundColor: "#eff6ff",
-          border: "1px solid #bfdbfe",
-          borderRadius: "8px",
-          padding: "12px 16px",
-          marginBottom: "20px",
-          fontSize: "13px",
-          color: "#1e40af",
-          lineHeight: "1.7",
-        }}
-      >
-        <b>Luồng xử lý:</b>&nbsp;
-        <span style={{ color: "#7c3aed" }}>Confirmed</span> → đổi sang{" "}
-        <span style={{ color: "#7c3aed" }}>Processing</span> (trong Quản lý Đơn
-        hàng) →&nbsp; Nhập mã vận đơn thủ công → status tự chuyển sang{" "}
-        <span style={{ color: "#0891b2" }}>Shipped</span> →&nbsp; Bấm{" "}
-        <b>Đã giao</b> khi khách nhận hàng →{" "}
-        <span style={{ color: "#059669" }}>Delivered</span>
-      </div>
+      
+      
 
       {/* Tabs */}
       <div

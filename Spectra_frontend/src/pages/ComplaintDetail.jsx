@@ -611,12 +611,12 @@ export default function ComplaintDetail() {
                     color: "#065f46",
                   }}
                 >
-                  Số tiền hoàn: {fmt(refundAmount)}₫
+                  Số tiền sẽ hoàn: {fmt(refundAmount)}$
                 </p>
                 {refundedAt && (
                   <p style={{ margin: 0, fontSize: "13px", color: "#047857" }}>
-                    Đã hoàn tiền ngày{" "}
-                    {new Date(refundedAt).toLocaleString("vi-VN")}
+                    Nhân viên sẽ liên hệ với bạn qua số điện thoại hoặc email để hỗ trợ hoàn tiền.
+                    
                   </p>
                 )}
               </div>

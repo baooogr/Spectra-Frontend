@@ -343,17 +343,7 @@ export default function OrderDetail() {
                   </p>
                 )}
               </div>
-              <p
-                style={{
-                  margin: "8px 0 0 0",
-                  fontSize: "12px",
-                  color: "#6b7280",
-                  fontStyle: "italic",
-                }}
-              >
-                Dùng mã vận đơn để tra cứu trạng thái giao hàng trên trang của
-                hãng vận chuyển.
-              </p>
+              
             </div>
           </div>
         )}
