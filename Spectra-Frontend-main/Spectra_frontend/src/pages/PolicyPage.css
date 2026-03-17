@@ -7,6 +7,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   font-family: Arial, sans-serif;
 }
+
 .policy-header {
   display: flex;
   justify-content: space-between;
@@ -14,4 +15,20 @@
   border-bottom: 2px solid #f3f4f6;
   padding-bottom: 20px;
   margin-bottom: 30px;
+}
+
+.policy-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.btn-toggle-edit {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
 }
