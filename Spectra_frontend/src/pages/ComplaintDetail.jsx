@@ -569,15 +569,7 @@ export default function ComplaintDetail() {
                     {returnTrackingNumber}
                   </span>
                 </p>
-                <p
-                  style={{
-                    margin: "4px 0",
-                    fontSize: "13px",
-                    color: "#6b7280",
-                  }}
-                >
-                  Hãy gửi sản phẩm về kho theo mã vận đơn phía trên.
-                </p>
+                
               </div>
             ) : status === "approved" || status === "in_progress" ? (
               <p

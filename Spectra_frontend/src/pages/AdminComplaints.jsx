@@ -678,7 +678,6 @@ export default function AdminComplaints() {
                     value={staffNote}
                     onChange={(e) => setStaffNote(e.target.value)}
                     rows={3}
-                    placeholder="Ghi chú nội bộ hoặc phản hồi cho khách hàng..."
                     style={{
                       width: "100%",
                       padding: "10px 12px",
