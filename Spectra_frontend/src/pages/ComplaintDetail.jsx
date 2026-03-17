@@ -347,7 +347,7 @@ export default function ComplaintDetail() {
                   <b>Tên:</b> {originalItem.frameName || "—"}
                 </p>
                 <p style={{ margin: "4px 0", fontSize: "14px" }}>
-                  <b>Giá:</b> {fmt(originalItem.unitPrice)}₫
+                  <b>Giá:</b> {fmt(originalItem.unitPrice)}$
                 </p>
                 <p style={{ margin: "4px 0", fontSize: "14px" }}>
                   <b>Số lượng:</b> {originalItem.quantity || 1}

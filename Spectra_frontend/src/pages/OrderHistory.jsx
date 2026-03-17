@@ -287,7 +287,7 @@ export default function OrderHistory() {
               letterSpacing: "0.5px",
             }}
           >
-            🚀 PRE-ORDER
+             PRE-ORDER
           </span>
         </div>
 
