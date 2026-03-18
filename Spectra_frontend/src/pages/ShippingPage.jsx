@@ -53,6 +53,39 @@ const CARRIERS = [
   "VNPost",
 ];
 
+function getCarrierTrackingUrl(carrier, tracking) {
+  if (!carrier || !tracking) return null;
+  const c = carrier.toLowerCase();
+  if (c.includes("giao hàng nhanh") || c.includes("ghn"))
+    return `https://donhang.ghn.vn/?order_code=${encodeURIComponent(tracking)}`;
+  if (c.includes("tiết kiệm") || c.includes("ghtk"))
+    return `https://i.ghtk.vn/${encodeURIComponent(tracking)}`;
+  if (c.includes("j&t") || c.includes("jt"))
+    return `https://jtexpress.vn/vi/tracking?type=track&billcode=${encodeURIComponent(tracking)}`;
+  if (c.includes("vnpost") || c.includes("vn post"))
+    return `https://www.vnpost.vn/vi-vn/dinh-vi/buu-pham?key=${encodeURIComponent(tracking)}`;
+  return null;
+}
+
+function ShippingMethodBadge({ method }) {
+  const isExpress = method?.toLowerCase() === "express";
+  return (
+    <span
+      style={{
+        fontSize: "12px",
+        fontWeight: 600,
+        padding: "2px 8px",
+        borderRadius: "10px",
+        backgroundColor: isExpress ? "#fef3c7" : "#f0f9ff",
+        color: isExpress ? "#92400e" : "#1e40af",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {isExpress ? "⚡ Nhanh" : "📦 Tiêu chuẩn"}
+    </span>
+  );
+}
+
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 export default function ShippingPage() {
@@ -205,8 +238,9 @@ export default function ShippingPage() {
 
   const filteredOrders = orders.filter((o) => {
     const s = o.status?.toLowerCase();
-    if (activeTab === "active") return s === "processing"; // chỉ processing
+    if (activeTab === "active") return s === "processing";
     if (activeTab === "shipped") return s === "shipped";
+    if (activeTab === "delivered") return s === "delivered";
     return true; // "all"
   });
 
@@ -232,13 +266,81 @@ export default function ShippingPage() {
   const shippedCount = orders.filter(
     (o) => o.status?.toLowerCase() === "shipped",
   ).length;
+  const deliveredCount = orders.filter(
+    (o) => o.status?.toLowerCase() === "delivered",
+  ).length;
 
   return (
     <div className="shipping-page-container">
       <h2 className="shipping-header">🚚 Quản Lý Vận Chuyển & Giao Hàng</h2>
 
-      
-      
+      {/* Summary cards */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "12px",
+          marginBottom: "20px",
+        }}
+      >
+        {[
+          {
+            label: "Chờ giao",
+            count: activeCount,
+            icon: "📦",
+            color: "#7c3aed",
+            bg: "#ede9fe",
+          },
+          {
+            label: "Đang giao",
+            count: shippedCount,
+            icon: "🚚",
+            color: "#0891b2",
+            bg: "#cffafe",
+          },
+          {
+            label: "Đã giao",
+            count: deliveredCount,
+            icon: "✅",
+            color: "#059669",
+            bg: "#d1fae5",
+          },
+          {
+            label: "Tổng đơn",
+            count: orders.length,
+            icon: "📋",
+            color: "#6b7280",
+            bg: "#f3f4f6",
+          },
+        ].map((card) => (
+          <div
+            key={card.label}
+            style={{
+              backgroundColor: "white",
+              borderRadius: "10px",
+              padding: "16px",
+              border: `2px solid ${card.bg}`,
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "24px", marginBottom: "4px" }}>
+              {card.icon}
+            </div>
+            <div
+              style={{
+                fontSize: "24px",
+                fontWeight: "bold",
+                color: card.color,
+              }}
+            >
+              {card.count}
+            </div>
+            <div style={{ fontSize: "13px", color: "#6b7280" }}>
+              {card.label}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* Tabs */}
       <div
@@ -260,6 +362,12 @@ export default function ShippingPage() {
           onClick={() => setActiveTab("shipped")}
         >
           🚚 Đang vận chuyển ({shippedCount})
+        </button>
+        <button
+          style={tabStyle("delivered")}
+          onClick={() => setActiveTab("delivered")}
+        >
+          ✅ Đã giao ({deliveredCount})
         </button>
         <button style={tabStyle("all")} onClick={() => setActiveTab("all")}>
           📋 Tất cả ({orders.length})
@@ -286,8 +394,11 @@ export default function ShippingPage() {
               <tr>
                 <th>Mã Đơn</th>
                 <th>Khách Hàng</th>
+                <th>Địa Chỉ Giao</th>
+                <th>Vận Chuyển</th>
                 <th>Trạng Thái</th>
                 <th>Mã Vận Đơn</th>
+                <th>Dự Kiến Giao</th>
                 <th>Thao Tác</th>
               </tr>
             </thead>
@@ -295,7 +406,7 @@ export default function ShippingPage() {
               {filteredOrders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="8"
                     style={{
                       textAlign: "center",
                       padding: "32px",
@@ -312,10 +423,15 @@ export default function ShippingPage() {
                   const canManual = status === "processing";
                   const canDeliver = status === "shipped";
                   const hasTracking = !!order.trackingNumber;
+                  const addr = parseAddress(order.shippingAddress);
+                  const trackUrl = getCarrierTrackingUrl(
+                    order.shippingCarrier,
+                    order.trackingNumber,
+                  );
 
                   return (
                     <tr key={rawId}>
-                      {/* Mã đơn — nếu convert từ preorder thì hiện mã preorder gốc */}
+                      {/* Mã đơn */}
                       <td>
                         {order.convertedFromPreorderId ? (
                           <div>
@@ -356,17 +472,29 @@ export default function ShippingPage() {
                       {/* Khách hàng */}
                       <td>
                         <div style={{ fontWeight: "bold" }}>
-                          {order.user?.fullName ||
-                            order.receiverName ||
-                            order.customerName ||
-                            "Khách hàng"}
+                          {addr.name || order.user?.fullName || "Khách hàng"}
                         </div>
                         <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                          {order.user?.phone ||
-                            order.phoneNumber ||
-                            order.phone ||
-                            "—"}
+                          {addr.phone || order.user?.phone || "—"}
                         </div>
+                      </td>
+
+                      {/* Địa chỉ giao */}
+                      <td>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            maxWidth: "200px",
+                            lineHeight: "1.4",
+                          }}
+                        >
+                          {addr.street || order.shippingAddress || "—"}
+                        </div>
+                      </td>
+
+                      {/* Phương thức vận chuyển */}
+                      <td>
+                        <ShippingMethodBadge method={order.shippingMethod} />
                       </td>
 
                       {/* Trạng thái */}
@@ -374,7 +502,7 @@ export default function ShippingPage() {
                         <StatusBadge status={order.status} />
                       </td>
 
-                      {/* Mã vận đơn + hãng ship */}
+                      {/* Mã vận đơn + hãng ship + tracking link */}
                       <td>
                         {hasTracking ? (
                           <div>
@@ -392,10 +520,64 @@ export default function ShippingPage() {
                             <span className="badge-tracking">
                               {order.trackingNumber}
                             </span>
+                            {trackUrl && (
+                              <div style={{ marginTop: "4px" }}>
+                                <a
+                                  href={trackUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    fontSize: "11px",
+                                    color: "#2563eb",
+                                    textDecoration: "none",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  🔗 Theo dõi
+                                </a>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span style={{ color: "#9ca3af", fontSize: "13px" }}>
                             Chưa có
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Dự kiến giao */}
+                      <td>
+                        {order.estimatedDeliveryDate ? (
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              color: "#1e40af",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {new Date(
+                              order.estimatedDeliveryDate,
+                            ).toLocaleDateString("vi-VN", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            })}
+                          </span>
+                        ) : order.shippedAt ? (
+                          <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                            ~
+                            {new Date(
+                              new Date(order.shippedAt).getTime() +
+                                (order.shippingMethod === "express" ? 3 : 7) *
+                                  86400000,
+                            ).toLocaleDateString("vi-VN", {
+                              day: "2-digit",
+                              month: "2-digit",
+                            })}
+                          </span>
+                        ) : (
+                          <span style={{ color: "#d1d5db", fontSize: "13px" }}>
+                            —
                           </span>
                         )}
                       </td>

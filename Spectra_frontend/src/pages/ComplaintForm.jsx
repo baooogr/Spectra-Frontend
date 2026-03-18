@@ -107,13 +107,17 @@ export default function ComplaintForm() {
 
   if (loading) return <div className="mc-loading">Đang tải...</div>;
 
-  // Flatten all order items from delivered orders
+  // Flatten all order items from delivered orders (including preorder-converted)
   const orderItems = orders.flatMap((o) => {
     const items = o.items || o.orderItems || o.OrderItems || [];
+    const isFromPreorder = !!(
+      o.convertedFromPreorderId || o.ConvertedFromPreorderId
+    );
     return items.map((item) => ({
       ...item,
       orderId: o.orderId || o.OrderId,
       orderDate: o.createdAt || o.CreatedAt || o.orderDate || o.OrderDate,
+      isFromPreorder,
     }));
   });
 
@@ -128,7 +132,8 @@ export default function ComplaintForm() {
     >
       <h2 style={{ marginBottom: "8px" }}>Tạo khiếu nại mới</h2>
       <p style={{ color: "#6b7280", fontSize: "14px", marginBottom: "24px" }}>
-        Chọn sản phẩm từ đơn hàng đã giao và mô tả vấn đề của bạn.
+        Chọn sản phẩm từ đơn hàng hoặc đơn đặt trước đã giao và mô tả vấn đề của
+        bạn.
       </p>
 
       <form
@@ -163,7 +168,7 @@ export default function ComplaintForm() {
               }}
             >
               Bạn chưa có đơn hàng đã giao nào. Chỉ có thể khiếu nại với đơn
-              hàng đã giao.
+              hàng hoặc đơn đặt trước đã giao.
             </p>
           ) : (
             <select
@@ -184,10 +189,12 @@ export default function ComplaintForm() {
                 const name =
                   item.frameName || item.productName || item.name || "Sản phẩm";
                 const color = item.colorName || item.color || "";
+                const preorderTag = item.isFromPreorder ? " [Pre-order]" : "";
                 return (
                   <option key={itemId} value={itemId}>
                     {name} {color ? `(${color})` : ""} — Đơn #
                     {String(item.orderId).slice(0, 8)}
+                    {preorderTag}
                   </option>
                 );
               })}

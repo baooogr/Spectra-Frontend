@@ -13,6 +13,7 @@ const statusMap = {
   in_progress: { text: "Đang xử lý", color: "#3b82f6", bg: "#dbeafe" },
   resolved: { text: "Đã giải quyết", color: "#10b981", bg: "#d1fae5" },
   cancelled: { text: "Đã huỷ", color: "#6b7280", bg: "#f3f4f6" },
+  customer_cancelled: { text: "Bạn đã rút", color: "#9333ea", bg: "#f3e8ff" },
 };
 
 const typeMap = {
@@ -78,6 +79,7 @@ export default function ComplaintDetail() {
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
 
@@ -134,7 +136,13 @@ export default function ComplaintDetail() {
   const returnTrackingNumber = complaint.returnTrackingNumber;
   const refundedAt = complaint.refundedAt;
 
-  const sInfo = statusMap[status] || {
+  const cancelledByCustomer = complaint.cancelledByCustomer;
+
+  const sInfo = statusMap[
+    status === "cancelled" && cancelledByCustomer
+      ? "customer_cancelled"
+      : status
+  ] || {
     text: status,
     color: "#6b7280",
     bg: "#f3f4f6",
@@ -144,6 +152,32 @@ export default function ComplaintDetail() {
       ? -1
       : statusFlow.indexOf(status);
   const flowSteps = flowDescriptions[type] || flowDescriptions.complaint;
+
+  // Customer can cancel when pending, under_review, or approved
+  const canCancel = ["pending", "under_review", "approved"].includes(status);
+
+  const handleCancelComplaint = async () => {
+    if (!window.confirm("Bạn có chắc muốn rút khiếu nại này không?")) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`${API}/${reqId}/cancel`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        fetchDetail();
+      } else {
+        const err = await res.json().catch(() => null);
+        alert(err?.message || err?.Message || "Không thể rút khiếu nại.");
+      }
+    } catch {
+      alert("Lỗi kết nối.");
+    }
+    setCancelling(false);
+  };
 
   return (
     <div
@@ -569,7 +603,6 @@ export default function ComplaintDetail() {
                     {returnTrackingNumber}
                   </span>
                 </p>
-                
               </div>
             ) : status === "approved" || status === "in_progress" ? (
               <p
@@ -615,8 +648,8 @@ export default function ComplaintDetail() {
                 </p>
                 {refundedAt && (
                   <p style={{ margin: 0, fontSize: "13px", color: "#047857" }}>
-                    Nhân viên sẽ liên hệ với bạn qua số điện thoại hoặc email để hỗ trợ hoàn tiền.
-                    
+                    Nhân viên sẽ liên hệ với bạn qua số điện thoại hoặc email để
+                    hỗ trợ hoàn tiền.
                   </p>
                 )}
               </div>
@@ -780,6 +813,24 @@ export default function ComplaintDetail() {
             >
               Chỉnh sửa khiếu nại
             </Link>
+          )}
+          {canCancel && (
+            <button
+              onClick={handleCancelComplaint}
+              disabled={cancelling}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#dc2626",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                cursor: cancelling ? "not-allowed" : "pointer",
+                fontWeight: "600",
+                fontSize: "14px",
+              }}
+            >
+              {cancelling ? "Đang hủy..." : "Rút khiếu nại"}
+            </button>
           )}
           <Link
             to="/profile"

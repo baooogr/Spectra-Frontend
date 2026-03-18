@@ -13,6 +13,7 @@ const statusMap = {
   in_progress: { text: "Đang xử lý", color: "#3b82f6", bg: "#dbeafe" },
   resolved: { text: "Đã giải quyết", color: "#10b981", bg: "#d1fae5" },
   cancelled: { text: "Đã huỷ", color: "#6b7280", bg: "#f3f4f6" },
+  customer_cancelled: { text: "Bạn đã rút", color: "#9333ea", bg: "#f3e8ff" },
 };
 
 const typeMap = {
@@ -69,8 +70,9 @@ export default function MyComplaints() {
           (c) => (c.status || c.Status || "").toLowerCase() === activeFilter,
         );
 
-  const getStatusBadge = (status) => {
-    const s = (status || "").toLowerCase();
+  const getStatusBadge = (status, cancelledByCustomer) => {
+    let s = (status || "").toLowerCase();
+    if (s === "cancelled" && cancelledByCustomer) s = "customer_cancelled";
     const info = statusMap[s] || {
       text: status || "?",
       color: "#6b7280",
@@ -139,6 +141,7 @@ export default function MyComplaints() {
           { key: "approved", label: "Đã duyệt" },
           { key: "in_progress", label: "Đang xử lý" },
           { key: "resolved", label: "Đã giải quyết" },
+          { key: "cancelled", label: "Đã huỷ" },
         ].map((f) => (
           <button
             key={f.key}
@@ -176,7 +179,10 @@ export default function MyComplaints() {
                     <span className="mc-type-badge">
                       {typeMap[type.toLowerCase()] || type}
                     </span>
-                    {getStatusBadge(status)}
+                    {getStatusBadge(
+                      status,
+                      c.cancelledByCustomer || c.CancelledByCustomer,
+                    )}
                   </div>
                   <span className="mc-date">
                     {date ? new Date(date).toLocaleDateString("vi-VN") : ""}
