@@ -580,7 +580,7 @@ export default function AdminProducts() {
                   {fieldErrors.size && <span style={errorStyle}>{fieldErrors.size}</span>}
                 </div>
                 <div className="form-group">
-                  <label>Rộng tròng (mm):</label>
+                  <label>Rộng tròng kính (mm):</label>
                   <input type="number" name="lensWidth" value={formData.lensWidth} onChange={handleInputChange} min="0" />
                   {fieldErrors.lensWidth && <span style={errorStyle}>{fieldErrors.lensWidth}</span>}
                 </div>
@@ -595,7 +595,7 @@ export default function AdminProducts() {
                   {fieldErrors.templeLength && <span style={errorStyle}>{fieldErrors.templeLength}</span>}
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / span 2' }}>
-                  <label>Rộng toàn khung (mm):</label>
+                  <label>Rộng toàn khung kính (mm):</label>
                   <input type="number" name="frameWidth" value={formData.frameWidth} onChange={handleInputChange} min="0" />
                   {fieldErrors.frameWidth && <span style={errorStyle}>{fieldErrors.frameWidth}</span>}
                 </div>
@@ -607,11 +607,11 @@ export default function AdminProducts() {
                 <div style={{ display: 'flex', gap: '15px' }}>
 
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '13px', color: '#4b5563' }}>Min RX (VD: -6.0):</label>
+                    <label style={{ fontSize: '13px', color: '#4b5563' }}>Min RX:</label>
                     <input type="number" step="0.25" name="minRx" value={formData.minRx} onChange={handleInputChange} placeholder="-6.0" />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '13px', color: '#4b5563' }}>Max RX (VD: +6.0):</label>
+                    <label style={{ fontSize: '13px', color: '#4b5563' }}>Max RX:</label>
                     <input type="number" step="0.25" name="maxRx" value={formData.maxRx} onChange={handleInputChange} placeholder="6.0" />
                   </div>
 

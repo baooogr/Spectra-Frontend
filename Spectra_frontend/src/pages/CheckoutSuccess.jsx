@@ -16,22 +16,8 @@ export default function CheckoutSuccess() {
     );
   }, [location.state, complaint]);
 
-  const customer = location.state?.customer || complaint?.customer;
-  const total = location.state?.total;
-
-  const complaintReason =
-    complaint?.content ||
-    complaint?.description ||
-    complaint?.reason ||
-    location.state?.content;
-
-  const complaintType =
-    complaint?.requestTypeLabel ||
-    complaint?.requestType ||
-    location.state?.requestType;
-
-  const complaintDate =
-    complaint?.createdAt || location.state?.createdAt;
+  const customer = location.state?.customer;
+  const total = location.state?.total; // Giả sử total này đang là USD
 
   const formatCurrency = (amountInUSD) => {
     if (typeof amountInUSD !== "number") return null;
@@ -94,75 +80,13 @@ export default function CheckoutSuccess() {
               </div>
             )}
 
+            {/* Đã sửa dòng này để gọi hàm formatCurrency mới */}
+
             {typeof total === "number" && (
               <div className="info-row info-row--total">
                 <span>Tổng tiền</span>
                 <span>{formatCurrency(total)}</span>
-              </div>
-            )}
-          </div>
-        )}
 
-        {complaint && (
-          <div className="success__info">
-            {customer?.fullName && (
-              <div className="info-row">
-                <span>Khách hàng</span>
-                <span>{customer.fullName}</span>
-              </div>
-            )}
-
-            {customer?.phone && (
-              <div className="info-row">
-                <span>Số điện thoại</span>
-                <span>{customer.phone}</span>
-              </div>
-            )}
-
-            {customer?.email && (
-              <div className="info-row">
-                <span>Email</span>
-                <span className="info-row__right">{customer.email}</span>
-              </div>
-            )}
-
-            {complaintType && (
-              <div className="info-row">
-                <span>Loại khiếu nại</span>
-                <span>{complaintType}</span>
-              </div>
-            )}
-
-            <div className="info-row">
-              <span>Trạng thái</span>
-              <span>{complaint?.status || "Pending"}</span>
-            </div>
-
-            {complaintDate && (
-              <div className="info-row">
-                <span>Ngày gửi</span>
-                <span>{new Date(complaintDate).toLocaleString("vi-VN")}</span>
-              </div>
-            )}
-
-            {complaint?.orderItemId && (
-              <div className="info-row">
-                <span>Order Item ID</span>
-                <span className="info-row__right">{complaint.orderItemId}</span>
-              </div>
-            )}
-
-            {complaintReason && (
-              <div className="info-row">
-                <span>Nội dung</span>
-                <span className="info-row__right">{complaintReason}</span>
-              </div>
-            )}
-
-            {complaint?.mediaUrl && (
-              <div className="info-row">
-                <span>Media URL</span>
-                <span className="info-row__right">{complaint.mediaUrl}</span>
               </div>
             )}
           </div>
@@ -184,6 +108,7 @@ export default function CheckoutSuccess() {
             Về trang chủ
           </button>
         </div>
+
       </div>
     </div>
   );

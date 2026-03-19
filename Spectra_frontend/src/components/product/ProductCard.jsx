@@ -57,7 +57,6 @@ function ProductCard({ product }) {
         e.currentTarget.style.boxShadow = "none";
       }}
     >
-
       {/* Badge trạng thái góc trên */}
       {isPreorder ? (
         <div
@@ -98,7 +97,6 @@ function ProductCard({ product }) {
         ) : (
           <div
             style={{
-
               width: "100%", height: "150px", backgroundColor: "#f9fafb",
               marginBottom: "10px", borderRadius: "8px", display: "flex",
               alignItems: "center", justifyContent: "center", color: "#ccc", fontSize: "12px",

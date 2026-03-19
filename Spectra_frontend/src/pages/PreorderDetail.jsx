@@ -12,19 +12,30 @@ export default function PreorderDetail() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
+  const [showNotReceivedInfo, setShowNotReceivedInfo] = useState(false);
 
   useEffect(() => {
-    const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
-    if (!token) { navigate("/login"); return; }
+    const token =
+      user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
     const fetchDetail = async () => {
       try {
-        const res = await fetch(`https://myspectra.runasp.net/api/Preorders/${id}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+
+        const res = await fetch(
+          `https://myspectra.runasp.net/api/Preorders/${id}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+
           },
-        });
+        );
         if (res.ok) {
           const data = await res.json();
           setOrder(data);
@@ -34,15 +45,27 @@ export default function PreorderDetail() {
             try {
               const ordersRes = await fetch(
                 "https://myspectra.runasp.net/api/Orders/my?page=1&pageSize=100",
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` } },
               );
               if (ordersRes.ok) {
                 const ordersData = await ordersRes.json();
                 const list = ordersData.items || ordersData || [];
                 const linked = list.find(
-                  (o) => o.convertedFromPreorderId === (data.id || data.preorderId)
+                  (o) =>
+                    o.convertedFromPreorderId === (data.id || data.preorderId),
                 );
-                if (linked) setLinkedOrder(linked);
+                if (linked) {
+                  setLinkedOrder(linked);
+                  // Check delivery confirmation from backend or localStorage
+                  if (
+                    linked.deliveryConfirmedAt ||
+                    localStorage.getItem(
+                      `delivery_confirmed_${linked.orderId}`,
+                    ) === "true"
+                  ) {
+                    setDeliveryConfirmed(true);
+                  }
+                }
               }
             } catch {
               // Không cần xử lý lỗi, chỉ là fallback hiển thị
@@ -74,8 +97,12 @@ export default function PreorderDetail() {
   if (error || !order)
     return (
       <div style={{ textAlign: "center", padding: "60px" }}>
-        <h2 style={{ color: "#dc2626" }}>{error || "Không tìm thấy đơn đặt trước"}</h2>
-        <Link to="/orders" style={{ color: "#3b82f6" }}>← Quay lại lịch sử mua hàng</Link>
+        <h2 style={{ color: "#dc2626" }}>
+          {error || "Không tìm thấy đơn đặt trước"}
+        </h2>
+        <Link to="/orders" style={{ color: "#3b82f6" }}>
+          ← Quay lại lịch sử mua hàng
+        </Link>
       </div>
     );
 
@@ -92,27 +119,40 @@ export default function PreorderDetail() {
     return `${usd} (${vnd} VND)`;
   };
 
-  const formatDate = (d) =>
-    d ? new Date(d).toLocaleString("vi-VN") : "—";
+  const formatDate = (d) => (d ? new Date(d).toLocaleString("vi-VN") : "—");
+
 
   const getStatusBadge = (status) => {
     const s = status?.toLowerCase() || "";
     const map = {
-      pending:          { text: "Chờ xác nhận",   color: "#d97706", bg: "#fef3c7" },
-      confirmed:        { text: "Đã xác nhận",    color: "#059669", bg: "#d1fae5" },
-      processing:       { text: "Đang xử lý",     color: "#4338ca", bg: "#ede9fe" },
 
+      pending: { text: "Chờ xác nhận", color: "#d97706", bg: "#fef3c7" },
+      confirmed: { text: "Đã xác nhận", color: "#059669", bg: "#d1fae5" },
+      processing: { text: "Đang xử lý", color: "#4338ca", bg: "#ede9fe" },
       // FIX: converted hiển thị "Đang xử lý" (linked order đang processing)
-      converted:        { text: "Đang xử lý",     color: "#4338ca", bg: "#ede9fe" },
-      awaiting_payment: { text: "Chờ thanh toán", color: "#f97316", bg: "#fff7ed" },
-      awaitingpayment:  { text: "Chờ thanh toán", color: "#f97316", bg: "#fff7ed" },
-      paid:             { text: "Đã thanh toán",  color: "#059669", bg: "#d1fae5" },
-      shipped:          { text: "Đang giao hàng", color: "#7e22ce", bg: "#f3e8ff" },
-      delivered:        { text: "Hoàn thành",     color: "#059669", bg: "#d1fae5" },
-      completed:        { text: "Hoàn thành",     color: "#059669", bg: "#d1fae5" },
-      cancelled:        { text: "Đã huỷ",         color: "#dc2626", bg: "#fee2e2" },
+      converted: { text: "Đang xử lý", color: "#4338ca", bg: "#ede9fe" },
+      awaiting_payment: {
+        text: "Chờ thanh toán",
+        color: "#f97316",
+        bg: "#fff7ed",
+      },
+      awaitingpayment: {
+        text: "Chờ thanh toán",
+        color: "#f97316",
+        bg: "#fff7ed",
+      },
+      paid: { text: "Đã thanh toán", color: "#059669", bg: "#d1fae5" },
+      shipped: { text: "Đang giao hàng", color: "#7e22ce", bg: "#f3e8ff" },
+      delivered: { text: "Hoàn thành", color: "#059669", bg: "#d1fae5" },
+      completed: { text: "Hoàn thành", color: "#059669", bg: "#d1fae5" },
+      cancelled: { text: "Đã huỷ", color: "#dc2626", bg: "#fee2e2" },
     };
-    const s2 = map[s] || { text: status || "Không rõ", color: "#6b7280", bg: "#f3f4f6" };
+    const s2 = map[s] || {
+      text: status || "Không rõ",
+      color: "#6b7280",
+      bg: "#f3f4f6",
+
+    };
     return (
       <span
         style={{
@@ -132,33 +172,63 @@ export default function PreorderDetail() {
   // FIX: Dùng status của linked order nếu preorder đã convert
   const displayStatus = linkedOrder ? linkedOrder.status : order.status;
 
+  const isDelivered = (displayStatus || "").toLowerCase() === "delivered";
+  const deliveryOrderId = linkedOrder?.orderId;
+
+  const handleConfirmDelivery = async () => {
+    if (!deliveryOrderId) return;
+    const token =
+      user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+    if (!token) return;
+    try {
+      const res = await fetch(
+        `https://myspectra.runasp.net/api/Orders/${deliveryOrderId}/confirm-delivery`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res.ok) {
+        localStorage.setItem(`delivery_confirmed_${deliveryOrderId}`, "true");
+        setDeliveryConfirmed(true);
+        setShowNotReceivedInfo(false);
+      }
+    } catch {
+      localStorage.setItem(`delivery_confirmed_${deliveryOrderId}`, "true");
+      setDeliveryConfirmed(true);
+    }
+  };
+
   // ===== BÓC TÁCH THÔNG TIN NGƯỜI NHẬN =====
-  let receiverName    = order.user?.fullName || "—";
-  let receiverPhone   = order.user?.phone    || "—";
-  let receiverEmail   = order.user?.email    || "—";
+  let receiverName = order.user?.fullName || "—";
+  let receiverPhone = order.user?.phone || "—";
+  let receiverEmail = order.user?.email || "—";
   let shippingAddress =
     order.shippingAddress ||
     order.deliveryAddress ||
-    order.address         ||
-    order.user?.address   ||
+    order.address ||
+    order.user?.address ||
     "—";
 
-  const matchNew   = shippingAddress.match(/^\[(.*?) - (.*?) - (.*?)\] (.*)$/);
+  const matchNew = shippingAddress.match(/^\[(.*?) - (.*?) - (.*?)\] (.*)$/);
   const matchError = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*?)] (.*)$/);
-  const matchOld   = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*)$/);
+  const matchOld = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*)$/);
 
   if (matchNew) {
-    if (receiverName  === "—") receiverName  = matchNew[1];
+    if (receiverName === "—") receiverName = matchNew[1];
     if (receiverPhone === "—") receiverPhone = matchNew[2];
     if (receiverEmail === "—") receiverEmail = matchNew[3];
     shippingAddress = matchNew[4];
   } else if (matchError) {
-    if (receiverName  === "—") receiverName  = matchError[1];
+    if (receiverName === "—") receiverName = matchError[1];
     if (receiverPhone === "—") receiverPhone = matchError[2];
     if (receiverEmail === "—") receiverEmail = matchError[3].trim();
     shippingAddress = matchError[4];
   } else if (matchOld) {
-    if (receiverName  === "—") receiverName  = matchOld[1];
+    if (receiverName === "—") receiverName = matchOld[1];
     if (receiverPhone === "—") receiverPhone = matchOld[2];
     shippingAddress = matchOld[3];
   }
@@ -166,19 +236,35 @@ export default function PreorderDetail() {
   const orderNote = order.note || "Không có";
 
   // ===== DANH SÁCH SẢN PHẨM =====
-  const itemsList = (order.preorderItems || order.orderItems || order.items || []).filter(Boolean);
+
+  const itemsList = (
+    order.preorderItems ||
+    order.orderItems ||
+    order.items ||
+    []
+  ).filter(Boolean);
 
   const totalAmount =
     order.totalAmount ||
-    order.totalPrice  ||
+    order.totalPrice ||
+
     itemsList.reduce(
       (sum, item) =>
-        sum + (item.orderPrice || item.preorderPrice || item.unitPrice || 0) * (item.quantity || 1),
-      0
+        sum +
+        (item.orderPrice || item.preorderPrice || item.unitPrice || 0) *
+          (item.quantity || 1),
+      0,
     );
 
   return (
-    <div style={{ maxWidth: "860px", margin: "40px auto", padding: "20px", fontFamily: "sans-serif" }}>
+    <div
+      style={{
+        maxWidth: "860px",
+        margin: "40px auto",
+        padding: "20px",
+        fontFamily: "sans-serif",
+      }}
+    >
       <Link
         to="/orders"
         style={{
@@ -227,15 +313,121 @@ export default function PreorderDetail() {
             >
               🚀 PRE-ORDER
             </span>
-            <h2 style={{ margin: "8px 0 0", fontSize: "22px" }}>Chi Tiết Đơn Đặt Trước</h2>
-            <p style={{ margin: "6px 0 0", color: "#6b7280", fontSize: "14px" }}>
-              Mã đơn: <b style={{ color: "#1e40af" }}>#{order.preorderId || order.id}</b>
+            <h2 style={{ margin: "8px 0 0", fontSize: "22px" }}>
+              Chi Tiết Đơn Đặt Trước
+            </h2>
+            <p
+              style={{ margin: "6px 0 0", color: "#6b7280", fontSize: "14px" }}
+            >
+              Mã đơn:{" "}
+              <b style={{ color: "#1e40af" }}>
+                #{order.preorderId || order.id}
+              </b>
             </p>
           </div>
 
           {/* FIX: dùng displayStatus thay vì order.status */}
           {getStatusBadge(displayStatus)}
         </div>
+
+        {/* ── XÁC NHẬN NHẬN HÀNG — hiển thị khi đơn delivered và chưa confirm ── */}
+        {isDelivered && !deliveryConfirmed && deliveryOrderId && (
+          <div
+            style={{
+              backgroundColor: "#eff6ff",
+              border: "2px solid #3b82f6",
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "20px",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                margin: "0 0 14px",
+                fontSize: "16px",
+                fontWeight: "bold",
+                color: "#1e40af",
+              }}
+            >
+              📦 Bạn đã nhận được đơn hàng chưa?
+            </p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                onClick={handleConfirmDelivery}
+                style={{
+                  padding: "10px 28px",
+                  backgroundColor: "#059669",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                ✅ Đã nhận
+              </button>
+              <button
+                onClick={() => setShowNotReceivedInfo(true)}
+                style={{
+                  padding: "10px 28px",
+                  backgroundColor: "#dc2626",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                ❌ Chưa nhận
+              </button>
+            </div>
+
+            {showNotReceivedInfo && (
+              <div
+                style={{
+                  marginTop: "16px",
+                  backgroundColor: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  borderRadius: "8px",
+                  padding: "14px",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "14px", color: "#991b1b" }}>
+                  Nếu bạn chưa nhận được hàng, vui lòng liên hệ tổng đài hỗ trợ:
+                </p>
+                <p
+                  style={{
+                    margin: "8px 0 0",
+                    fontSize: "20px",
+                    fontWeight: "bold",
+                    color: "#dc2626",
+                  }}
+                >
+                  📞 1900-0091
+                </p>
+                <p
+                  style={{
+                    margin: "4px 0 0",
+                    fontSize: "13px",
+                    color: "#78716c",
+                  }}
+                >
+                  Thời gian hỗ trợ: 8:00 – 21:00 hàng ngày
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ===== 2 CỘT THÔNG TIN ===== */}
         <div
@@ -349,19 +541,22 @@ export default function PreorderDetail() {
         ) : (
           <div style={{ marginBottom: "24px" }}>
             {itemsList.map((item, index) => {
-              const frameName  = item.frame?.frameName || "Gọng kính";
-              const frameColor = item.selectedColor || item.frame?.color || null;
-              const qty        = item.quantity || 1;
-              const unitPrice  = item.orderPrice || item.preorderPrice || item.unitPrice || 0;
+
+              const frameName = item.frame?.frameName || "Gọng kính";
+              const frameColor =
+                item.selectedColor || item.frame?.color || null;
+              const qty = item.quantity || 1;
+              const unitPrice =
+                item.orderPrice || item.preorderPrice || item.unitPrice || 0;
 
               const brand =
                 (typeof item.frame?.brand === "string"
                   ? item.frame.brand
                   : item.frame?.brand?.brandName) || null;
 
-              const lensType       = item.lensType?.lensSpecification || null;
+              const lensType = item.lensType?.lensSpecification || null;
               const lensFeatureObj = item.lensFeature || item.feature;
-              const lensFeature    = lensFeatureObj?.featureSpecification || null;
+              const lensFeature = lensFeatureObj?.featureSpecification || null;
               const prescriptionUrl = item.prescription?.imageUrl || null;
 
               return (
@@ -385,20 +580,45 @@ export default function PreorderDetail() {
                     }}
                   >
                     <div style={{ flex: 1 }}>
-                      <p style={{ margin: "0 0 4px 0", fontWeight: "bold", fontSize: "16px" }}>
+                      <p
+                        style={{
+                          margin: "0 0 4px 0",
+                          fontWeight: "bold",
+                          fontSize: "16px",
+                        }}
+                      >
                         {frameName}
                         {frameColor && (
-                          <span style={{ fontSize: "13px", color: "#6b7280", fontWeight: "normal" }}>
-                            {" "}- Màu: {frameColor}
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              color: "#6b7280",
+                              fontWeight: "normal",
+                            }}
+                          >
+                            {" "}
+                            - Màu: {frameColor}
                           </span>
                         )}
                       </p>
                       {brand && (
-                        <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#6b7280" }}>
+                        <p
+                          style={{
+                            margin: "0 0 4px 0",
+                            fontSize: "13px",
+                            color: "#6b7280",
+                          }}
+                        >
                           Thương hiệu: {brand}
                         </p>
                       )}
-                      <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#374151" }}>
+                      <p
+                        style={{
+                          margin: "4px 0 0",
+                          fontSize: "13px",
+                          color: "#374151",
+                        }}
+                      >
                         Số lượng: <b>x{qty}</b>
                       </p>
                     </div>
@@ -430,7 +650,14 @@ export default function PreorderDetail() {
                       }}
                     >
                       <div style={{ flex: 1 }}>
-                        <p style={{ margin: 0, fontSize: "14px", color: "#4338ca", fontWeight: "500" }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            color: "#4338ca",
+                            fontWeight: "500",
+                          }}
+                        >
                           🔭 Tròng kính: {lensType || "Không có"}
                           {lensFeature ? ` — ${lensFeature}` : ""}
                         </p>
@@ -489,6 +716,60 @@ export default function PreorderDetail() {
             {formatPrice(totalAmount)}
           </strong>
         </div>
+
+        {/* Complaint button for delivered preorders */}
+        {(displayStatus || "").toLowerCase() === "delivered" && (
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "16px",
+              backgroundColor: "#fff7ed",
+              borderRadius: "10px",
+              border: "1px solid #fed7aa",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <p
+                style={{
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "15px",
+                  color: "#9a3412",
+                }}
+              >
+                Có vấn đề với đơn đặt trước?
+              </p>
+              <p
+                style={{
+                  margin: "4px 0 0",
+                  fontSize: "13px",
+                  color: "#78716c",
+                }}
+              >
+                Bạn có thể gửi khiếu nại, trả/đổi hàng hoặc yêu cầu bảo hành.
+              </p>
+            </div>
+            <Link
+              to="/complaints/new"
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#f97316",
+                color: "#fff",
+                borderRadius: "8px",
+                textDecoration: "none",
+                fontWeight: "600",
+                fontSize: "14px",
+              }}
+            >
+              Gửi khiếu nại
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

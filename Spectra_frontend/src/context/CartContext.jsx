@@ -9,7 +9,6 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product, quantity) => {
     setCartItems((prevItems) => {
-      // Kiểm tra trùng ID, cùng màu và cùng cấu hình tròng kính
       const existingItemIndex = prevItems.findIndex(
         (item) => 
           item.id === product.id && 

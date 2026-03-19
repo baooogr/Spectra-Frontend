@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Outlet,
+} from "react-router-dom";
 
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import UserProfile from "../pages/UserProfile";
@@ -9,14 +14,12 @@ import Footer from "../components/layout/Footer";
 
 import AdminLayout from "../components/layout/AdminLayout";
 
-
 // --- IMPORT CÁC TRANG KHÁCH HÀNG ---
 import MainPage from "../pages/MainPage";
 import OrderHistory from "../pages/OrderHistory";
 
 import OrderDetail from "../pages/OrderDetail";
-import PreorderDetail from "../pages/PreorderDetail"; // ✅ THÊM MỚI
-
+import PreorderDetail from "../pages/PreorderDetail";
 import CartPage from "../pages/CartPage";
 
 import CheckoutPreorderPage from "../pages/CheckoutPreorderPage";
@@ -34,21 +37,25 @@ import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
 
 import AdminPreorderCampaigns from "../pages/AdminPreorderCampaigns";
+import AdminComplaints from "../pages/AdminComplaints";
 import ShippingPage from "../pages/ShippingPage";
 
-import ComplaintManagementPage from "../pages/ComplaintManagementPage";
-import ComplaintPage from "../pages/ComplaintPage";
-
+import MyComplaints from "../pages/MyComplaints";
+import ComplaintDetail from "../pages/ComplaintDetail";
+import ComplaintForm from "../pages/ComplaintForm";
+import ComplaintEdit from "../pages/ComplaintEdit";
+import ExchangeSelect from "../pages/ExchangeSelect";
 
 // VNPay
 import VNPayReturnPage from "../pages/VNPayReturnPage";
-
 
 const CustomerLayout = () => {
   return (
     <>
       <Header />
-      <main style={{ minHeight: '60vh' }}>
+
+      <main style={{ minHeight: "60vh" }}>
+
         <Outlet />
       </main>
       <Footer />
@@ -72,9 +79,8 @@ export default function AppRouter() {
             <Route path="users" element={<AdminUsers />} />
 
             <Route path="campaigns" element={<AdminPreorderCampaigns />} />
+            <Route path="complaints" element={<AdminComplaints />} />
             <Route path="/admin/shipping" element={<ShippingPage />} />
-
-            <Route path="complaints" element={<ComplaintManagementPage />} />
 
           </Route>
         </Route>
@@ -86,10 +92,14 @@ export default function AppRouter() {
 
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/orders/:id" element={<OrderDetail />} />
-          <Route path="/complaint" element={<ComplaintPage />} />
 
-          {/* ✅ THÊM MỚI: Route cho trang chi tiết đơn đặt trước */}
           <Route path="/preorders/:id" element={<PreorderDetail />} />
+
+          <Route path="/complaints" element={<MyComplaints />} />
+          <Route path="/complaints/new" element={<ComplaintForm />} />
+          <Route path="/complaints/:id" element={<ComplaintDetail />} />
+          <Route path="/complaints/:id/edit" element={<ComplaintEdit />} />
+          <Route path="/complaints/:id/exchange" element={<ExchangeSelect />} />
 
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -102,7 +112,6 @@ export default function AppRouter() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/profile" element={<UserProfile />} />
         </Route>
-
       </Routes>
     </Router>
   );

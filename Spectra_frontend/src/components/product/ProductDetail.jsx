@@ -19,7 +19,7 @@ const ImageGallery = ({ images }) => {
     <div className="product-gallery">
       <div className="main-image-container" onClick={() => setIsZoomed(true)}>
         <img src={mainImg} alt="Main Product" className="main-image" />
-=
+
       </div>
       <div className="thumbnail-row">
         {images.map((img, idx) => (

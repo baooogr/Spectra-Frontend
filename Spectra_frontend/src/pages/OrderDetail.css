@@ -1,3 +1,13 @@
+/* Pulse animation for active tracking step */
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1);
+  }
+}
 
 .order-detail-container {
   max-width: 900px;
@@ -8,13 +18,11 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
-
 .order-detail-container h2 {
   font-size: 26px;
   font-weight: 700;
   margin-bottom: 24px;
 }
-
 
 .order-detail-container p {
   font-size: 15px;
@@ -28,13 +36,11 @@
   display: inline-block;
 }
 
-
 .section-title {
   font-size: 20px;
   font-weight: 700;
   margin: 36px 0 16px;
 }
-
 
 .order-table-wrapper {
   overflow-x: auto;
@@ -76,12 +82,10 @@
   color: #333;
 }
 
-
 .order-table td:last-child,
 .order-table th:last-child {
   text-align: right;
 }
-
 
 .order-grand-total {
   text-align: right;
@@ -95,16 +99,13 @@
   font-weight: 600;
 }
 
-
 .payment-status.completed {
-  color: #2e7d32;       
+  color: #2e7d32;
 }
-
 
 .payment-status.pending {
   color: #ed6c02;
 }
-
 
 .payment-status.failed {
   color: #d32f2f;
