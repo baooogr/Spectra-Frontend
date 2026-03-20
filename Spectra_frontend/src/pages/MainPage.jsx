@@ -1,175 +1,318 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import "./MainPage.css";
 import ProductCard from "../components/product/ProductCard";
-import bannerImg from "../assets/bn.jpg";
+import { useFrames, useShapes, useMaterials } from "../api";
+
+const heroSlides = [
+  {
+    image: "/Images/ethan-robertson-SYx3UCHZJlo-unsplash.jpg",
+    tag: "New Collection",
+    title: "See the World in Style",
+    subtitle:
+      "Premium eyewear starting at $6.95. Discover frames that match your vibe — bold, minimal, or somewhere in between.",
+    cta: "Shop Now",
+  },
+  {
+    image: "/Images/ali-pazani-GwglcplmXDs-unsplash.jpg",
+    tag: "Trending",
+    title: "Frames That Define You",
+    subtitle:
+      "Explore our curated collection of designer-inspired eyewear at prices that won't break the bank.",
+    cta: "Explore Collection",
+  },
+  {
+    image: "/Images/tamara-bellis-tw5_DJQaeDU-unsplash.jpg",
+    tag: "Best Sellers",
+    title: "Look Sharp, Feel Sharper",
+    subtitle:
+      "From classic aviators to modern cat-eyes, find the perfect pair that complements your look.",
+    cta: "Browse Bestsellers",
+  },
+];
+
+const categories = [
+  {
+    image: "/Images/giorgio-trovato-K62u25Jk6vo-unsplash.jpg",
+    title: "Eyeglasses",
+    desc: "Classic & modern frames",
+  },
+  {
+    image: "/Images/bradyn-trollip-10zIqwA5VL0-unsplash.jpg",
+    title: "Sunglasses",
+    desc: "UV protection in style",
+  },
+  {
+    image: "/Images/lensabl-FwtWEIzyNJI-unsplash.jpg",
+    title: "Prescription Lenses",
+    desc: "Crystal clear vision",
+  },
+];
 
 export default function MainPage() {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
-  const [products, setProducts]     = useState([]);
-  const [shapes, setShapes]         = useState([]); // fetch từ API
-  const [materials, setMaterials]   = useState([]); // fetch từ API
-  const [isLoading, setIsLoading]   = useState(true);
-  const [error, setError]           = useState("");
+  const {
+    frames: products,
+    isLoading: framesLoading,
+    isError: framesError,
+  } = useFrames();
+  const { shapes, isLoading: shapesLoading } = useShapes();
+  const { materials, isLoading: materialsLoading } = useMaterials();
 
-  const [selectedShapes, setSelectedShapes]     = useState([]);
+  const isLoading = framesLoading || shapesLoading || materialsLoading;
+  const error = framesError ? "Could not connect to the server." : "";
+
+  const [selectedShapes, setSelectedShapes] = useState([]);
   const [selectedMaterials, setSelectedMaterials] = useState([]);
-  const [selectedPrice, setSelectedPrice]         = useState("all");
-
+  const [selectedPrice, setSelectedPrice] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [heroIndex, setHeroIndex] = useState(0);
   const productsPerPage = 12;
 
-  // Fetch products + shapes + materials song song
+  // Hero auto-slide
   useEffect(() => {
-    const fetchAll = async () => {
-      setIsLoading(true);
-      setError("");
-      try {
-        const [framesRes, shapesRes, materialsRes] = await Promise.all([
-          fetch("https://myspectra.runasp.net/api/Frames?page=1&pageSize=100"),
-          fetch("https://myspectra.runasp.net/api/Shapes"),
-          fetch("https://myspectra.runasp.net/api/Materials"),
-        ]);
-
-        if (framesRes.ok) {
-          const data = await framesRes.json();
-          const allFrames = data.items || data || [];
-          // Lọc trùng tên
-          const uniqueFrames = [];
-          const seenNames = new Set();
-          allFrames.forEach(frame => {
-            if (!seenNames.has(frame.frameName)) {
-              seenNames.add(frame.frameName);
-              uniqueFrames.push(frame);
-            }
-          });
-          setProducts(uniqueFrames);
-        } else {
-          setError("Không thể tải danh sách sản phẩm.");
-        }
-
-        if (shapesRes.ok) {
-          const data = await shapesRes.json();
-          setShapes(data || []);
-        }
-
-        if (materialsRes.ok) {
-          const data = await materialsRes.json();
-          setMaterials(data || []);
-        }
-      } catch {
-        setError("Lỗi kết nối đến máy chủ Backend.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAll();
+    const timer = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      // Tìm kiếm theo tên
       const productName = product.frameName || product.name || "";
-      const searchMatch = productName.toLowerCase().includes(searchQuery.toLowerCase());
-
-      // FIX: dùng shapeName/materialName từ object thay vì so sánh object trực tiếp
-      const productShapeName    = product.shape?.shapeName    || "";
+      const searchMatch = productName
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const productShapeName = product.shape?.shapeName || "";
       const productMaterialName = product.material?.materialName || "";
-
-      const shapeMatch    = selectedShapes.length === 0    || selectedShapes.includes(productShapeName);
-      const materialMatch = selectedMaterials.length === 0 || selectedMaterials.includes(productMaterialName);
-
+      const shapeMatch =
+        selectedShapes.length === 0 ||
+        selectedShapes.includes(productShapeName);
+      const materialMatch =
+        selectedMaterials.length === 0 ||
+        selectedMaterials.includes(productMaterialName);
       const price = product.basePrice || product.price || 0;
       let priceMatch = true;
-      if (selectedPrice === "under15")  priceMatch = price < 15;
-      else if (selectedPrice === "15to20") priceMatch = price >= 15 && price <= 20;
+      if (selectedPrice === "under15") priceMatch = price < 15;
+      else if (selectedPrice === "15to20")
+        priceMatch = price >= 15 && price <= 20;
       else if (selectedPrice === "over20") priceMatch = price > 20;
-
       return searchMatch && shapeMatch && materialMatch && priceMatch;
     });
   }, [products, selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
 
-  // Reset về trang 1 khi thay đổi filter
-  useEffect(() => { setCurrentPage(1); }, [selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [currentPage]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
-  const indexOfLastProduct  = currentPage * productsPerPage;
+  const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts     = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
-  const totalPages          = Math.ceil(filteredProducts.length / productsPerPage);
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct,
+  );
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
-  const paginate  = (pageNumber) => setCurrentPage(pageNumber);
-  const nextPage  = () => setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
-  const prevPage  = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const nextPage = () =>
+    setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
+  const prevPage = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
 
-  const handleCheckboxChange = (setState, state, value) => {
+  const handleCheckboxChange = useCallback((setState, state, value) => {
     if (state.includes(value)) setState(state.filter((item) => item !== value));
     else setState([...state, value]);
-  };
+  }, []);
 
   const hasActiveFilters =
-    selectedShapes.length > 0 || selectedMaterials.length > 0 || selectedPrice !== "all";
-
+    selectedShapes.length > 0 ||
+    selectedMaterials.length > 0 ||
+    selectedPrice !== "all";
   const resetFilters = () => {
     setSelectedShapes([]);
     setSelectedMaterials([]);
     setSelectedPrice("all");
   };
 
+  const scrollToProducts = () => {
+    document
+      .getElementById("products-section")
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="main-page">
-      <div style={{ width: "100%", marginLeft: "40px", overflow: "hidden" }}>
-        <img
-          src={bannerImg}
-          alt="Khuyến mãi FGlasses"
-          style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }}
-        />
+      {/* ===== HERO CAROUSEL ===== */}
+      <section className="hero-section">
+        {heroSlides.map((slide, i) => (
+          <div
+            key={i}
+            className={`hero-slide ${i === heroIndex ? "active" : ""}`}
+          >
+            <img src={slide.image} alt={slide.title} />
+            <div className="hero-content">
+              <span className="hero-tag">{slide.tag}</span>
+              <h1 className="hero-title">{slide.title}</h1>
+              <p className="hero-subtitle">{slide.subtitle}</p>
+              <button className="hero-cta" onClick={scrollToProducts}>
+                {slide.cta} →
+              </button>
+            </div>
+          </div>
+        ))}
+        <div className="hero-dots">
+          {heroSlides.map((_, i) => (
+            <button
+              key={i}
+              className={`hero-dot ${i === heroIndex ? "active" : ""}`}
+              onClick={() => setHeroIndex(i)}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ===== FEATURES BAR ===== */}
+      <div className="features-bar">
+        <div className="feature-item">
+          <span className="feature-icon">🚚</span>
+          <div className="feature-text">
+            <strong>Free Shipping</strong>
+            <span>On orders over $50</span>
+          </div>
+        </div>
+        <div className="feature-item">
+          <span className="feature-icon">🔄</span>
+          <div className="feature-text">
+            <strong>Easy Returns</strong>
+            <span>30-day money back</span>
+          </div>
+        </div>
+        <div className="feature-item">
+          <span className="feature-icon">🛡️</span>
+          <div className="feature-text">
+            <strong>Quality Guarantee</strong>
+            <span>Premium materials</span>
+          </div>
+        </div>
+        <div className="feature-item">
+          <span className="feature-icon">💬</span>
+          <div className="feature-text">
+            <strong>24/7 Support</strong>
+            <span>Always here for you</span>
+          </div>
+        </div>
       </div>
 
-      <div className="main-header">
-        <h1>Khám phá bộ sưu tập kính</h1>
+      {/* ===== CATEGORY SHOWCASE ===== */}
+      <section className="category-showcase">
+        <div className="section-label">
+          <h2>Shop by Category</h2>
+          <p>Find the perfect eyewear for every occasion</p>
+        </div>
+        <div className="category-grid">
+          {categories.map((cat, i) => (
+            <Link to="/" key={i} className="category-card">
+              <img src={cat.image} alt={cat.title} />
+              <div className="category-card-overlay">
+                <h3>{cat.title}</h3>
+                <p>{cat.desc}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== PRODUCT SECTION ===== */}
+      <div id="products-section" className="main-header">
+        <h1>Explore Our Collection</h1>
         {searchQuery && (
-          <p style={{ marginTop: "10px", fontSize: "18px", fontWeight: "bold" }}>
-            Kết quả tìm kiếm cho: "<span style={{ color: "#0070c9" }}>{searchQuery}</span>"
+          <p
+            style={{
+              marginTop: "10px",
+              fontSize: "16px",
+              color: "var(--color-text-secondary)",
+            }}
+          >
+            Results for: "
+            <span style={{ color: "var(--color-primary)", fontWeight: 700 }}>
+              {searchQuery}
+            </span>
+            "
           </p>
         )}
       </div>
 
       <div className="main-content">
-        {/* ===== SIDEBAR FILTER ===== */}
+        {/* SIDEBAR FILTER */}
         <aside className="sidebar-filter">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ margin: 0 }}>Bộ lọc sản phẩm</h3>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <h3 style={{ margin: 0, borderBottom: "none", paddingBottom: 0 }}>
+              Filters
+            </h3>
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
                 style={{
-                  fontSize: "12px", color: "#ef4444", background: "none",
-                  border: "none", cursor: "pointer", fontWeight: "bold", padding: 0,
+                  fontSize: "12px",
+                  color: "var(--color-error)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontWeight: "bold",
                 }}
               >
-                Xoá lọc
+                Clear All
               </button>
             )}
           </div>
-          <div style={{ borderBottom: "2px solid #111827", marginBottom: "20px", marginTop: "10px" }} />
+          <div
+            style={{
+              borderBottom: "2px solid var(--color-primary)",
+              marginBottom: "20px",
+              marginTop: "10px",
+            }}
+          />
 
-          {/* Filter: Hình dáng gọng — tự động từ API */}
           <div className="filter-group">
-            <h4>Hình dáng gọng</h4>
+            <h4>Frame Shape</h4>
             {shapes.length === 0 ? (
-              <p style={{ fontSize: "13px", color: "#9ca3af", fontStyle: "italic" }}>Đang tải...</p>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "var(--color-text-muted)",
+                  fontStyle: "italic",
+                }}
+              >
+                Loading...
+              </p>
             ) : (
               shapes.map((shape) => {
                 const name = shape.shapeName || shape.name || "";
                 return (
-                  <label key={shape.shapeId || shape.id} className="filter-label">
+                  <label
+                    key={shape.shapeId || shape.id}
+                    className="filter-label"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedShapes.includes(name)}
-                      onChange={() => handleCheckboxChange(setSelectedShapes, selectedShapes, name)}
+                      onChange={() =>
+                        handleCheckboxChange(
+                          setSelectedShapes,
+                          selectedShapes,
+                          name,
+                        )
+                      }
                     />
                     {name}
                   </label>
@@ -178,20 +321,36 @@ export default function MainPage() {
             )}
           </div>
 
-          {/* Filter: Chất liệu — tự động từ API */}
           <div className="filter-group">
-            <h4>Chất liệu</h4>
+            <h4>Material</h4>
             {materials.length === 0 ? (
-              <p style={{ fontSize: "13px", color: "#9ca3af", fontStyle: "italic" }}>Đang tải...</p>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "var(--color-text-muted)",
+                  fontStyle: "italic",
+                }}
+              >
+                Loading...
+              </p>
             ) : (
               materials.map((mat) => {
                 const name = mat.materialName || mat.name || "";
                 return (
-                  <label key={mat.materialId || mat.id} className="filter-label">
+                  <label
+                    key={mat.materialId || mat.id}
+                    className="filter-label"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedMaterials.includes(name)}
-                      onChange={() => handleCheckboxChange(setSelectedMaterials, selectedMaterials, name)}
+                      onChange={() =>
+                        handleCheckboxChange(
+                          setSelectedMaterials,
+                          selectedMaterials,
+                          name,
+                        )
+                      }
                     />
                     {name}
                   </label>
@@ -200,14 +359,13 @@ export default function MainPage() {
             )}
           </div>
 
-          {/* Filter: Mức giá — giữ nguyên hardcode vì đây là khoảng giá */}
           <div className="filter-group">
-            <h4>Mức giá</h4>
+            <h4>Price Range</h4>
             {[
-              { value: "all",     label: "Tất cả" },
-              { value: "under15", label: "Dưới $15" },
-              { value: "15to20",  label: "Từ $15 - $20" },
-              { value: "over20",  label: "Trên $20" },
+              { value: "all", label: "All Prices" },
+              { value: "under15", label: "Under $15" },
+              { value: "15to20", label: "$15 - $20" },
+              { value: "over20", label: "Over $20" },
             ].map((opt) => (
               <label key={opt.value} className="filter-label">
                 <input
@@ -222,28 +380,40 @@ export default function MainPage() {
           </div>
         </aside>
 
-        {/* ===== DANH SÁCH SẢN PHẨM ===== */}
+        {/* PRODUCT GRID */}
         <section className="product-section">
           {isLoading && (
-            <p style={{ textAlign: "center", fontSize: "18px", marginTop: "40px" }}>
-              ⏳ Đang tải dữ liệu từ máy chủ...
-            </p>
+            <div style={{ textAlign: "center", padding: "60px 0" }}>
+              <div style={{ fontSize: "40px", marginBottom: "12px" }}>⏳</div>
+              <p style={{ color: "var(--color-text-muted)", fontSize: "16px" }}>
+                Loading products...
+              </p>
+            </div>
           )}
           {error && (
-            <p style={{ textAlign: "center", fontSize: "18px", marginTop: "40px", color: "red" }}>
-              ❌ {error}
-            </p>
+            <div style={{ textAlign: "center", padding: "60px 0" }}>
+              <div style={{ fontSize: "40px", marginBottom: "12px" }}>❌</div>
+              <p style={{ color: "var(--color-error)", fontSize: "16px" }}>
+                {error}
+              </p>
+            </div>
           )}
 
           {!isLoading && !error && filteredProducts.length === 0 ? (
-            <p style={{ textAlign: "center", fontSize: "18px", marginTop: "40px", color: "#666" }}>
-              Không tìm thấy sản phẩm nào phù hợp.
-            </p>
+            <div style={{ textAlign: "center", padding: "60px 0" }}>
+              <div style={{ fontSize: "48px", marginBottom: "12px" }}>🔍</div>
+              <p style={{ color: "var(--color-text-muted)", fontSize: "16px" }}>
+                No products found matching your criteria.
+              </p>
+            </div>
           ) : (
             <>
               <div className="product-grid">
                 {currentProducts.map((product) => (
-                  <ProductCard key={product.id || product.frameId} product={product} />
+                  <ProductCard
+                    key={product.id || product.frameId}
+                    product={product}
+                  />
                 ))}
               </div>
 
@@ -255,7 +425,7 @@ export default function MainPage() {
                     disabled={currentPage === 1}
                     style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
                   >
-                    Trước
+                    ← Prev
                   </button>
                   {[...Array(totalPages)].map((_, index) => (
                     <button
@@ -272,7 +442,7 @@ export default function MainPage() {
                     disabled={currentPage === totalPages}
                     style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
                   >
-                    Sau
+                    Next →
                   </button>
                 </div>
               )}

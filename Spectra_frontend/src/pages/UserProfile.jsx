@@ -37,6 +37,16 @@ export default function UserProfile() {
   const [complaints, setComplaints] = useState([]);
   const [complaintsLoading, setComplaintsLoading] = useState(false);
 
+  // Change password state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   // State lưu lỗi theo khu vực
   const [validationErrors, setValidationErrors] = useState({
     right: [],
@@ -161,6 +171,65 @@ export default function UserProfile() {
       }
     } catch (err) {
       alert("Lỗi khi cập nhật");
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (!passwordForm.currentPassword) {
+      setPasswordError("Vui lòng nhập mật khẩu hiện tại");
+      return;
+    }
+    if (!passwordForm.newPassword) {
+      setPasswordError("Vui lòng nhập mật khẩu mới");
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError("Mật khẩu mới phải có ít nhất 6 ký tự");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("Mật khẩu xác nhận không khớp");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const res = await fetch(
+        "https://myspectra.runasp.net/api/Auth/change-password",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            currentPassword: passwordForm.currentPassword,
+            newPassword: passwordForm.newPassword,
+          }),
+        },
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setPasswordSuccess(data.message || "Đổi mật khẩu thành công!");
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        setPasswordError(
+          data.message ||
+            "Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại.",
+        );
+      }
+    } catch (err) {
+      setPasswordError("Lỗi kết nối. Vui lòng thử lại.");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -301,6 +370,20 @@ export default function UserProfile() {
           }}
         >
           Khiếu nại của tôi
+        </button>
+        <button
+          onClick={() => setActiveTab("password")}
+          style={{
+            padding: "10px 20px",
+            fontWeight: "bold",
+            background: activeTab === "password" ? "#000" : "#f3f4f6",
+            color: activeTab === "password" ? "#fff" : "#000",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Đổi mật khẩu
         </button>
       </div>
 
@@ -1171,6 +1254,164 @@ export default function UserProfile() {
               );
             })
           )}
+        </div>
+      )}
+
+      {activeTab === "password" && (
+        <div
+          style={{
+            background: "#f9fafb",
+            padding: "20px",
+            borderRadius: "8px",
+            maxWidth: "500px",
+          }}
+        >
+          <h3 style={{ marginTop: 0, marginBottom: "20px" }}>Đổi mật khẩu</h3>
+
+          <form onSubmit={handleChangePassword}>
+            <div style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Mật khẩu hiện tại
+              </label>
+              <input
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(e) =>
+                  setPasswordForm({
+                    ...passwordForm,
+                    currentPassword: e.target.value,
+                  })
+                }
+                placeholder="Nhập mật khẩu hiện tại"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Mật khẩu mới
+              </label>
+              <input
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(e) =>
+                  setPasswordForm({
+                    ...passwordForm,
+                    newPassword: e.target.value,
+                  })
+                }
+                placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Xác nhận mật khẩu mới
+              </label>
+              <input
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) =>
+                  setPasswordForm({
+                    ...passwordForm,
+                    confirmPassword: e.target.value,
+                  })
+                }
+                placeholder="Nhập lại mật khẩu mới"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {passwordError && (
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "#fee2e2",
+                  color: "#dc2626",
+                  borderRadius: "6px",
+                  marginBottom: "20px",
+                  fontSize: "14px",
+                }}
+              >
+                {passwordError}
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div
+                style={{
+                  padding: "12px",
+                  backgroundColor: "#d1fae5",
+                  color: "#059669",
+                  borderRadius: "6px",
+                  marginBottom: "20px",
+                  fontSize: "14px",
+                }}
+              >
+                {passwordSuccess}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isChangingPassword}
+              style={{
+                padding: "12px 24px",
+                backgroundColor: isChangingPassword ? "#9ca3af" : "#111827",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                fontWeight: "bold",
+                fontSize: "14px",
+                cursor: isChangingPassword ? "not-allowed" : "pointer",
+              }}
+            >
+              {isChangingPassword ? "Đang xử lý..." : "Đổi mật khẩu"}
+            </button>
+          </form>
         </div>
       )}
     </div>

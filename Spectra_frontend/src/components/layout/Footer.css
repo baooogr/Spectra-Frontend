@@ -1,52 +1,53 @@
+/* ===== SPECTRA FOOTER — Dark & Sophisticated ===== */
 .footer {
-  background-color: #f9f9f9;
-  padding: 60px 40px 20px;
-  font-family: sans-serif;
-  color: #333;
-  border-top: 1px solid #eaeaea;
-  margin-top: 60px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  padding: 64px 48px 24px;
+  color: #c8ccd8;
+  margin-top: 0;
+  border-top: none;
 }
 
 .footer-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-bottom: 40px;
-  gap: 30px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
+  gap: 40px;
   max-width: 1200px;
-  margin: 0 auto 40px auto;
+  margin: 0 auto 48px;
 }
 
 .footer-col {
-  flex: 1;
-}
-
-.footer-col.about {
-  min-width: 220px;
-}
-
-.footer-col.links {
-  min-width: 150px;
-}
-
-.footer-col.newsletter {
-  min-width: 280px;
+  min-width: 0;
 }
 
 .footer-heading {
-  font-size: 16px;
-  margin-bottom: 16px;
-  font-weight: bold;
+  font-family: var(--font-display);
+  font-size: 18px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #ffffff;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.footer-heading::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 32px;
+  height: 2px;
+  background: var(--color-primary-light);
+  border-radius: 2px;
 }
 
 .footer-col.about .footer-heading {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .footer-text {
   font-size: 14px;
-  line-height: 1.6;
-  color: #666;
+  line-height: 1.7;
+  color: #8e95a9;
   margin-top: 0;
 }
 
@@ -54,58 +55,128 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  font-size: 14px;
-  line-height: 2.2;
+}
+
+.footer-list li {
+  margin-bottom: 10px;
 }
 
 .footer-link {
   text-decoration: none;
-  color: #555;
+  color: #8e95a9;
+  font-size: 14px;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
+.footer-link:hover {
+  color: var(--color-primary-light);
+  transform: translateX(4px);
+}
+
+.footer-link::before {
+  content: "→";
+  font-size: 11px;
+  opacity: 0;
+  transition: var(--transition-fast);
+  margin-left: -14px;
+}
+
+.footer-link:hover::before {
+  opacity: 1;
+  margin-left: 0;
+}
+
+/* Newsletter */
 .newsletter-form {
   display: flex;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .newsletter-input {
-  padding: 12px;
+  padding: 12px 18px;
   flex: 1;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
+  border: none;
   outline: none;
   font-size: 14px;
+  background: transparent;
+  color: #fff;
+}
+
+.newsletter-input::placeholder {
+  color: #6b7280;
 }
 
 .newsletter-btn {
-  padding: 12px 20px;
-  background-color: #000;
+  padding: 12px 24px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-light) 100%
+  );
   color: #fff;
   border: none;
-  border-radius: 0 4px 4px 0;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: var(--transition-base);
 }
 
+.newsletter-btn:hover {
+  filter: brightness(1.15);
+}
+
+/* Bottom bar */
 .footer-bottom {
-  border-top: 1px solid #eaeaea;
-  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  font-size: 14px;
-  color: #888;
+  gap: 16px;
+  font-size: 13px;
+  color: #5a6178;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .footer-socials {
   display: flex;
-  gap: 20px;
+  gap: 16px;
 }
 
 .social-link {
   cursor: pointer;
-  font-weight: bold;
-  color: #888;
+  font-weight: 600;
+  color: #8e95a9;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: var(--transition-fast);
+  font-size: 12px;
+}
+
+.social-link:hover {
+  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .footer {
+    padding: 40px 20px 20px;
+  }
 }

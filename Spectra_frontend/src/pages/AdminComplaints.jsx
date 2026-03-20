@@ -351,18 +351,76 @@ export default function AdminComplaints() {
                         {reason.length > 60
                           ? reason.slice(0, 60) + "..."
                           : reason}
-                        {mediaUrl && (
-                          <div style={{ marginTop: "6px" }}>
-                            <a
-                              href={mediaUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ fontSize: "12px", color: "#2563eb" }}
-                            >
-                              📎 Xem bằng chứng
-                            </a>
-                          </div>
-                        )}
+                        {mediaUrl &&
+                          (() => {
+                            const urls = mediaUrl
+                              .split(",")
+                              .map((u) => u.trim())
+                              .filter(Boolean);
+                            const imageUrls = urls.filter(
+                              (u) =>
+                                /\.(jpg|jpeg|png|gif|webp)/i.test(u) ||
+                                u.includes("cloudinary"),
+                            );
+                            const hasImages = imageUrls.length > 0;
+                            return (
+                              <div style={{ marginTop: "6px" }}>
+                                {hasImages ? (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: "4px",
+                                      flexWrap: "wrap",
+                                    }}
+                                  >
+                                    {imageUrls.slice(0, 3).map((url, idx) => (
+                                      <a
+                                        key={idx}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <img
+                                          src={url}
+                                          alt={`" ${idx + 1}`}
+                                          style={{
+                                            width: "40px",
+                                            height: "40px",
+                                            objectFit: "cover",
+                                            borderRadius: "4px",
+                                            border: "1px solid #e5e7eb",
+                                          }}
+                                        />
+                                      </a>
+                                    ))}
+                                    {imageUrls.length > 3 && (
+                                      <span
+                                        style={{
+                                          fontSize: "11px",
+                                          color: "#6b7280",
+                                          alignSelf: "center",
+                                        }}
+                                      >
+                                        +{imageUrls.length - 3}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <a
+                                    href={urls[0]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "#2563eb",
+                                    }}
+                                  >
+                                    📎 Xem bằng chứng
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          })()}
                       </td>
                       <td>
                         {getStatusBadge(
@@ -566,21 +624,79 @@ export default function AdminComplaints() {
                   {(selectedComplaint.reason || "").length > 100 ? "..." : ""}
                 </p>
 
-                {(selectedComplaint.mediaUrl || selectedComplaint.MediaUrl) && (
-                  <p style={{ margin: "0 0 16px", fontSize: "13px" }}>
-                    <b>Bằng chứng:</b>{" "}
-                    <a
-                      href={
-                        selectedComplaint.mediaUrl || selectedComplaint.MediaUrl
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#2563eb" }}
-                    >
-                      Xem file đính kèm
-                    </a>
-                  </p>
-                )}
+                {(selectedComplaint.mediaUrl || selectedComplaint.MediaUrl) &&
+                  (() => {
+                    const rawUrl =
+                      selectedComplaint.mediaUrl || selectedComplaint.MediaUrl;
+                    const urls = rawUrl
+                      .split(",")
+                      .map((u) => u.trim())
+                      .filter(Boolean);
+                    const imageUrls = urls.filter(
+                      (u) =>
+                        /\.(jpg|jpeg|png|gif|webp)/i.test(u) ||
+                        u.includes("cloudinary"),
+                    );
+                    const otherUrls = urls.filter(
+                      (u) =>
+                        !(
+                          /\.(jpg|jpeg|png|gif|webp)/i.test(u) ||
+                          u.includes("cloudinary")
+                        ),
+                    );
+                    return (
+                      <div style={{ margin: "0 0 16px" }}>
+                        <b style={{ fontSize: "13px" }}>Bằng chứng:</b>
+                        {imageUrls.length > 0 && (
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              flexWrap: "wrap",
+                              marginTop: "8px",
+                            }}
+                          >
+                            {imageUrls.map((url, idx) => (
+                              <a
+                                key={idx}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <img
+                                  src={url}
+                                  alt={`Ảnh ${idx + 1}`}
+                                  style={{
+                                    width: "100px",
+                                    height: "100px",
+                                    objectFit: "cover",
+                                    borderRadius: "8px",
+                                    border: "1px solid #e5e7eb",
+                                  }}
+                                />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                        {otherUrls.map((url, idx) => (
+                          <p
+                            key={idx}
+                            style={{ margin: "4px 0", fontSize: "13px" }}
+                          >
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: "#2563eb" }}
+                            >
+                              Xem file đính kèm{" "}
+                              {otherUrls.length > 1 ? idx + 1 : ""}
+                            </a>
+                          </p>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
                 {/* Exchange: show exchange order detail if exists */}
                 {isExchange && (

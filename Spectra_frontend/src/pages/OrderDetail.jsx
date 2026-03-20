@@ -13,6 +13,8 @@ export default function OrderDetail() {
   const [error, setError] = useState("");
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [showNotReceivedInfo, setShowNotReceivedInfo] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   useEffect(() => {
     const token =
@@ -186,6 +188,40 @@ export default function OrderDetail() {
     }
   };
 
+  const handleCancelOrder = async () => {
+    const token =
+      user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+    if (!token) return;
+
+    setIsCancelling(true);
+    try {
+      const res = await fetch(
+        `https://myspectra.runasp.net/api/Orders/${id}/cancel`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (res.ok) {
+        setOrder((prev) => ({ ...prev, status: "cancelled" }));
+        setShowCancelConfirm(false);
+        alert("Đã huỷ đơn hàng thành công!");
+      } else {
+        const data = await res.json();
+        alert(data.message || "Không thể huỷ đơn hàng. Vui lòng thử lại.");
+      }
+    } catch {
+      alert("Lỗi kết nối. Vui lòng thử lại.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const isPending = (order?.status || "").toLowerCase() === "pending";
+
   return (
     <div
       style={{
@@ -237,8 +273,109 @@ export default function OrderDetail() {
               Mã đơn: <b style={{ color: "#111827" }}>#{order.orderId}</b>
             </p>
           </div>
-          {getStatusBadge(order.status)}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
+            }}
+          >
+            {getStatusBadge(order.status)}
+            {isPending && (
+              <button
+                onClick={() => setShowCancelConfirm(true)}
+                disabled={isCancelling}
+                style={{
+                  padding: "6px 16px",
+                  backgroundColor: "#fee2e2",
+                  color: "#dc2626",
+                  border: "1px solid #fca5a5",
+                  borderRadius: "20px",
+                  fontSize: "13px",
+                  fontWeight: "bold",
+                  cursor: isCancelling ? "not-allowed" : "pointer",
+                  opacity: isCancelling ? 0.6 : 1,
+                }}
+              >
+                {isCancelling ? "Đang huỷ..." : "Huỷ đơn hàng"}
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* ── XÁC NHẬN HUỶ ĐƠN HÀNG — hiển thị khi bấm nút huỷ ── */}
+        {showCancelConfirm && (
+          <div
+            style={{
+              backgroundColor: "#fef2f2",
+              border: "2px solid #dc2626",
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "20px",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                margin: "0 0 14px",
+                fontSize: "16px",
+                fontWeight: "bold",
+                color: "#991b1b",
+              }}
+            >
+              ⚠️ Bạn có chắc chắn muốn huỷ đơn hàng này?
+            </p>
+            <p
+              style={{ margin: "0 0 14px", fontSize: "14px", color: "#7f1d1d" }}
+            >
+              Sau khi huỷ, bạn sẽ cần đặt lại đơn hàng nếu muốn mua sản phẩm
+              này.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "12px",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                onClick={handleCancelOrder}
+                disabled={isCancelling}
+                style={{
+                  padding: "10px 28px",
+                  backgroundColor: "#dc2626",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  fontSize: "14px",
+                  cursor: isCancelling ? "not-allowed" : "pointer",
+                  opacity: isCancelling ? 0.6 : 1,
+                }}
+              >
+                {isCancelling ? "Đang xử lý..." : "Xác nhận huỷ"}
+              </button>
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                disabled={isCancelling}
+                style={{
+                  padding: "10px 28px",
+                  backgroundColor: "#f3f4f6",
+                  color: "#374151",
+                  border: "1px solid #d1d5db",
+                  borderRadius: "8px",
+                  fontWeight: "bold",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                Không, giữ đơn hàng
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── XÁC NHẬN NHẬN HÀNG — hiển thị khi đơn delivered và chưa confirm ── */}
         {isDelivered && !deliveryConfirmed && (

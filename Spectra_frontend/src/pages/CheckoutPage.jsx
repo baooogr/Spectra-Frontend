@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useCart } from "../context/CartContext";
+import { useCurrentUser, API_BASE_URL, ENDPOINTS, buildUrl } from "../api";
 import "./CheckoutPage.css";
 
 export default function CheckoutPage() {
@@ -13,39 +14,45 @@ export default function CheckoutPage() {
 
   const currentUser = user || JSON.parse(localStorage.getItem("user")) || {};
 
+  // Use cached user data
+  const { user: apiUser } = useCurrentUser();
+
   const [form, setForm] = useState({
     fullName: currentUser.fullName || "",
-    phone: "", // Sẽ được tự động điền từ API
+    phone: "",
     email: currentUser.email || "",
-    address: "", // Sẽ được tự động điền từ API
+    address: "",
     note: "",
     paymentMethod: "COD",
     shippingMethod: "standard",
   });
 
-  // ⚡ GỌI API LẤY THÔNG TIN USER (GỒM CẢ SĐT VÀ ĐỊA CHỈ)
+  const [phoneManualMode, setPhoneManualMode] = useState(false);
+
+  // ⚡ Sync form with cached user data when available
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      const token = currentUser.token;
-      if (!token) return;
-      try {
-        const res = await fetch("https://myspectra.runasp.net/api/Users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setForm((prev) => ({
-            ...prev,
-            phone: data.phone || "",
-            address: data.address || "",
-            fullName: data.fullName || prev.fullName,
-          }));
-        }
-      } catch (err) {
-        console.error("Lỗi tải thông tin cá nhân:", err);
+    if (apiUser) {
+      setForm((prev) => ({
+        ...prev,
+        phone: apiUser.phone || prev.phone,
+        address: apiUser.address || prev.address,
+        fullName: apiUser.fullName || prev.fullName,
+      }));
+      if (!apiUser.phone) {
+        setPhoneManualMode(true);
       }
-    };
-    fetchUserProfile();
+    }
+  }, [apiUser]);
+
+  // Fallback: if phone is still empty after 8s, let the user type it in
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setForm((prev) => {
+        if (!prev.phone) setPhoneManualMode(true);
+        return prev;
+      });
+    }, 8000);
+    return () => clearTimeout(timer);
   }, []);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -293,21 +300,52 @@ export default function CheckoutPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Số điện thoại (Cố định)</label>
+                <label>
+                  {phoneManualMode
+                    ? "Số điện thoại"
+                    : "Số điện thoại (Cố định)"}
+                </label>
                 <input
                   type="tel"
                   name="phone"
                   value={form.phone}
-                  readOnly
-                  style={{
-                    backgroundColor: "#e5e7eb",
-                    color: "#6b7280",
-                    cursor: "not-allowed",
-                    outline: "none",
-                  }}
-                  title="Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
-                  placeholder={form.phone ? "" : "Đang tải SĐT..."}
+                  onChange={phoneManualMode ? onChange : undefined}
+                  readOnly={!phoneManualMode}
+                  style={
+                    phoneManualMode
+                      ? {}
+                      : {
+                          backgroundColor: "#e5e7eb",
+                          color: "#6b7280",
+                          cursor: "not-allowed",
+                          outline: "none",
+                        }
+                  }
+                  required
+                  title={
+                    phoneManualMode
+                      ? "Nhập số điện thoại của bạn"
+                      : "Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
+                  }
+                  placeholder={
+                    phoneManualMode
+                      ? "Nhập số điện thoại..."
+                      : form.phone
+                        ? ""
+                        : "Đang tải SĐT..."
+                  }
                 />
+                {phoneManualMode && !form.phone && (
+                  <small
+                    style={{
+                      color: "#d97706",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
+                    Không tìm thấy SĐT trong hồ sơ. Vui lòng nhập thủ công.
+                  </small>
+                )}
               </div>
             </div>
 

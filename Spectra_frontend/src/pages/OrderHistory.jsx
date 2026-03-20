@@ -21,12 +21,14 @@ export default function OrderHistory() {
       currency: "USD",
       minimumFractionDigits: 0,
     }).format(n);
-    const vnd = new Intl.NumberFormat("vi-VN").format(n * EXCHANGE_RATE) + " VND";
+    const vnd =
+      new Intl.NumberFormat("vi-VN").format(n * EXCHANGE_RATE) + " VND";
     return `${usd} (${vnd})`;
   };
 
   useEffect(() => {
-    const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+    const token =
+      user?.token || JSON.parse(localStorage.getItem("user"))?.token;
     if (!token) {
       navigate("/login");
       return;
@@ -38,13 +40,16 @@ export default function OrderHistory() {
       try {
         // Gọi song song cả 2 API
         const [ordersRes, preordersRes] = await Promise.all([
-          fetch("https://myspectra.runasp.net/api/Orders/my?page=1&pageSize=100", {
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-              Authorization: `Bearer ${token}`,
+          fetch(
+            "https://myspectra.runasp.net/api/Orders/my?page=1&pageSize=100",
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: `Bearer ${token}`,
+              },
             },
-          }),
+          ),
           fetch("https://myspectra.runasp.net/api/Preorders/my", {
             headers: {
               "Content-Type": "application/json",
@@ -56,9 +61,13 @@ export default function OrderHistory() {
 
         if (ordersRes.ok) {
           const data = await ordersRes.json();
-          setOrders(data.items || data || []);
-        } else if (ordersRes.status !== 404) {
-          console.warn("Orders API error:", ordersRes.status);
+          console.log("Orders API response:", data);
+          const items = data.items || (Array.isArray(data) ? data : []);
+          console.log("Parsed orders:", items);
+          setOrders(items);
+        } else {
+          const errorText = await ordersRes.text().catch(() => "");
+          console.warn("Orders API error:", ordersRes.status, errorText);
         }
 
         if (preordersRes.ok) {
@@ -81,15 +90,18 @@ export default function OrderHistory() {
     const s = status?.toLowerCase();
     if (s === "pending") return { text: "Chờ xác nhận", color: "#f59e0b" };
     if (s === "processing") return { text: "Đang xử lý", color: "#3b82f6" };
-    if (s === "shipped" || s === "delivering") return { text: "Đang giao hàng", color: "#8b5cf6" };
-    if (s === "delivered" || s === "completed") return { text: "Thành công", color: "#10b981" };
+    if (s === "shipped" || s === "delivering")
+      return { text: "Đang giao hàng", color: "#8b5cf6" };
+    if (s === "delivered" || s === "completed")
+      return { text: "Thành công", color: "#10b981" };
     if (s === "cancelled") return { text: "Đã huỷ", color: "#ef4444" };
-    if (s === "awaiting_payment" || s === "awaitingpayment") return { text: "Chờ thanh toán", color: "#f97316" };
+    if (s === "awaiting_payment" || s === "awaitingpayment")
+      return { text: "Chờ thanh toán", color: "#f97316" };
     if (s === "confirmed") return { text: "Đã xác nhận", color: "#059669" };
-    if (s === "paid")       return { text: "Đã thanh toán", color: "#059669" };
-    if (s === "converted")  return { text: "Đang xử lý",    color: "#3b82f6" };
+    if (s === "paid") return { text: "Đã thanh toán", color: "#059669" };
+    if (s === "converted") return { text: "Đang xử lý", color: "#3b82f6" };
     return { text: status || "Không rõ", color: "gray" };
-      };
+  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -98,10 +110,14 @@ export default function OrderHistory() {
 
   // Sắp xếp theo ngày mới nhất
   const sortedOrders = [...orders].sort(
-    (a, b) => new Date(b.orderDate || b.createdAt || 0) - new Date(a.orderDate || a.createdAt || 0)
+    (a, b) =>
+      new Date(b.orderDate || b.createdAt || 0) -
+      new Date(a.orderDate || a.createdAt || 0),
   );
   const sortedPreorders = [...preorders].sort(
-    (a, b) => new Date(b.createdAt || b.orderDate || 0) - new Date(a.createdAt || a.orderDate || 0)
+    (a, b) =>
+      new Date(b.createdAt || b.orderDate || 0) -
+      new Date(a.createdAt || a.orderDate || 0),
   );
 
   const tabStyle = (tab) => ({
@@ -113,18 +129,23 @@ export default function OrderHistory() {
     fontSize: "15px",
     backgroundColor: activeTab === tab ? "white" : "#f3f4f6",
     color: activeTab === tab ? "#111827" : "#6b7280",
-    borderBottom: activeTab === tab ? "3px solid #2563eb" : "3px solid transparent",
+    borderBottom:
+      activeTab === tab ? "3px solid #2563eb" : "3px solid transparent",
     transition: "all 0.2s",
   });
 
   // ===== RENDER CARD ĐƠN THƯỜNG (GIỮ NGUYÊN - KHÔNG ĐỘNG VÀO) =====
   const OrderCard = ({ order }) => {
     const statusObj = translateStatus(order.status);
-    const itemsList = order.orderDetails || order.orderItems || order.items || [];
+    const itemsList =
+      order.orderDetails || order.orderItems || order.items || [];
     const totalQty =
       order.totalQuantity ||
       order.totalItems ||
-      itemsList.reduce((sum, item) => sum + (item.quantity || item.qty || 1), 0);
+      itemsList.reduce(
+        (sum, item) => sum + (item.quantity || item.qty || 1),
+        0,
+      );
 
     return (
       <div
@@ -149,7 +170,13 @@ export default function OrderHistory() {
           }}
         >
           <div>
-            <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#6b7280" }}>
+            <p
+              style={{
+                margin: "0 0 4px 0",
+                fontSize: "13px",
+                color: "#6b7280",
+              }}
+            >
               <b>Mã đơn:</b> #{order.id || order.orderId}
             </p>
             <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px" }}>
@@ -171,7 +198,15 @@ export default function OrderHistory() {
           </span>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
           <div>
             <p style={{ margin: "0 0 4px 0" }}>
               Tổng tiền:{" "}
@@ -205,36 +240,40 @@ export default function OrderHistory() {
 
   // ===== RENDER CARD ĐƠN PRE-ORDER (ĐÃ SỬA) =====
   const PreorderCard = ({ order }) => {
-  // Nếu preorder đã convert → tìm Order liên kết để lấy status thật
-  const linkedOrder = order.status?.toLowerCase() === "converted"
-    ? orders.find(o => o.convertedFromPreorderId === (order.id || order.preorderId))
-    : null;
-  const displayStatus = linkedOrder ? linkedOrder.status : order.status;
-  const statusObj = translateStatus(displayStatus);
+    // Nếu preorder đã convert → tìm Order liên kết để lấy status thật
+    const linkedOrder =
+      order.status?.toLowerCase() === "converted"
+        ? orders.find(
+            (o) => o.convertedFromPreorderId === (order.id || order.preorderId),
+          )
+        : null;
+    const displayStatus = linkedOrder ? linkedOrder.status : order.status;
+    const statusObj = translateStatus(displayStatus);
 
     // Lấy danh sách items — hỗ trợ nhiều field name BE có thể trả về
     const itemsList = (
-      order.preorderItems  ||
+      order.preorderItems ||
       order.preorderDetails ||
-      order.orderItems     ||
-      order.items          ||
+      order.orderItems ||
+      order.items ||
       []
     ).filter(Boolean);
 
     const totalQty = itemsList.reduce(
       (sum, item) => sum + (item.quantity || item.qty || 1),
-      0
+      0,
     );
 
     // Tổng tiền: ưu tiên từ data, fallback tính từ items
     const [finalAmount, setFinalAmount] = useState(
       order.totalAmount ||
-      order.totalPrice  ||
-      itemsList.reduce((sum, item) => {
-        const price = item.unitPrice || item.orderPrice || item.preorderPrice || 0;
-        const qty   = item.quantity  || item.qty        || 1;
-        return sum + price * qty;
-      }, 0)
+        order.totalPrice ||
+        itemsList.reduce((sum, item) => {
+          const price =
+            item.unitPrice || item.orderPrice || item.preorderPrice || 0;
+          const qty = item.quantity || item.qty || 1;
+          return sum + price * qty;
+        }, 0),
     );
 
     // Nếu vẫn = 0 thì gọi Payment API để lấy số tiền đã thanh toán (fallback)
@@ -242,11 +281,12 @@ export default function OrderHistory() {
       if (finalAmount > 0) return;
       const fetchPaymentAmount = async () => {
         try {
-          const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
+          const token =
+            user?.token || JSON.parse(localStorage.getItem("user"))?.token;
           const preId = order.id || order.preorderId;
           const res = await fetch(
             `https://myspectra.runasp.net/api/Payments/preorder/${preId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
+            { headers: { Authorization: `Bearer ${token}` } },
           );
           if (res.ok) {
             const data = await res.json();
@@ -287,7 +327,7 @@ export default function OrderHistory() {
               letterSpacing: "0.5px",
             }}
           >
-             PRE-ORDER
+            PRE-ORDER
           </span>
         </div>
 
@@ -303,14 +343,33 @@ export default function OrderHistory() {
           }}
         >
           <div>
-            <p style={{ margin: "0 0 4px 0", fontSize: "13px", color: "#1e40af" }}>
+            <p
+              style={{
+                margin: "0 0 4px 0",
+                fontSize: "13px",
+                color: "#1e40af",
+              }}
+            >
               <b>Mã đặt trước:</b> #{order.id || order.preorderId}
             </p>
-            <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px", color: "#1e3a8a" }}>
+            <p
+              style={{
+                margin: 0,
+                fontWeight: "bold",
+                fontSize: "14px",
+                color: "#1e3a8a",
+              }}
+            >
               Ngày đặt: {formatDate(order.createdAt || order.orderDate)}
             </p>
             {order.expectedDate && (
-              <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#1d4ed8" }}>
+              <p
+                style={{
+                  margin: "4px 0 0 0",
+                  fontSize: "13px",
+                  color: "#1d4ed8",
+                }}
+              >
                 📅 Dự kiến giao: {formatDate(order.expectedDate)}
               </p>
             )}
@@ -340,19 +399,26 @@ export default function OrderHistory() {
             }}
           >
             {itemsList.slice(0, 3).map((item, idx) => {
-              const frameName = item.frame?.frameName || item.frameName || "Gọng kính";
-              const qty       = item.quantity || item.qty || 1;
+              const frameName =
+                item.frame?.frameName || item.frameName || "Gọng kính";
+              const qty = item.quantity || item.qty || 1;
               return (
                 <p
                   key={item.preorderItemId || item.orderItemId || idx}
-                  style={{ margin: "3px 0", fontSize: "14px", color: "#1e3a8a" }}
+                  style={{
+                    margin: "3px 0",
+                    fontSize: "14px",
+                    color: "#1e3a8a",
+                  }}
                 >
                   • {frameName} <span style={{ color: "#1e40af" }}>x{qty}</span>
                 </p>
               );
             })}
             {itemsList.length > 3 && (
-              <p style={{ margin: "3px 0", fontSize: "13px", color: "#6b7280" }}>
+              <p
+                style={{ margin: "3px 0", fontSize: "13px", color: "#6b7280" }}
+              >
                 ...và {itemsList.length - 3} sản phẩm khác
               </p>
             )}
@@ -410,18 +476,32 @@ export default function OrderHistory() {
     <div style={{ maxWidth: "800px", margin: "40px auto", padding: "20px" }}>
       <h2 style={{ marginBottom: "6px" }}>Lịch Sử Đơn Hàng</h2>
       <p style={{ color: "#6b7280", marginBottom: "24px", fontSize: "14px" }}>
-        Tổng: <b>{totalCount}</b> đơn hàng ({orders.length} thường + {preorders.length} đặt trước)
+        Tổng: <b>{totalCount}</b> đơn hàng ({orders.length} thường +{" "}
+        {preorders.length} đặt trước)
       </p>
 
       {/* TABS */}
-      <div style={{ display: "flex", gap: "4px", marginBottom: "0", borderBottom: "1px solid #e5e7eb" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "4px",
+          marginBottom: "0",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
         <button style={tabStyle("all")} onClick={() => setActiveTab("all")}>
           Tất cả ({totalCount})
         </button>
-        <button style={tabStyle("orders")} onClick={() => setActiveTab("orders")}>
+        <button
+          style={tabStyle("orders")}
+          onClick={() => setActiveTab("orders")}
+        >
           Đơn thường ({orders.length})
         </button>
-        <button style={tabStyle("preorders")} onClick={() => setActiveTab("preorders")}>
+        <button
+          style={tabStyle("preorders")}
+          onClick={() => setActiveTab("preorders")}
+        >
           Đặt trước ({preorders.length})
         </button>
       </div>
@@ -437,7 +517,9 @@ export default function OrderHistory() {
         }}
       >
         {isLoading && (
-          <p style={{ textAlign: "center", color: "#6b7280", padding: "40px 0" }}>
+          <p
+            style={{ textAlign: "center", color: "#6b7280", padding: "40px 0" }}
+          >
             ⏳ Đang tải đơn hàng...
           </p>
         )}
@@ -484,13 +566,21 @@ export default function OrderHistory() {
             {activeTab === "all" && (
               <>
                 {sortedPreorders.map((order) => (
-                  <PreorderCard key={`pre-${order.id || order.preorderId}`} order={order} />
+                  <PreorderCard
+                    key={`pre-${order.id || order.preorderId}`}
+                    order={order}
+                  />
                 ))}
                 {sortedOrders.map((order) => (
-                  <OrderCard key={`ord-${order.id || order.orderId}`} order={order} />
+                  <OrderCard
+                    key={`ord-${order.id || order.orderId}`}
+                    order={order}
+                  />
                 ))}
                 {totalCount === 0 && !error && (
-                  <p style={{ textAlign: "center", color: "#6b7280" }}>Chưa có đơn hàng nào.</p>
+                  <p style={{ textAlign: "center", color: "#6b7280" }}>
+                    Chưa có đơn hàng nào.
+                  </p>
                 )}
               </>
             )}
@@ -499,7 +589,13 @@ export default function OrderHistory() {
             {activeTab === "orders" && (
               <>
                 {sortedOrders.length === 0 ? (
-                  <p style={{ textAlign: "center", color: "#6b7280", padding: "30px 0" }}>
+                  <p
+                    style={{
+                      textAlign: "center",
+                      color: "#6b7280",
+                      padding: "30px 0",
+                    }}
+                  >
                     Chưa có đơn hàng thường nào.
                   </p>
                 ) : (
@@ -514,12 +610,21 @@ export default function OrderHistory() {
             {activeTab === "preorders" && (
               <>
                 {sortedPreorders.length === 0 ? (
-                  <p style={{ textAlign: "center", color: "#6b7280", padding: "30px 0" }}>
+                  <p
+                    style={{
+                      textAlign: "center",
+                      color: "#6b7280",
+                      padding: "30px 0",
+                    }}
+                  >
                     Chưa có đơn đặt trước nào.
                   </p>
                 ) : (
                   sortedPreorders.map((order) => (
-                    <PreorderCard key={order.id || order.preorderId} order={order} />
+                    <PreorderCard
+                      key={order.id || order.preorderId}
+                      order={order}
+                    />
                   ))
                 )}
               </>

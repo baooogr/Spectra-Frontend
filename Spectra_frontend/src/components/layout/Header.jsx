@@ -3,48 +3,31 @@ import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../../context/UserContext";
 import "./Header.css";
 import logo from "../../assets/logo.png";
+import { useCurrentUser } from "../../api";
 
 export default function Header() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   const { user, logout } = useContext(UserContext);
   const currentUser = user || JSON.parse(localStorage.getItem("user"));
 
-  // Cơ chế tự động kiểm tra quyền ngầm
+  // Use cached user data for role checking
+  const { user: apiUser } = useCurrentUser();
+
+  // Determine admin status from cached API data or stored user
+  const isAdmin = (() => {
+    const role = (apiUser?.role || currentUser?.role || "").toLowerCase();
+    return role === "manager" || role === "admin";
+  })();
+
+  // Update localStorage if API returns newer role data
   useEffect(() => {
-    if (!currentUser || !currentUser.token) {
-      setIsAdmin(false);
-      return;
+    if (apiUser?.role && currentUser && apiUser.role !== currentUser.role) {
+      const updated = { ...currentUser, role: apiUser.role };
+      localStorage.setItem("user", JSON.stringify(updated));
     }
-
-    const currentRole = (currentUser.role || "").toLowerCase();
-
-    // Nếu đã có sẵn chữ manager -> Hiện nút luôn
-    if (currentRole === "manager" || currentRole === "admin") {
-      setIsAdmin(true);
-    }
-    // Nếu chưa có -> Gọi API xin quyền để check lại
-    else if (!currentUser.role) {
-      fetch("https://myspectra.runasp.net/api/Users/me", {
-        headers: { Authorization: `Bearer ${currentUser.token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          const fetchedRole = (data.role || "").toLowerCase();
-          if (fetchedRole === "manager" || fetchedRole === "admin") {
-            setIsAdmin(true);
-            // Cập nhật lại vào máy
-            const updated = { ...currentUser, role: data.role };
-            localStorage.setItem("user", JSON.stringify(updated));
-          }
-        })
-        .catch(() => setIsAdmin(false));
-    } else {
-      setIsAdmin(false);
-    }
-  }, [currentUser]);
+  }, [apiUser, currentUser]);
 
   const handleSearch = (e) => {
     if (e.key === "Enter") {
@@ -64,6 +47,10 @@ export default function Header() {
 
   return (
     <header className="header">
+      <div className="header-promo">
+        Starting at <span>$6.95</span> — Premium eyewear, unbeatable prices.
+        Free shipping on orders over $50!
+      </div>
       <div className="header-top">
         <Link to="/" className="header-logo">
           <img src={logo} alt="Spectra Logo" />
@@ -74,7 +61,7 @@ export default function Header() {
             <span className="search-icon"></span>
             <input
               type="text"
-              placeholder="Tìm kiếm kính..."
+              placeholder="Search frames, sunglasses, lenses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleSearch}
@@ -83,47 +70,33 @@ export default function Header() {
         </div>
 
         <div className="header-actions">
-          {/* NÚT ADMIN: CHỈ XUẤT HIỆN NẾU LÀ MANAGER HOẶC ADMIN */}
           {isAdmin && (
-            <Link
-              to="/admin"
-              className="header-action-btn"
-              style={{ color: "#10b981" }}
-            >
-              <span className="icon"></span>
-              <span className="text" style={{ fontWeight: "bold" }}>
-                Admin
-              </span>
+            <Link to="/admin" className="header-action-btn">
+              <span className="icon">⚙️</span>
+              <span className="text">Admin</span>
             </Link>
           )}
 
           <Link to="/orders" className="header-action-btn">
-            <span className="icon"></span>
+            <span className="icon">📦</span>
             <span className="text">Orders</span>
           </Link>
 
           <Link to="/cart" className="header-action-btn">
-            <span className="icon"></span>
+            <span className="icon">🛒</span>
             <span className="text">Cart</span>
           </Link>
 
           {currentUser ? (
-            <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+            <>
               <Link
                 to="/profile"
                 className="header-action-btn"
                 title="Đi đến Hồ sơ cá nhân"
               >
-                <span className="icon"></span>
-                <span
-                  className="text"
-                  style={{
-                    textTransform: "capitalize",
-                    fontWeight: "bold",
-                    color: "#000",
-                  }}
-                >
-                  {currentUser.fullName || currentUser.userName || "Hồ sơ"}
+                <span className="icon">👤</span>
+                <span className="text">
+                  {currentUser.fullName || currentUser.userName || "Profile"}
                 </span>
               </Link>
 
@@ -133,31 +106,37 @@ export default function Header() {
                 style={{
                   background: "none",
                   border: "none",
-                  cursor: "pointer",
-                  padding: 0,
+                  padding: "8px 14px",
                 }}
                 title="Đăng xuất khỏi hệ thống"
               >
-                <span className="icon" style={{ color: "#ef4444" }}></span>
-                <span className="text" style={{ color: "#ef4444" }}>
-                  Đăng xuất
-                </span>
+                <span className="icon">🚪</span>
+                <span className="text">Logout</span>
               </button>
-            </div>
+            </>
           ) : (
             <Link to="/login" className="header-action-btn">
-              <span className="icon"></span>
-              <span className="text">Login</span>
+              <span className="icon">👤</span>
+              <span className="text">Sign In</span>
             </Link>
           )}
         </div>
       </div>
 
-      <div className="header-nav">
+      <nav className="header-nav">
         <Link to="/" className="header-nav-link">
           Home
         </Link>
-      </div>
+        <Link to="/?category=eyeglasses" className="header-nav-link">
+          Eyeglasses
+        </Link>
+        <Link to="/?category=sunglasses" className="header-nav-link">
+          Sunglasses
+        </Link>
+        <Link to="/orders" className="header-nav-link">
+          My Orders
+        </Link>
+      </nav>
     </header>
   );
 }

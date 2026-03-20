@@ -26,6 +26,8 @@ import CheckoutSuccess from "../pages/CheckoutSuccess";
 import ProductDetail from "../components/product/ProductDetail";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 
 import AdminUsers from "../pages/AdminUsers";
 import AdminLensFeatures from "../pages/AdminLensFeatures";
@@ -100,6 +102,8 @@ export default function AppRouter() {
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/profile" element={<UserProfile />} />
         </Route>
       </Routes>
