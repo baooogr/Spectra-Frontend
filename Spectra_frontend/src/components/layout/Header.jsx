@@ -48,8 +48,8 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-promo">
-        Starting at <span>$6.95</span> — Premium eyewear, unbeatable prices.
-        Free shipping on orders over $50!
+        Starting at <span>$100</span> — Premium eyewear, unbeatable prices. Free
+        shipping on orders over $50!
       </div>
       <div className="header-top">
         <Link to="/" className="header-logo">
