@@ -1,143 +1,114 @@
 
-.profile-container { max-width: 600px; margin: 40px auto; padding: 30px; background-color: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.profile-title { text-align: center; margin-bottom: 20px; }
+/* ===== SPECTRA USER PROFILE ===== */
+.profile-container {
+  max-width: 620px;
+  margin: 48px auto;
+  padding: 36px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  border: var(--border-thick);
+  animation: fadeInUp 0.5s ease-out;
+}
+.profile-title {
+  text-align: center;
+  margin-bottom: 24px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
 
-.profile-msg { padding: 10px; margin-bottom: 20px; border-radius: 6px; text-align: center; }
-.profile-msg.success { background-color: #dcfce7; color: #15803d; }
-.profile-msg.error { background-color: #fee2e2; color: #b91c1c; }
+.profile-msg {
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: 800;
+}
+.profile-msg.success {
+  background-color: #ecfdf5;
+  color: #059669;
+  border: var(--border-thin);
+  border-color: #059669;
+}
+.profile-msg.error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: var(--border-thin);
+  border-color: #dc2626;
+}
 
-.profile-form { display: flex; flex-direction: column; gap: 15px; }
-.form-label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #4b5563; }
-.form-input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #d1d5db; box-sizing: border-box; }
-.form-input:disabled { background-color: #f3f4f6; cursor: not-allowed; }
-
-.profile-info-row { display: flex; justify-content: space-between; margin-top: 10px; }
-.profile-info-text { margin: 0; color: #6b7280; font-size: 14px; }
-.profile-status { color: #10b981; font-weight: bold; }
-
-.profile-btn-save { padding: 12px; background-color: #000; color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-.profile-btn-save:disabled { background-color: #6b7280; cursor: not-allowed; }
-.profile-btn-save:not(:disabled):hover { background-color: #333; }
-
-.complaint-history-list {
+.profile-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+}
+.form-label {
+  display: block;
+  font-weight: 800;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  box-sizing: border-box;
+  background: var(--color-bg);
+  transition: var(--transition-fast);
+}
+.form-input:focus {
+  border-color: var(--color-brand-charcoal);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  outline: none;
+}
+.form-input:disabled {
+  background-color: var(--color-bg);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.complaint-history-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 16px;
-}
-
-.complaint-history-top {
+.profile-info-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+  margin-top: 12px;
 }
-
-.complaint-history-title {
-  margin: 0 0 6px 0;
-  font-size: 18px;
-  color: #111827;
-}
-
-.complaint-history-meta {
-  margin: 4px 0;
+.profile-info-text {
+  margin: 0;
+  color: var(--color-text-muted);
   font-size: 14px;
-  color: #6b7280;
+}
+.profile-status {
+  color: var(--color-success);
+  font-weight: 800;
 }
 
-.complaint-history-body {
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-.complaint-history-text {
-  margin: 6px 0;
-  font-size: 14px;
-  color: #374151;
-  line-height: 1.5;
-}
-
-.complaint-history-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.complaint-action-btn {
-  display: inline-block;
-  padding: 10px 14px;
-  background: #fff7ed;
-  color: #c2410c;
-  border: 1px solid #fdba74;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.complaint-action-btn:hover {
-  opacity: 0.9;
-}
-
-.complaint-link {
-  color: #2563eb;
-  font-weight: 600;
-  text-decoration: underline;
-}
-
-.complaint-empty-box {
-  background: white;
-  border: 1px dashed #d1d5db;
-  padding: 18px;
-  border-radius: 8px;
-  text-align: center;
-  color: #6b7280;
-}
-
-.complaint-error-box {
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+.profile-btn-save {
   padding: 14px;
-  border-radius: 8px;
-  text-align: center;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 800;
+  border: var(--border-thick);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-top: 10px;
+  transition: var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
-
-.complaint-status {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: bold;
-  background: #f3f4f6;
-  color: #6b7280;
+.profile-btn-save:disabled {
+  background: var(--color-text-muted);
+  cursor: not-allowed;
 }
-
-.complaint-status.pending {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.complaint-status.processing {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.complaint-status.resolved {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.complaint-status.rejected {
-  background: #fee2e2;
-  color: #b91c1c;
+.profile-btn-save:not(:disabled):hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
 }

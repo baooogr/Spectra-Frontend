@@ -1,13 +1,19 @@
+/* ===== SPECTRA MY COMPLAINTS — NEO-BRUTALISM ===== */
 .mc-container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 30px auto;
-  padding: 20px;
-  font-family: sans-serif;
+  padding: 24px;
+  animation: fadeInUp 0.5s ease-out;
 }
 
 .mc-header h2 {
   margin: 0 0 4px;
-  font-size: 24px;
+  font-size: 28px;
+  font-family: var(--font-display);
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .mc-loading,
@@ -15,11 +21,11 @@
 .mc-empty {
   text-align: center;
   padding: 60px 20px;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .mc-error {
-  color: #dc2626;
+  color: var(--color-error);
 }
 
 .mc-empty p {
@@ -31,57 +37,64 @@
 .mc-filters {
   display: flex;
   gap: 8px;
-  margin: 20px 0;
+  margin: 24px 0;
   flex-wrap: wrap;
 }
 
 .mc-filter-btn {
-  padding: 7px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 20px;
-  background: #fff;
+  padding: 7px 18px;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
   font-size: 13px;
   cursor: pointer;
-  color: #374151;
-  transition: all 0.15s;
+  color: var(--color-text-secondary);
+  transition: var(--transition-fast);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .mc-filter-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .mc-filter-btn.active {
-  background: #3b82f6;
+  background: var(--color-primary);
   color: #fff;
-  border-color: #3b82f6;
+  border-color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Complaint cards */
 .mc-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .mc-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 18px 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.15s;
+  background: var(--color-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
 }
 
 .mc-card:hover {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
+  transform: translate(-2px, -2px);
 }
 
 .mc-card-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -93,33 +106,38 @@
 }
 
 .mc-type-badge {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1d4ed8;
-  background: #dbeafe;
-  padding: 3px 12px;
-  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-lighter);
+  padding: 4px 14px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .mc-date {
   font-size: 13px;
-  color: #9ca3af;
+  color: var(--color-text-muted);
 }
 
 .mc-reason {
   font-size: 14px;
-  color: #374151;
-  margin: 0 0 10px;
-  line-height: 1.5;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+  line-height: 1.6;
 }
 
 .mc-staff-note {
   font-size: 13px;
-  color: #1e3a8a;
-  background: #eff6ff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 10px;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-lighter);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  border: var(--border-thin);
+  border-left: 4px solid var(--color-primary);
 }
 
 .mc-card-actions {
@@ -130,20 +148,27 @@
 
 .mc-detail-link {
   font-size: 14px;
-  color: #3b82f6;
+  color: var(--color-primary);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: var(--transition-fast);
 }
 
 .mc-detail-link:hover {
   text-decoration: underline;
+  color: var(--color-primary-dark);
 }
 
 .mc-edit-link {
   font-size: 13px;
   color: #f59e0b;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: var(--transition-fast);
 }
 
 .mc-edit-link:hover {

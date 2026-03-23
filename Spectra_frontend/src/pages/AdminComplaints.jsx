@@ -195,7 +195,7 @@ export default function AdminComplaints() {
         body: JSON.stringify({ refundAmount: amt }),
       });
       if (res.ok) {
-        setActionMsg("✅ Đã thêm số tiền cần hoàn.");
+        setActionMsg("Đã thêm số tiền cần hoàn.");
         setRefundConfirmed(true);
         setRefundAmount("");
         fetchComplaints(activeFilter, page);
@@ -226,7 +226,7 @@ export default function AdminComplaints() {
         body: JSON.stringify({ trackingNumber: trackingNumber.trim() }),
       });
       if (res.ok) {
-        setActionMsg("✅ Đã cập nhật mã vận đơn thành công.");
+        setActionMsg("Đã cập nhật mã vận đơn thành công.");
         setTrackingConfirmed(true);
         setTrackingNumber("");
         fetchComplaints(activeFilter, page);
@@ -351,18 +351,76 @@ export default function AdminComplaints() {
                         {reason.length > 60
                           ? reason.slice(0, 60) + "..."
                           : reason}
-                        {mediaUrl && (
-                          <div style={{ marginTop: "6px" }}>
-                            <a
-                              href={mediaUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ fontSize: "12px", color: "#2563eb" }}
-                            >
-                              📎 Xem bằng chứng
-                            </a>
-                          </div>
-                        )}
+                        {mediaUrl &&
+                          (() => {
+                            const urls = mediaUrl
+                              .split(",")
+                              .map((u) => u.trim())
+                              .filter(Boolean);
+                            const imageUrls = urls.filter(
+                              (u) =>
+                                /\.(jpg|jpeg|png|gif|webp)/i.test(u) ||
+                                u.includes("cloudinary"),
+                            );
+                            const hasImages = imageUrls.length > 0;
+                            return (
+                              <div style={{ marginTop: "6px" }}>
+                                {hasImages ? (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: "4px",
+                                      flexWrap: "wrap",
+                                    }}
+                                  >
+                                    {imageUrls.slice(0, 3).map((url, idx) => (
+                                      <a
+                                        key={idx}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <img
+                                          src={url}
+                                          alt={`" ${idx + 1}`}
+                                          style={{
+                                            width: "40px",
+                                            height: "40px",
+                                            objectFit: "cover",
+                                            borderRadius: "4px",
+                                            border: "1px solid #e5e7eb",
+                                          }}
+                                        />
+                                      </a>
+                                    ))}
+                                    {imageUrls.length > 3 && (
+                                      <span
+                                        style={{
+                                          fontSize: "11px",
+                                          color: "#6b7280",
+                                          alignSelf: "center",
+                                        }}
+                                      >
+                                        +{imageUrls.length - 3}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <a
+                                    href={urls[0]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "#2563eb",
+                                    }}
+                                  >
+                                    Xem bằng chứng
+                                  </a>
+                                )}
+                              </div>
+                            );
+                          })()}
                       </td>
                       <td>
                         {getStatusBadge(
@@ -438,7 +496,7 @@ export default function AdminComplaints() {
             selectedComplaint.RequestType ||
             ""
           ).toLowerCase();
-          const transitions = validTransitions[cStatus] || [];
+          let transitions = validTransitions[cStatus] || [];
 
           // Determine which sections to show based on complaint type
           const needsTracking =
@@ -486,6 +544,21 @@ export default function AdminComplaints() {
               canShowStatusUpdate = false;
               statusBlockReason =
                 "Khách hàng chưa chọn sản phẩm thay thế. Không thể chuyển sang trạng thái 'Đang xử lý' cho đến khi khách hoàn tất chọn sản phẩm đổi.";
+            }
+          }
+
+          // Block resolving exchange complaints unless exchange order is delivered
+          if (cType === "exchange" && cStatus === "in_progress") {
+            const exchangeDelivered =
+              exchangeOrderDetail?.status?.toLowerCase() === "delivered";
+            if (!exchangeDelivered) {
+              // Filter out "resolved" from available transitions
+              transitions = transitions.filter((t) => t !== "resolved");
+              if (transitions.length === 0) {
+                canShowStatusUpdate = false;
+                statusBlockReason =
+                  "Không thể hoàn tất khiếu nại cho đến khi đơn hàng thay thế đã được giao đến khách hàng.";
+              }
             }
           }
 
@@ -566,21 +639,79 @@ export default function AdminComplaints() {
                   {(selectedComplaint.reason || "").length > 100 ? "..." : ""}
                 </p>
 
-                {(selectedComplaint.mediaUrl || selectedComplaint.MediaUrl) && (
-                  <p style={{ margin: "0 0 16px", fontSize: "13px" }}>
-                    <b>Bằng chứng:</b>{" "}
-                    <a
-                      href={
-                        selectedComplaint.mediaUrl || selectedComplaint.MediaUrl
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#2563eb" }}
-                    >
-                      Xem file đính kèm
-                    </a>
-                  </p>
-                )}
+                {(selectedComplaint.mediaUrl || selectedComplaint.MediaUrl) &&
+                  (() => {
+                    const rawUrl =
+                      selectedComplaint.mediaUrl || selectedComplaint.MediaUrl;
+                    const urls = rawUrl
+                      .split(",")
+                      .map((u) => u.trim())
+                      .filter(Boolean);
+                    const imageUrls = urls.filter(
+                      (u) =>
+                        /\.(jpg|jpeg|png|gif|webp)/i.test(u) ||
+                        u.includes("cloudinary"),
+                    );
+                    const otherUrls = urls.filter(
+                      (u) =>
+                        !(
+                          /\.(jpg|jpeg|png|gif|webp)/i.test(u) ||
+                          u.includes("cloudinary")
+                        ),
+                    );
+                    return (
+                      <div style={{ margin: "0 0 16px" }}>
+                        <b style={{ fontSize: "13px" }}>Bằng chứng:</b>
+                        {imageUrls.length > 0 && (
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              flexWrap: "wrap",
+                              marginTop: "8px",
+                            }}
+                          >
+                            {imageUrls.map((url, idx) => (
+                              <a
+                                key={idx}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <img
+                                  src={url}
+                                  alt={`Ảnh ${idx + 1}`}
+                                  style={{
+                                    width: "100px",
+                                    height: "100px",
+                                    objectFit: "cover",
+                                    borderRadius: "8px",
+                                    border: "1px solid #e5e7eb",
+                                  }}
+                                />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                        {otherUrls.map((url, idx) => (
+                          <p
+                            key={idx}
+                            style={{ margin: "4px 0", fontSize: "13px" }}
+                          >
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: "#2563eb" }}
+                            >
+                              Xem file đính kèm{" "}
+                              {otherUrls.length > 1 ? idx + 1 : ""}
+                            </a>
+                          </p>
+                        ))}
+                      </div>
+                    );
+                  })()}
 
                 {/* Exchange: show exchange order detail if exists */}
                 {isExchange && (
@@ -621,7 +752,7 @@ export default function AdminComplaints() {
                               fontSize: "13px",
                             }}
                           >
-                            ✅ Khách đã chọn sản phẩm thay thế
+                            Khách đã chọn sản phẩm thay thế
                           </span>
                         </div>
                         {exchangeOrderDetail && (
@@ -734,7 +865,7 @@ export default function AdminComplaints() {
                             fontWeight: "600",
                           }}
                         >
-                          ⏳ Khách hàng chưa chọn sản phẩm thay thế
+                          Khách hàng chưa chọn sản phẩm thay thế
                         </p>
                         <p
                           style={{
@@ -789,7 +920,7 @@ export default function AdminComplaints() {
                         color: trackingConfirmed ? "#065f46" : "#92400e",
                       }}
                     >
-                      {trackingConfirmed ? "✅ " : "① "}
+                      {trackingConfirmed ? "" : "① "}
                       Mã vận đơn trả hàng / gửi bảo hành
                     </label>
                     {trackingConfirmed ? (
@@ -865,8 +996,7 @@ export default function AdminComplaints() {
                         color: "#065f46",
                       }}
                     >
-                      {refundConfirmed
-                        ? "✅ "
+                        ? "" 
                         : cType === "return"
                           ? "② "
                           : "① "}
@@ -948,7 +1078,7 @@ export default function AdminComplaints() {
                           fontWeight: "600",
                         }}
                       >
-                        🔒 {statusBlockReason}
+                        {statusBlockReason}
                       </p>
                     </div>
                   )}

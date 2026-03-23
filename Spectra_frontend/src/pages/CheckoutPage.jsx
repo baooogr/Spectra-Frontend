@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useCart } from "../context/CartContext";
+import { useCurrentUser, API_BASE_URL, ENDPOINTS, buildUrl } from "../api";
 import "./CheckoutPage.css";
 
 export default function CheckoutPage() {
@@ -14,58 +15,138 @@ export default function CheckoutPage() {
 
   const currentUser = user || JSON.parse(localStorage.getItem("user")) || {};
 
+  // Use cached user data
+  const { user: apiUser } = useCurrentUser();
+
   const [form, setForm] = useState({
     fullName: currentUser.fullName || "",
-    phone: "", // Sẽ được tự động điền từ API
+    phone: "",
     email: currentUser.email || "",
-    address: "", // Sẽ được tự động điền từ API
+    address: "",
     note: "",
     paymentMethod: "COD",
     shippingMethod: "standard",
   });
 
-  // ⚡ GỌI API LẤY THÔNG TIN USER (GỒM CẢ SĐT VÀ ĐỊA CHỈ)
+  const [phoneManualMode, setPhoneManualMode] = useState(false);
+
+  // ⚡ Sync form with cached user data when available
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      const token = currentUser.token;
-      if (!token) return;
-      try {
-        const res = await fetch("https://myspectra.runasp.net/api/Users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setForm((prev) => ({
-            ...prev,
-            phone: data.phone || "",
-            address: data.address || "",
-            fullName: data.fullName || prev.fullName,
-          }));
-        }
-      } catch (err) {
-        console.error("Lỗi tải thông tin cá nhân:", err);
+    if (apiUser) {
+      setForm((prev) => ({
+        ...prev,
+        phone: apiUser.phone || prev.phone,
+        address: apiUser.address || prev.address,
+        fullName: apiUser.fullName || prev.fullName,
+      }));
+      if (!apiUser.phone) {
+        setPhoneManualMode(true);
       }
-    };
-    fetchUserProfile();
+    }
+  }, [apiUser]);
+
+  // Fallback: if phone is still empty after 8s, let the user type it in
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setForm((prev) => {
+        if (!prev.phone) setPhoneManualMode(true);
+        return prev;
+      });
+    }, 8000);
+    return () => clearTimeout(timer);
   }, []);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   // ─── SHIPPING METHOD LOGIC ──────────────────────────────────────────────────
-  const FREE_SHIPPING_THRESHOLD = 89;
+  // Zone-based express fee: same_city=$2, southern=$4, central=$6, northern=$7
+  const ZONE_FEE = { same_city: 2, southern: 4, central: 6, northern: 7 };
+  const ZONE_LABELS = {
+    same_city: "Nội thành HCM",
+    southern: "Miền Nam",
+    central: "Miền Trung",
+    northern: "Miền Bắc",
+  };
+
+  const CITY_ZONE_MAP = {
+    "hồ chí minh": "same_city",
+    "ho chi minh": "same_city",
+    hcm: "same_city",
+    "thủ đức": "same_city",
+    "thu duc": "same_city",
+    "bình dương": "southern",
+    "binh duong": "southern",
+    "đồng nai": "southern",
+    "dong nai": "southern",
+    "long an": "southern",
+    "bà rịa": "southern",
+    "ba ria": "southern",
+    "vũng tàu": "southern",
+    "vung tau": "southern",
+    "tây ninh": "southern",
+    "tay ninh": "southern",
+    "cần thơ": "southern",
+    "can tho": "southern",
+    "an giang": "southern",
+    "kiên giang": "southern",
+    "kien giang": "southern",
+    "tiền giang": "southern",
+    "tien giang": "southern",
+    "bến tre": "southern",
+    "ben tre": "southern",
+    "cà mau": "southern",
+    "ca mau": "southern",
+    "đà nẵng": "central",
+    "da nang": "central",
+    huế: "central",
+    hue: "central",
+    "khánh hòa": "central",
+    "khanh hoa": "central",
+    "nha trang": "central",
+    "nghệ an": "central",
+    "nghe an": "central",
+    "thanh hóa": "central",
+    "thanh hoa": "central",
+    "quảng nam": "central",
+    "quang nam": "central",
+    "hà nội": "northern",
+    "ha noi": "northern",
+    hanoi: "northern",
+    "hải phòng": "northern",
+    "hai phong": "northern",
+    "quảng ninh": "northern",
+    "quang ninh": "northern",
+    "nam định": "northern",
+    "nam dinh": "northern",
+    "thái nguyên": "northern",
+    "thai nguyen": "northern",
+  };
+
+  const detectZone = (address) => {
+    if (!address) return "southern";
+    const lower = address.toLowerCase();
+    for (const [key, zone] of Object.entries(CITY_ZONE_MAP)) {
+      if (lower.includes(key)) return zone;
+    }
+    return "southern";
+  };
+
+  const currentZone = useMemo(() => detectZone(form.address), [form.address]);
+  const expressFee = ZONE_FEE[currentZone] || 4;
+
   const SHIPPING_METHODS = [
     {
       key: "standard",
-      label: "Giao hàng tiêu chuẩn",
-      fee: 5,
+      label: "Giao hàng tiêu chuẩn (J&T Express)",
+      fee: 0,
       days: "5-7 ngày",
-      icon: "📦",
+      icon: "",
     },
     {
       key: "express",
-      label: "Giao hàng nhanh",
-      fee: 15,
+      label: "Giao hàng nhanh (J&T Express)",
+      fee: expressFee,
       days: "2-3 ngày",
       icon: "⚡",
     },
@@ -75,11 +156,11 @@ export default function CheckoutPage() {
     () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [items],
   );
-  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const isFreeShipping = form.shippingMethod === "standard";
   const selectedMethod =
     SHIPPING_METHODS.find((m) => m.key === form.shippingMethod) ||
     SHIPPING_METHODS[0];
-  const shippingFee = isFreeShipping ? 0 : selectedMethod.fee;
+  const shippingFee = selectedMethod.fee;
   const total = subtotal + shippingFee;
 
   // Estimated delivery date range
@@ -307,24 +388,52 @@ export default function CheckoutPage() {
                 />
               </div>
               <div className="form-group">
-                <label>Số điện thoại (Cố định)</label>
-
+                <label>
+                  {phoneManualMode
+                    ? "Số điện thoại"
+                    : "Số điện thoại (Cố định)"}
+                </label>
                 <input
                   type="tel"
                   name="phone"
                   value={form.phone}
-                  readOnly
-
-                  style={{
-                    backgroundColor: "#e5e7eb",
-                    color: "#6b7280",
-                    cursor: "not-allowed",
-                    outline: "none",
-                  }}
-
-                  title="Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
-                  placeholder={form.phone ? "" : "Đang tải SĐT..."}
+                  onChange={phoneManualMode ? onChange : undefined}
+                  readOnly={!phoneManualMode}
+                  style={
+                    phoneManualMode
+                      ? {}
+                      : {
+                          backgroundColor: "#e5e7eb",
+                          color: "#6b7280",
+                          cursor: "not-allowed",
+                          outline: "none",
+                        }
+                  }
+                  required
+                  title={
+                    phoneManualMode
+                      ? "Nhập số điện thoại của bạn"
+                      : "Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
+                  }
+                  placeholder={
+                    phoneManualMode
+                      ? "Nhập số điện thoại..."
+                      : form.phone
+                        ? ""
+                        : "Đang tải SĐT..."
+                  }
                 />
+                {phoneManualMode && !form.phone && (
+                  <small
+                    style={{
+                      color: "#d97706",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
+                    Không tìm thấy SĐT trong hồ sơ. Vui lòng nhập thủ công.
+                  </small>
+                )}
               </div>
             </div>
 
@@ -386,7 +495,7 @@ export default function CheckoutPage() {
                 Phương thức vận chuyển <span className="req">*</span>
               </label>
 
-              {isFreeShipping && (
+              {form.shippingMethod === "standard" && (
                 <div
                   style={{
                     backgroundColor: "#d1fae5",
@@ -399,7 +508,25 @@ export default function CheckoutPage() {
                     fontWeight: 600,
                   }}
                 >
-                  🎉 Đơn hàng từ $89 trở lên — Miễn phí vận chuyển!
+                  Giao hàng tiêu chuẩn J&T Express — Miễn phí vận chuyển!
+                </div>
+              )}
+
+              {form.shippingMethod === "express" && (
+                <div
+                  style={{
+                    backgroundColor: "#fef3c7",
+                    border: "1px solid #fde68a",
+                    borderRadius: "8px",
+                    padding: "10px 14px",
+                    marginBottom: "12px",
+                    fontSize: "14px",
+                    color: "#92400e",
+                    fontWeight: 600,
+                  }}
+                >
+                  ⚡ Phí giao nhanh J&T Express theo vùng:{" "}
+                  {ZONE_LABELS[currentZone]} — ${expressFee}
                 </div>
               )}
 
@@ -412,7 +539,7 @@ export default function CheckoutPage() {
               >
                 {SHIPPING_METHODS.map((m) => {
                   const isSelected = form.shippingMethod === m.key;
-                  const displayFee = isFreeShipping ? 0 : m.fee;
+                  const displayFee = m.fee;
                   return (
                     <label
                       key={m.key}
@@ -489,7 +616,7 @@ export default function CheckoutPage() {
                   color: "#92400e",
                 }}
               >
-                🚚 Dự kiến nhận hàng: <strong>{getEstimatedDelivery()}</strong>
+                Dự kiến nhận hàng: <strong>{getEstimatedDelivery()}</strong>
               </div>
             </div>
 
@@ -518,10 +645,9 @@ export default function CheckoutPage() {
                   fontSize: "15px",
                 }}
               >
-
-                <option value="COD">💵 Thanh toán tiền mặt (COD)</option>
+                <option value="COD">Thanh toán tiền mặt (COD)</option>
                 <option value="VNPAY">
-                  💳 Thanh toán qua VNPay (Quét mã QR / Thẻ ATM)
+                  Thanh toán qua VNPay (Quét mã QR / Thẻ ATM)
                 </option>
               </select>
             </div>

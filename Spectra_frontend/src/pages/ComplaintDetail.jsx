@@ -440,14 +440,74 @@ export default function ComplaintDetail() {
             >
               Hình ảnh/Video đính kèm
             </h4>
-            <a
-              href={mediaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#3b82f6" }}
-            >
-              Xem tệp đính kèm →
-            </a>
+            {(() => {
+              const urls = mediaUrl
+                .split(",")
+                .map((u) => u.trim())
+                .filter(Boolean);
+              const imageUrls = urls.filter(
+                (u) =>
+                  /\.(jpg|jpeg|png|gif|webp)/i.test(u) ||
+                  u.includes("cloudinary"),
+              );
+              const otherUrls = urls.filter(
+                (u) =>
+                  !(
+                    /\.(jpg|jpeg|png|gif|webp)/i.test(u) ||
+                    u.includes("cloudinary")
+                  ),
+              );
+              return (
+                <>
+                  {imageUrls.length > 0 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        flexWrap: "wrap",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      {imageUrls.map((url, idx) => (
+                        <a
+                          key={idx}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <img
+                            src={url}
+                            alt={`Ảnh ${idx + 1}`}
+                            style={{
+                              width: "120px",
+                              height: "120px",
+                              objectFit: "cover",
+                              borderRadius: "8px",
+                              border: "1px solid #e5e7eb",
+                            }}
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  {otherUrls.map((url, idx) => (
+                    <a
+                      key={`link-${idx}`}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        color: "#3b82f6",
+                        display: "block",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Xem tệp đính kèm {otherUrls.length > 1 ? idx + 1 : ""} →
+                    </a>
+                  ))}
+                </>
+              );
+            })()}
           </div>
         )}
 
@@ -517,7 +577,7 @@ export default function ComplaintDetail() {
                     color: "#065f46",
                   }}
                 >
-                  ✅ Đơn đổi hàng đã được tạo
+                  Đơn đổi hàng đã được tạo
                 </p>
                 <Link
                   to={`/orders/${exchangeOrderId}`}
@@ -698,7 +758,7 @@ export default function ComplaintDetail() {
                       color: "#047857",
                     }}
                   >
-                    ✅ Đã hoàn tiền ngày{" "}
+                    Đã hoàn tiền ngày{" "}
                     {new Date(refundedAt).toLocaleString("vi-VN")}
                   </p>
                 ) : (
@@ -709,7 +769,7 @@ export default function ComplaintDetail() {
                       color: "#92400e",
                     }}
                   >
-                    ⏳ Đang xử lý hoàn tiền...
+                    Đang xử lý hoàn tiền...
                   </p>
                 )}
               </div>

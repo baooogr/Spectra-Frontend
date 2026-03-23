@@ -1,52 +1,54 @@
+/* ===== SPECTRA FOOTER — NEO-BRUTALISM ===== */
 .footer {
-  background-color: #f9f9f9;
-  padding: 60px 40px 20px;
-  font-family: sans-serif;
-  color: #333;
-  border-top: 1px solid #eaeaea;
-  margin-top: 60px;
+  background: var(--color-brand-charcoal);
+  padding: 64px 48px 24px;
+  color: #c8ccd8;
+  margin-top: 0;
+  border-top: var(--border-thick);
 }
 
 .footer-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-bottom: 40px;
-  gap: 30px;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
+  gap: 40px;
   max-width: 1200px;
-  margin: 0 auto 40px auto;
+  margin: 0 auto 48px;
 }
 
 .footer-col {
-  flex: 1;
-}
-
-.footer-col.about {
-  min-width: 220px;
-}
-
-.footer-col.links {
-  min-width: 150px;
-}
-
-.footer-col.newsletter {
-  min-width: 280px;
+  min-width: 0;
 }
 
 .footer-heading {
-  font-size: 16px;
-  margin-bottom: 16px;
-  font-weight: bold;
+  font-family: var(--font-display);
+  font-size: 18px;
+  margin-bottom: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  position: relative;
+  padding-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.footer-heading::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 4px;
+  background: var(--color-brand-yellow);
 }
 
 .footer-col.about .footer-heading {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .footer-text {
   font-size: 14px;
-  line-height: 1.6;
-  color: #666;
+  line-height: 1.7;
+  color: #8e95a9;
   margin-top: 0;
 }
 
@@ -54,58 +56,124 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  font-size: 14px;
-  line-height: 2.2;
+}
+
+.footer-list li {
+  margin-bottom: 10px;
 }
 
 .footer-link {
   text-decoration: none;
-  color: #555;
+  color: #8e95a9;
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 2px solid transparent;
 }
 
+.footer-link:hover {
+  color: var(--color-brand-yellow);
+  border-color: var(--color-brand-yellow);
+  background: rgba(250, 204, 21, 0.1);
+}
+
+.footer-link::before {
+  display: none;
+}
+
+/* Newsletter */
 .newsletter-form {
   display: flex;
+  border: var(--border-thick);
+  border-color: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .newsletter-input {
-  padding: 12px;
+  padding: 12px 18px;
   flex: 1;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
+  border: none;
   outline: none;
   font-size: 14px;
+  background: transparent;
+  color: #fff;
+  font-weight: 500;
+}
+
+.newsletter-input::placeholder {
+  color: #6b7280;
 }
 
 .newsletter-btn {
-  padding: 12px 20px;
-  background-color: #000;
-  color: #fff;
+  padding: 12px 24px;
+  background: var(--color-brand-yellow);
+  color: var(--color-brand-charcoal);
   border: none;
-  border-radius: 0 4px 4px 0;
+  border-left: 3px solid var(--color-brand-charcoal);
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 900;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: var(--transition-fast);
 }
 
+.newsletter-btn:hover {
+  background: var(--color-brand-sage);
+  color: white;
+}
+
+/* Bottom bar */
 .footer-bottom {
-  border-top: 1px solid #eaeaea;
-  padding-top: 20px;
+  border-top: 3px solid rgba(255, 255, 255, 0.15);
+  padding-top: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  font-size: 14px;
-  color: #888;
+  gap: 16px;
+  font-size: 13px;
+  color: #5a6178;
   max-width: 1200px;
   margin: 0 auto;
+  font-weight: 600;
 }
 
 .footer-socials {
   display: flex;
-  gap: 20px;
+  gap: 12px;
 }
 
 .social-link {
   cursor: pointer;
-  font-weight: bold;
-  color: #888;
+  font-weight: 800;
+  color: #8e95a9;
+  padding: 8px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition: var(--transition-fast);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.social-link:hover {
+  color: var(--color-brand-charcoal);
+  background: var(--color-brand-yellow);
+  border-color: var(--color-brand-charcoal);
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .footer {
+    padding: 40px 20px 20px;
+  }
 }

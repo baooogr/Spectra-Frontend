@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import DeliveryMap from "../components/DeliveryMap";
 
 export default function PreorderDetail() {
   const { id } = useParams();
@@ -513,6 +514,436 @@ export default function PreorderDetail() {
             </p>
           </div>
         </div>
+
+        {/* ===== LO TRINH DON HANG — Tracking Timeline (only when converted with linked order) ===== */}
+        {(() => {
+          if (!linkedOrder) return null;
+          const status = (linkedOrder.status || "").toLowerCase();
+          const isCancelled = status === "cancelled";
+          if (isCancelled) return null;
+
+          const trackingNumber = linkedOrder.trackingNumber || null;
+          const shippingCarrier = linkedOrder.shippingCarrier || null;
+          const hasTracking = !!trackingNumber;
+
+          const getCarrierTrackingUrl = (carrier, tracking) => {
+            if (!carrier || !tracking) return null;
+            const c = carrier.toLowerCase();
+            if (c.includes("giao hàng nhanh") || c.includes("ghn"))
+              return `https://donhang.ghn.vn/?order_code=${encodeURIComponent(tracking)}`;
+            if (c.includes("tiết kiệm") || c.includes("ghtk"))
+              return `https://i.ghtk.vn/${encodeURIComponent(tracking)}`;
+            if (c.includes("j&t") || c.includes("jt"))
+              return `https://jtexpress.vn/vi/tracking?type=track&billcode=${encodeURIComponent(tracking)}`;
+            if (c.includes("vnpost") || c.includes("vn post"))
+              return `https://www.vnpost.vn/vi-vn/dinh-vi/buu-pham?key=${encodeURIComponent(tracking)}`;
+            return null;
+          };
+
+          const statusOrder = [
+            "pending",
+            "confirmed",
+            "processing",
+            "shipped",
+            "delivered",
+          ];
+          const statusIdx = statusOrder.indexOf(status);
+
+          const createdAt = linkedOrder.createdAt
+            ? new Date(linkedOrder.createdAt)
+            : order.createdAt
+              ? new Date(order.createdAt)
+              : null;
+          const shipped = linkedOrder.shippedAt
+            ? new Date(linkedOrder.shippedAt)
+            : null;
+          const delivered = linkedOrder.deliveredAt || linkedOrder.arrivalDate;
+          const deliveredDate = delivered ? new Date(delivered) : null;
+          const confirmedAt = linkedOrder.deliveryConfirmedAt
+            ? new Date(linkedOrder.deliveryConfirmedAt)
+            : null;
+          const estimated = linkedOrder.estimatedDeliveryDate
+            ? new Date(linkedOrder.estimatedDeliveryDate)
+            : null;
+
+          const now = new Date();
+          let inTransitTime = null;
+          let outForDeliveryTime = null;
+
+          if (shipped) {
+            const endRef =
+              deliveredDate ||
+              estimated ||
+              new Date(shipped.getTime() + 7 * 86400000);
+            const window = endRef.getTime() - shipped.getTime();
+            inTransitTime = new Date(shipped.getTime() + window * 0.3);
+            outForDeliveryTime = new Date(shipped.getTime() + window * 0.75);
+          }
+
+          const steps = [
+            {
+              label: "Đơn hàng đã đặt",
+              desc: "Đơn đặt trước đã được chuyển thành đơn hàng",
+              time: createdAt,
+              done: statusIdx >= 0,
+              active: statusIdx === 0,
+            },
+            {
+              label: "Đã xác nhận",
+              desc: "Cửa hàng đã xác nhận đơn hàng",
+              time: createdAt
+                ? new Date(createdAt.getTime() + 2 * 3600000)
+                : null,
+              done: statusIdx >= 1,
+              active: statusIdx === 1,
+            },
+            {
+              label: "Đang chuẩn bị hàng",
+              desc: "Sản phẩm đang được đóng gói và chuẩn bị giao",
+              time: null,
+              done: statusIdx >= 2,
+              active: statusIdx === 2,
+            },
+            {
+              label: shipped
+                ? `Đã giao cho ${shippingCarrier || "hãng vận chuyển"}`
+                : "Chờ giao cho hãng vận chuyển",
+              desc: hasTracking
+                ? `Mã vận đơn: ${trackingNumber}`
+                : "Đơn hàng sẽ được bàn giao cho đơn vị vận chuyển",
+              time: shipped,
+              done: statusIdx >= 3,
+              active:
+                statusIdx === 3 && (!inTransitTime || now < inTransitTime),
+            },
+            {
+              label: "Đang vận chuyển",
+              desc: "Đang trên đường đến địa chỉ của bạn",
+              time:
+                inTransitTime && now >= inTransitTime ? inTransitTime : null,
+              done:
+                statusIdx >= 4 ||
+                (statusIdx >= 3 && inTransitTime && now >= inTransitTime),
+              active:
+                statusIdx === 3 &&
+                inTransitTime &&
+                now >= inTransitTime &&
+                (!outForDeliveryTime || now < outForDeliveryTime),
+            },
+            {
+              label: "Đang giao hàng",
+              desc: "Shipper đang trên đường giao đến bạn",
+              time:
+                outForDeliveryTime && now >= outForDeliveryTime
+                  ? outForDeliveryTime
+                  : null,
+              done:
+                statusIdx >= 4 ||
+                (statusIdx >= 3 &&
+                  outForDeliveryTime &&
+                  now >= outForDeliveryTime),
+              active:
+                statusIdx === 3 &&
+                outForDeliveryTime &&
+                now >= outForDeliveryTime,
+            },
+            {
+              label: "Giao hàng thành công",
+              desc: confirmedAt
+                ? "Người nhận đã xác nhận"
+                : "Đơn hàng đã được giao",
+              time: deliveredDate,
+              done: statusIdx >= 4,
+              active: statusIdx === 4 && !confirmedAt,
+            },
+          ];
+
+          if (confirmedAt || statusIdx >= 4) {
+            steps.push({
+              label: "Đã xác nhận nhận hàng",
+              desc: "Bạn đã xác nhận nhận được đơn hàng",
+              time: confirmedAt,
+              done: !!confirmedAt,
+              active: false,
+            });
+          }
+
+          const trackingUrl = getCarrierTrackingUrl(
+            shippingCarrier,
+            trackingNumber,
+          );
+
+          const fmtTime = (d) =>
+            d
+              ? new Date(d).toLocaleString("vi-VN", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : null;
+
+          return (
+            <div
+              style={{
+                backgroundColor: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                padding: "24px",
+                marginBottom: "20px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                }}
+              >
+                <h4 style={{ margin: 0, fontSize: "17px", color: "#1e293b" }}>
+                  Lộ trình đơn hàng
+                </h4>
+                {estimated && statusIdx < 4 && (
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      color: "#92400e",
+                      backgroundColor: "#fefce8",
+                      border: "1px solid #fde68a",
+                      padding: "4px 12px",
+                      borderRadius: "20px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Dự kiến:{" "}
+                    {new Date(estimated).toLocaleDateString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                  </span>
+                )}
+              </div>
+
+              {/* Carrier tracking link */}
+              {hasTracking && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: "12px",
+                    marginBottom: "20px",
+                    padding: "12px 16px",
+                    backgroundColor: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "16px",
+                      alignItems: "center",
+                    }}
+                  >
+                    {shippingCarrier && (
+                      <span style={{ fontSize: "14px", color: "#1e3a8a" }}>
+                        <b>{shippingCarrier}</b>
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontSize: "14px",
+                        fontWeight: "bold",
+                        backgroundColor: "#dbeafe",
+                        padding: "3px 10px",
+                        borderRadius: "6px",
+                        color: "#1e40af",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      {trackingNumber}
+                    </span>
+                  </div>
+                  {trackingUrl && (
+                    <a
+                      href={trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "bold",
+                        color: "#fff",
+                        backgroundColor: "#2563eb",
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Theo dõi trên {shippingCarrier || "website"}
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Delivery Map — live tracking */}
+              {hasTracking && statusIdx >= 3 && (
+                <DeliveryMap
+                  customerAddress={shippingAddress}
+                  shippedAt={linkedOrder.shippedAt}
+                  estimatedDate={linkedOrder.estimatedDeliveryDate}
+                  deliveredAt={
+                    linkedOrder.deliveredAt || linkedOrder.arrivalDate
+                  }
+                  carrier={shippingCarrier}
+                  status={linkedOrder.status}
+                />
+              )}
+
+              {/* Timeline stepper */}
+              <div style={{ position: "relative", paddingLeft: "36px" }}>
+                {steps.map((step, i) => {
+                  const isLast = i === steps.length - 1;
+                  const dotColor = step.done
+                    ? "#059669"
+                    : step.active
+                      ? "#2563eb"
+                      : "#d1d5db";
+                  const lineColor =
+                    step.done && !isLast ? "#059669" : "#e5e7eb";
+
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        position: "relative",
+                        paddingBottom: isLast ? 0 : "24px",
+                      }}
+                    >
+                      {!isLast && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: "-24px",
+                            top: "20px",
+                            width: "3px",
+                            height: "calc(100% - 8px)",
+                            backgroundColor: lineColor,
+                            borderRadius: "2px",
+                          }}
+                        />
+                      )}
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: "-32px",
+                          top: "2px",
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "50%",
+                          backgroundColor: dotColor,
+                          border: `3px solid ${step.active ? "#93c5fd" : dotColor}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: step.active
+                            ? "0 0 0 4px rgba(59,130,246,0.2)"
+                            : "none",
+                          animation: step.active ? "pulse 2s infinite" : "none",
+                        }}
+                      />
+                      <div style={{ minHeight: "32px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: "14px",
+                              color: step.done
+                                ? "#065f46"
+                                : step.active
+                                  ? "#1e40af"
+                                  : "#9ca3af",
+                            }}
+                          >
+                            {step.label}
+                          </span>
+                          {step.time && (step.done || step.active) && (
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                color: "#6b7280",
+                                marginLeft: "auto",
+                              }}
+                            >
+                              {fmtTime(step.time)}
+                            </span>
+                          )}
+                        </div>
+                        <p
+                          style={{
+                            margin: "4px 0 0",
+                            fontSize: "13px",
+                            color:
+                              step.done || step.active ? "#6b7280" : "#d1d5db",
+                          }}
+                        >
+                          {step.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Shipping method info */}
+              {linkedOrder.shippingMethod && (
+                <div
+                  style={{
+                    marginTop: "16px",
+                    paddingTop: "16px",
+                    borderTop: "1px solid #e2e8f0",
+                    display: "flex",
+                    gap: "16px",
+                    fontSize: "13px",
+                    color: "#64748b",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span>
+                    {linkedOrder.shippingMethod === "express"
+                      ? "Giao hàng nhanh"
+                      : "Giao hàng tiêu chuẩn"}
+                  </span>
+                  {linkedOrder.shippingFee !== null &&
+                    linkedOrder.shippingFee !== undefined && (
+                      <span>
+                        Phí ship:{" "}
+                        {linkedOrder.shippingFee === 0
+                          ? "Miễn phí"
+                          : `$${linkedOrder.shippingFee}`}
+                      </span>
+                    )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ===== DANH SÁCH SẢN PHẨM ===== */}
         <h3

@@ -1,48 +1,63 @@
+/* ===== SPECTRA ADMIN COMPLAINTS — NEO-BRUTALISM ===== */
 .ac-container {
   padding: 24px;
-  font-family: sans-serif;
 }
 
 .ac-header h2 {
   margin: 0 0 4px;
-  font-size: 22px;
+  font-size: 24px;
+  font-family: var(--font-display);
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .ac-loading,
 .ac-empty {
   text-align: center;
   padding: 50px 20px;
-  color: #6b7280;
+  color: var(--color-text-muted);
+  font-weight: 800;
 }
 
 /* Filters */
 .ac-filters {
   display: flex;
-  gap: 6px;
-  margin: 18px 0;
+  gap: 8px;
+  margin: 20px 0;
   flex-wrap: wrap;
 }
 
 .ac-filter-btn {
-  padding: 6px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 20px;
-  background: #fff;
+  padding: 7px 16px;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
   font-size: 13px;
   cursor: pointer;
-  color: #374151;
-  transition: all 0.15s;
+  color: var(--color-text-secondary);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-xs);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
 }
 
 .ac-filter-btn:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-brand-charcoal);
 }
 
 .ac-filter-btn.active {
-  background: #3b82f6;
+  background: var(--color-primary);
   color: #fff;
-  border-color: #3b82f6;
+  border-color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Table */
@@ -53,35 +68,39 @@
 .ac-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border-radius: 8px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
   font-size: 14px;
+  border: var(--border-thick);
 }
 
 .ac-table th,
 .ac-table td {
-  padding: 12px 14px;
+  padding: 13px 16px;
   text-align: left;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: var(--border-thin);
 }
 
 .ac-table th {
-  background: #f9fafb;
-  font-weight: 600;
-  color: #4b5563;
-  font-size: 13px;
+  background: var(--color-brand-yellow);
+  font-weight: 800;
+  color: var(--color-brand-charcoal);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   white-space: nowrap;
+  border-bottom: var(--border-thick);
 }
 
 .ac-table tr:hover {
-  background: #f9fafb;
+  background: var(--color-brand-cream);
 }
 
 .ac-id {
-  font-weight: 600;
-  color: #1d4ed8;
+  font-weight: 800;
+  color: var(--color-primary-dark);
   cursor: pointer;
 }
 
@@ -93,7 +112,7 @@
 }
 
 .ac-date {
-  color: #9ca3af;
+  color: var(--color-text-muted);
   font-size: 13px;
   white-space: nowrap;
 }
@@ -101,36 +120,48 @@
 .ac-badge {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 20px;
+  border-radius: var(--radius-sm);
+  border: 2px solid currentColor;
   font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .ac-type-tag {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 20px;
+  border-radius: var(--radius-sm);
+  border: 2px solid #1d4ed8;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 800;
   background: #dbeafe;
   color: #1d4ed8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .ac-action-btn {
   padding: 6px 14px;
-  border-radius: 6px;
-  border: 1px solid #3b82f6;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  border-color: #3b82f6;
   background: #fff;
   color: #3b82f6;
   font-size: 13px;
   cursor: pointer;
-  font-weight: 600;
-  transition: background 0.15s;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-xs);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
 }
 
 .ac-action-btn:hover {
-  background: #eff6ff;
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Pagination */
@@ -143,24 +174,35 @@
 
 .ac-pagination button {
   padding: 6px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
   background: #fff;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 800;
+  box-shadow: var(--shadow-xs);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.ac-pagination button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .ac-pagination button.active {
-  background: #3b82f6;
+  background: var(--color-primary);
   color: #fff;
-  border-color: #3b82f6;
+  border-color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Modal */
 .ac-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,36 +211,44 @@
 
 .ac-modal {
   background: #fff;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 28px;
   width: 420px;
   max-width: 92vw;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-xl);
 }
 
 .ac-modal h3 {
   margin: 0 0 18px;
   font-size: 17px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-brand-charcoal);
 }
 
 .ac-modal label {
   display: block;
   margin-bottom: 6px;
   font-size: 14px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 800;
+  color: var(--color-brand-charcoal);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .ac-modal select,
 .ac-modal textarea {
   width: 100%;
   padding: 9px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   margin-bottom: 16px;
   font-family: inherit;
   resize: vertical;
+  background: var(--color-brand-cream);
 }
 
 .ac-modal-actions {
@@ -209,19 +259,30 @@
 
 .ac-modal-actions button {
   padding: 8px 20px;
-  border-radius: 6px;
-  border: none;
+  border-radius: var(--radius-sm);
+  border: var(--border-thick);
   font-size: 14px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-xs);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.ac-modal-actions button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-md);
 }
 
 .ac-modal-actions button:first-child {
-  background: #f3f4f6;
-  color: #374151;
+  background: var(--color-surface);
+  color: var(--color-brand-charcoal);
 }
 
 .ac-modal-actions button:last-child {
-  background: #3b82f6;
+  background: var(--color-primary);
   color: #fff;
 }

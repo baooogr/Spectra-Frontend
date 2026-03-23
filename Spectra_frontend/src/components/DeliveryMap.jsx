@@ -261,13 +261,13 @@ export default function DeliveryMap({
     }
 
     // Shop marker
-    L.marker(SHOP_COORDS, { icon: createDivIcon("🏪", 32) })
+    L.marker(SHOP_COORDS, { icon: createDivIcon("S", 32) })
       .addTo(map)
       .bindPopup("<b>Spectra Glasses</b><br/>Kho hàng HCM");
 
     // Customer marker
     L.marker(routeCoords[routeCoords.length - 1], {
-      icon: createDivIcon("📍", 32),
+      icon: createDivIcon("D", 32),
     })
       .addTo(map)
       .bindPopup(
@@ -277,7 +277,7 @@ export default function DeliveryMap({
     // Truck marker
     const truckPos = routeCoords[progressIdx] || routeCoords[0];
     const truck = L.marker(truckPos, {
-      icon: createDivIcon(isDelivered ? "✅" : "🚚", 34, "truck-marker"),
+      icon: createDivIcon(isDelivered ? "V" : "T", 34, "truck-marker"),
       zIndexOffset: 1000,
     }).addTo(map);
 
@@ -285,8 +285,8 @@ export default function DeliveryMap({
     truck.bindPopup(
       `<b>${carrier || "Đơn vị vận chuyển"}</b><br/>` +
         (isDelivered
-          ? "✅ Đã giao hàng thành công"
-          : `📦 Đang giao... (${progressPct}%)`) +
+          ? "Đã giao hàng thành công"
+          : `Đang giao... (${progressPct}%)`) +
         (estimatedDate
           ? `<br/>⏰ Dự kiến: ${new Date(estimatedDate).toLocaleDateString("vi-VN")}`
           : ""),
@@ -366,7 +366,7 @@ export default function DeliveryMap({
         }}
       >
         <h4 style={{ margin: 0, fontSize: "16px", color: "#1e293b" }}>
-          🗺️ Theo dõi vận chuyển trực tiếp
+          Theo dõi vận chuyển trực tiếp
         </h4>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           {!isDelivered && (
@@ -394,7 +394,7 @@ export default function DeliveryMap({
                 borderRadius: "20px",
               }}
             >
-              ✅ Đã giao thành công
+              Đã giao thành công
             </span>
           )}
         </div>
@@ -418,9 +418,9 @@ export default function DeliveryMap({
           borderTop: "1px solid #e2e8f0",
         }}
       >
-        <span>🏪 Kho Spectra</span>
-        <span>🚚 Đơn hàng của bạn</span>
-        <span>📍 Địa chỉ nhận</span>
+        <span>Kho Spectra</span>
+        <span>Đơn hàng của bạn</span>
+        <span>Địa chỉ nhận</span>
         <span style={{ color: "#059669" }}>━━ Đã đi qua</span>
         <span style={{ color: "#2563eb" }}>╌╌╌ Còn lại</span>
       </div>

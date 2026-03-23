@@ -29,6 +29,8 @@ export default function ComplaintForm() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState([]);
 
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
 
@@ -63,6 +65,39 @@ export default function ComplaintForm() {
     fetchOrders();
   }, [token, navigate]);
 
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    setUploadingImage(true);
+    const newUrls = [];
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const res = await fetch(`${API_BASE}/Complaints/upload-image`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) newUrls.push(data.url);
+        }
+      } catch {
+        /* ignore individual failures */
+      }
+    }
+    if (newUrls.length > 0) {
+      setUploadedImages((prev) => [...prev, ...newUrls]);
+    }
+    setUploadingImage(false);
+    e.target.value = null;
+  };
+
+  const handleRemoveImage = (index) => {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -78,6 +113,11 @@ export default function ComplaintForm() {
 
     setSubmitting(true);
     try {
+      // Combine uploaded image URLs with manually entered URL
+      const allUrls = [...uploadedImages];
+      if (mediaUrl.trim()) allUrls.push(mediaUrl.trim());
+      const combinedMediaUrl = allUrls.length > 0 ? allUrls.join(",") : null;
+
       const res = await fetch(`${API_BASE}/Complaints`, {
         method: "POST",
         headers: {
@@ -88,7 +128,7 @@ export default function ComplaintForm() {
           orderItemId: selectedOrderItemId,
           requestType,
           reason: reason.trim(),
-          mediaUrl: mediaUrl.trim() || null,
+          mediaUrl: combinedMediaUrl,
         }),
       });
 
@@ -269,7 +309,7 @@ export default function ComplaintForm() {
           />
         </div>
 
-        {/* Media URL */}
+        {/* Image upload */}
         <div style={{ marginBottom: "20px" }}>
           <label
             style={{
@@ -279,8 +319,109 @@ export default function ComplaintForm() {
               fontSize: "14px",
             }}
           >
-            Link hình ảnh/video (tuỳ chọn)
+            Hình ảnh minh chứng (tuỳ chọn)
           </label>
+
+          {/* File upload */}
+          <div
+            style={{
+              border: "2px dashed #d1d5db",
+              borderRadius: "8px",
+              padding: "16px",
+              textAlign: "center",
+              marginBottom: "12px",
+              backgroundColor: "#f9fafb",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "13px",
+                color: "#6b7280",
+                margin: "0 0 8px 0",
+              }}
+            >
+              Tải ảnh trực tiếp từ thiết bị (tối đa 10MB mỗi ảnh)
+            </p>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              multiple
+              onChange={handleImageUpload}
+              disabled={uploadingImage}
+              style={{ fontSize: "13px" }}
+            />
+            {uploadingImage && (
+              <p
+                style={{ fontSize: "13px", color: "#3b82f6", marginTop: "8px" }}
+              >
+                Đang tải ảnh lên...
+              </p>
+            )}
+          </div>
+
+          {/* Preview uploaded images */}
+          {uploadedImages.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                flexWrap: "wrap",
+                marginBottom: "12px",
+              }}
+            >
+              {uploadedImages.map((url, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    position: "relative",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <img
+                    src={url}
+                    alt={`Upload ${idx + 1}`}
+                    style={{
+                      width: "80px",
+                      height: "80px",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(idx)}
+                    style={{
+                      position: "absolute",
+                      top: "-4px",
+                      right: "-4px",
+                      background: "#ef4444",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "50%",
+                      width: "20px",
+                      height: "20px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      lineHeight: "20px",
+                      textAlign: "center",
+                      padding: 0,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Manual URL fallback */}
+          <p
+            style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}
+          >
+            Hoặc nhập link ảnh/video bên ngoài:
+          </p>
           <input
             value={mediaUrl}
             onChange={(e) => setMediaUrl(e.target.value)}
@@ -294,9 +435,6 @@ export default function ComplaintForm() {
               boxSizing: "border-box",
             }}
           />
-          <p style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>
-            Đính kèm link ảnh hoặc video để nhân viên hỗ trợ tốt hơn.
-          </p>
         </div>
 
         {error && (

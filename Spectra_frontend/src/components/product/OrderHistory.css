@@ -1,22 +1,36 @@
+/* ===== SPECTRA ORDER HISTORY — NEO-BRUTALISM ===== */
 .order-container {
-  max-width: 900px;
+  max-width: 960px;
   margin: 40px auto;
-  padding: 0 20px;
+  padding: 0 24px;
+  animation: fadeInUp 0.5s ease-out;
 }
 
 .order-container h2 {
   margin-bottom: 30px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .order-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 24px;
-  background: #fff;
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-bottom: 20px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
 }
 
-/* HEADER */
+.order-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translate(-2px, -2px);
+}
+
 .order-header {
   display: flex;
   justify-content: space-between;
@@ -25,35 +39,41 @@
 
 .order-date {
   font-size: 14px;
-  color: #777;
+  color: var(--color-text-muted);
 }
 
 .order-status {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .order-status.completed {
-  background: #e6f4ea;
-  color: #2e7d32;
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #059669;
 }
 
 .order-status.pending {
-  background: #fff8e1;
-  color: #f57c00;
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #d97706;
 }
 
 .order-status.cancelled {
-  background: #fdecea;
-  color: #d32f2f;
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #dc2626;
 }
 
 .order-items {
   margin: 20px 0;
-  border-top: 1px solid #eee;
-  border-bottom: 1px solid #eee;
+  border-top: var(--border-thin);
+  border-bottom: var(--border-thin);
 }
 
 .order-item {
@@ -72,18 +92,25 @@
 
 .order-total {
   font-size: 16px;
+  font-weight: 900;
+  color: var(--color-primary);
 }
 
 .view-btn {
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 1px solid #000;
-  background: #000;
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  background: var(--color-primary);
   color: #fff;
   cursor: pointer;
-  transition: 0.2s;
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: var(--transition-fast);
 }
 
 .view-btn:hover {
-  background: #333;
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-md);
 }
