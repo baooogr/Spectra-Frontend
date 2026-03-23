@@ -33,9 +33,9 @@ export default function Header() {
     if (e.key === "Enter") {
       const trimmedTerm = searchTerm.trim();
       if (trimmedTerm) {
-        navigate(`/?search=${encodeURIComponent(trimmedTerm)}`);
+        navigate(`/shop?search=${encodeURIComponent(trimmedTerm)}`);
       } else {
-        navigate(`/`);
+        navigate(`/shop`);
       }
     }
   };
@@ -72,29 +72,21 @@ export default function Header() {
         <div className="header-actions">
           {isAdmin && (
             <Link to="/admin" className="header-action-btn">
-              <span className="icon">⚙️</span>
               <span className="text">Admin</span>
             </Link>
           )}
 
           <Link to="/orders" className="header-action-btn">
-            <span className="icon">📦</span>
             <span className="text">Orders</span>
           </Link>
 
           <Link to="/cart" className="header-action-btn">
-            <span className="icon">🛒</span>
             <span className="text">Cart</span>
           </Link>
 
           {currentUser ? (
             <>
-              <Link
-                to="/profile"
-                className="header-action-btn"
-                title="Đi đến Hồ sơ cá nhân"
-              >
-                <span className="icon">👤</span>
+              <Link to="/profile" className="header-action-btn" title="Profile">
                 <span className="text">
                   {currentUser.fullName || currentUser.userName || "Profile"}
                 </span>
@@ -108,15 +100,13 @@ export default function Header() {
                   border: "none",
                   padding: "8px 14px",
                 }}
-                title="Đăng xuất khỏi hệ thống"
+                title="Logout"
               >
-                <span className="icon">🚪</span>
                 <span className="text">Logout</span>
               </button>
             </>
           ) : (
             <Link to="/login" className="header-action-btn">
-              <span className="icon">👤</span>
               <span className="text">Sign In</span>
             </Link>
           )}
@@ -127,10 +117,13 @@ export default function Header() {
         <Link to="/" className="header-nav-link">
           Home
         </Link>
-        <Link to="/?category=eyeglasses" className="header-nav-link">
+        <Link to="/shop" className="header-nav-link">
+          Shop
+        </Link>
+        <Link to="/shop?category=eyeglasses" className="header-nav-link">
           Eyeglasses
         </Link>
-        <Link to="/?category=sunglasses" className="header-nav-link">
+        <Link to="/shop?category=sunglasses" className="header-nav-link">
           Sunglasses
         </Link>
         <Link to="/orders" className="header-nav-link">

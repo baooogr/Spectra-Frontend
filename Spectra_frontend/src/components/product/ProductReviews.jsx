@@ -267,7 +267,7 @@ export default function ProductReviews({ frameId }) {
             fontWeight: "600",
           }}
         >
-          {isVerified ? "✍️ Viết đánh giá (Đã mua hàng)" : "✍️ Viết đánh giá"}
+          {isVerified ? "Viết đánh giá (Đã mua hàng)" : "Viết đánh giá"}
         </button>
       )}
 

@@ -1,4 +1,4 @@
-/* ===== SPECTRA SHIPPING PAGE ===== */
+/* ===== SPECTRA SHIPPING PAGE — NEO-BRUTALISM ===== */
 .shipping-page-container {
   padding: 32px;
   background-color: var(--color-bg);
@@ -7,39 +7,42 @@
 
 .shipping-header {
   font-size: 26px;
-  color: var(--color-text);
+  color: var(--color-brand-charcoal);
   margin-top: 0;
   margin-bottom: 24px;
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: var(--border-thick);
   padding-bottom: 14px;
   font-family: var(--font-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .shipping-table {
   width: 100%;
   border-collapse: collapse;
   background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--color-border);
+  border: var(--border-thick);
 }
 
 .shipping-table th {
   background: var(--color-primary-lighter);
   padding: 16px;
   text-align: left;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-primary-dark);
-  border-bottom: 2px solid var(--color-border);
+  border-bottom: var(--border-thick);
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .shipping-table td {
   padding: 16px;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: var(--border-thin);
   color: var(--color-text-secondary);
   vertical-align: middle;
 }
@@ -52,8 +55,9 @@
   background: var(--color-primary-lighter);
   color: var(--color-primary-dark);
   padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  font-weight: 800;
   font-size: 13px;
   display: inline-block;
 }
@@ -64,21 +68,24 @@
 }
 
 .btn-manual {
-  border: none;
   padding: 8px 16px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: var(--transition-fast);
-  font-weight: 600;
+  font-weight: 800;
   font-size: 13px;
   background: var(--color-bg);
   color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  border: var(--border-thin);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 .btn-manual:hover {
   background: var(--color-primary-lighter);
   color: var(--color-primary);
   border-color: var(--color-primary);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Modals */
@@ -94,28 +101,31 @@
   align-items: center;
   z-index: 1000;
   padding: 20px;
-  backdrop-filter: blur(4px);
 }
 
 .modal-content {
   background: var(--color-surface);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
+  border: var(--border-thick);
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
   padding: 28px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
 }
 
 .modal-title {
   margin-top: 0;
   margin-bottom: 24px;
-  border-bottom: 2px solid var(--color-primary-lighter);
+  border-bottom: var(--border-thick);
   padding-bottom: 14px;
-  color: var(--color-text);
+  color: var(--color-brand-charcoal);
   font-size: 20px;
   font-family: var(--font-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .form-group {
@@ -125,11 +135,11 @@
 .form-group label {
   display: block;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-text-muted);
   margin-bottom: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .form-group input,
@@ -137,7 +147,7 @@
   width: 100%;
   padding: 10px 14px;
   border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border);
+  border: var(--border-thin);
   box-sizing: border-box;
   font-size: 14px;
   outline: none;
@@ -148,7 +158,8 @@
 .form-group input:focus,
 .form-group select:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 107, 122, 0.1);
+  outline: 3px solid var(--color-primary);
+  outline-offset: 0px;
   background: var(--color-surface);
 }
 
@@ -162,41 +173,43 @@
 .btn-cancel {
   padding: 10px 24px;
   background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   transition: var(--transition-fast);
 }
 
 .btn-cancel:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-confirm {
   padding: 10px 24px;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-light) 100%
-  );
+  background: var(--color-primary);
   color: white;
-  border: none;
-  border-radius: var(--radius-md);
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-weight: 700;
-  transition: var(--transition-base);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: var(--transition-fast);
 }
 
 .btn-confirm:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-confirm:disabled {
   background: var(--color-text-muted);
   cursor: not-allowed;
   transform: none;
-  filter: none;
+  box-shadow: none;
 }

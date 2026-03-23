@@ -1,4 +1,4 @@
-/* ===== SPECTRA PRODUCT DETAIL ===== */
+/* ===== SPECTRA PRODUCT DETAIL — NEO-BRUTALISM ===== */
 .product-detail-container {
   max-width: 1200px;
   margin: 40px auto;
@@ -20,8 +20,10 @@
   margin-bottom: 6px;
   font-size: 28px;
   font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--color-text);
+  font-weight: 900;
+  color: var(--color-brand-charcoal);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .product-brand {
@@ -31,7 +33,7 @@
 
 .product-price {
   font-size: 36px;
-  font-weight: 800;
+  font-weight: 900;
   margin: 15px 0 16px;
   color: var(--color-primary);
 }
@@ -42,7 +44,8 @@
   gap: 8px;
   background: var(--color-primary-lighter);
   padding: 6px 16px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
   font-size: 14px;
   margin-bottom: 24px;
 }
@@ -57,11 +60,11 @@
 }
 .status-in-stock {
   color: var(--color-success);
-  font-weight: 700;
+  font-weight: 800;
 }
 .status-out-stock {
   color: var(--color-error);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 /* Quantity */
@@ -75,10 +78,10 @@
   height: 40px;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  border: var(--border-thin);
   background: var(--color-bg);
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 900;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -88,6 +91,8 @@
   background: var(--color-primary-lighter);
   border-color: var(--color-primary);
   color: var(--color-primary);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-xs);
 }
 .btn-qty:disabled {
   opacity: 0.5;
@@ -96,7 +101,7 @@
 .qty-value {
   margin: 0 20px;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   min-width: 30px;
   text-align: center;
 }
@@ -105,36 +110,32 @@
 .btn-add-cart {
   padding: 16px 24px;
   color: white;
-  font-weight: 700;
-  border: none;
-  border-radius: var(--radius-md);
+  font-weight: 800;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
   width: 100%;
   font-size: 16px;
   margin-top: 10px;
-  transition: var(--transition-base);
+  transition: var(--transition-fast);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 .btn-add-cart.active {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-light) 100%
-  );
+  background: var(--color-primary);
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
 }
 .btn-add-cart.active:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Description box */
 .product-description-box {
   margin-top: 35px;
   padding: 28px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
   background-color: var(--color-surface);
   box-shadow: var(--shadow-sm);
 }
@@ -142,10 +143,13 @@
 .product-description-box h3 {
   margin-top: 0;
   padding-bottom: 14px;
-  border-bottom: 2px solid var(--color-primary-lighter);
+  border-bottom: var(--border-thick);
   font-size: 18px;
-  color: var(--color-text);
+  color: var(--color-brand-charcoal);
   font-family: var(--font-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .product-description-box ul {
@@ -156,7 +160,7 @@
 
 .product-description-box li {
   padding: 12px 0;
-  border-bottom: 1px dashed var(--color-border-light);
+  border-bottom: var(--border-thin);
   color: var(--color-text-secondary);
   font-size: 14px;
 }
@@ -167,6 +171,7 @@
 
 .product-description-box strong {
   color: var(--color-text);
+  font-weight: 800;
 }
 
 /* Gallery */
@@ -181,15 +186,16 @@
 .main-image-container {
   width: 100%;
   height: 380px;
-  background-color: #f8fafc;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
+  background-color: var(--color-brand-cream);
+  border-radius: var(--radius-md);
+  border: var(--border-thick);
   overflow: hidden;
   position: relative;
   cursor: zoom-in;
   display: flex;
   justify-content: center;
   align-items: center;
+  box-shadow: var(--shadow-md);
 }
 
 .main-image {
@@ -207,14 +213,17 @@
   position: absolute;
   bottom: 15px;
   right: 15px;
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: var(--color-brand-cream);
   padding: 6px 14px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 800;
   color: var(--color-text-secondary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   pointer-events: none;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Thumbnail row */
@@ -231,8 +240,8 @@
 }
 
 .thumbnail-row::-webkit-scrollbar-thumb {
-  background-color: #c4cad4;
-  border-radius: 4px;
+  background-color: var(--color-brand-charcoal);
+  border-radius: 0px;
 }
 
 .thumbnail-wrapper {
@@ -240,19 +249,22 @@
   height: 80px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  border: 2px solid transparent;
+  border: var(--border-thin);
   overflow: hidden;
   cursor: pointer;
-  background-color: #f8fafc;
+  background-color: var(--color-brand-cream);
   transition: var(--transition-fast);
 }
 
 .thumbnail-wrapper.active {
   border-color: var(--color-primary);
+  box-shadow: var(--shadow-xs);
 }
 
 .thumbnail-wrapper:hover {
   border-color: var(--color-primary-light);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-xs);
 }
 
 .thumbnail {
@@ -281,7 +293,6 @@
   align-items: center;
   z-index: 99999;
   cursor: zoom-out;
-  backdrop-filter: blur(4px);
 }
 
 .zoomed-image {
@@ -289,22 +300,24 @@
   max-height: 90vh;
   object-fit: contain;
   cursor: default;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-md);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-xl);
 }
 
 .close-zoom-btn {
   position: absolute;
   top: 20px;
   right: 30px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  background: var(--color-brand-charcoal);
+  border: var(--border-thin);
+  border-color: white;
   color: white;
   font-size: 32px;
   cursor: pointer;
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -312,8 +325,10 @@
 }
 
 .close-zoom-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ff6f3c;
+  background: var(--color-accent);
+  color: var(--color-brand-charcoal);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px white;
 }
 
 /* Responsive */
@@ -341,8 +356,8 @@
 
 .info-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: var(--transition-fast);
@@ -350,12 +365,13 @@
 
 .info-card:hover {
   box-shadow: var(--shadow-md);
+  transform: translate(-2px, -2px);
 }
 
 .info-card-header {
   background: var(--color-primary-lighter);
   padding: 14px 18px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-thin);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -364,10 +380,10 @@
 .info-card-header h3 {
   margin: 0;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-primary-dark);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .info-icon {
@@ -382,7 +398,7 @@
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: var(--border-thin);
   font-size: 14px;
 }
 
@@ -392,12 +408,12 @@
 
 .info-label {
   color: var(--color-text-muted);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .info-value {
   color: var(--color-text);
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .text-capitalize {

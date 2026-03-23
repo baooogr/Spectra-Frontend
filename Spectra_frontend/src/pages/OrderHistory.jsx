@@ -370,7 +370,7 @@ export default function OrderHistory() {
                   color: "#1d4ed8",
                 }}
               >
-                📅 Dự kiến giao: {formatDate(order.expectedDate)}
+                Dự kiến giao: {formatDate(order.expectedDate)}
               </p>
             )}
           </div>
@@ -520,7 +520,7 @@ export default function OrderHistory() {
           <p
             style={{ textAlign: "center", color: "#6b7280", padding: "40px 0" }}
           >
-            ⏳ Đang tải đơn hàng...
+            Đang tải đơn hàng...
           </p>
         )}
 
@@ -540,7 +540,7 @@ export default function OrderHistory() {
 
         {!isLoading && !error && totalCount === 0 && (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ fontSize: "48px", marginBottom: "12px" }}>🛍️</div>
+            <div style={{ fontSize: "48px", marginBottom: "12px" }}></div>
             <p style={{ color: "#6b7280" }}>Bạn chưa có đơn hàng nào.</p>
             <Link
               to="/"

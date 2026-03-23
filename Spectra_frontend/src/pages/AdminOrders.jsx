@@ -51,11 +51,11 @@ function fmtRx(val) {
 // =============================================================================
 function formatPaymentMethod(method) {
   if (method && method.toLowerCase() === "vnpay") {
-    return { label: "VNPay", icon: "💳", color: "#1d4ed8", bg: "#eff6ff" };
+    return { label: "VNPay", icon: "", color: "#1d4ed8", bg: "#eff6ff" };
   }
   return {
     label: "Tiền mặt (COD)",
-    icon: "💵",
+    icon: "",
     color: "#15803d",
     bg: "#f0fdf4",
   };
@@ -160,7 +160,7 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
           color: "#92400e",
         }}
       >
-        <span>📋 Đơn kính đính kèm</span>
+        <span>Đơn kính đính kèm</span>
         <span style={{ fontSize: "11px", color: "#b45309" }}>
           {isExpanded ? "▲ Thu gọn" : "▼ Xem chi tiết"}
         </span>
@@ -169,12 +169,12 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
         <div style={{ padding: "10px 12px", borderTop: "1px solid #fde68a" }}>
           {isLoading && (
             <p style={{ fontSize: "13px", color: "#92400e", margin: 0 }}>
-              ⏳ Đang tải...
+              Đang tải...
             </p>
           )}
           {fetchError && (
             <p style={{ fontSize: "13px", color: "#dc2626", margin: 0 }}>
-              ❌ Không thể tải đơn kính. Có thể đơn đã bị xóa.
+              Không thể tải đơn kính. Có thể đơn đã bị xóa.
             </p>
           )}
           {rxData && !isLoading && (
@@ -304,7 +304,7 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
 function PaymentInfoBlock({ paymentList }) {
   const COD = {
     label: "Tiền mặt (COD)",
-    icon: "💵",
+    icon: "",
     color: "#15803d",
     bg: "#f0fdf4",
   };
@@ -336,7 +336,7 @@ function PaymentInfoBlock({ paymentList }) {
     paymentList.find((p) => p.paymentStatus === "completed") || paymentList[0];
   const isVNPay = latest.paymentMethod?.toLowerCase() === "vnpay";
   const method = isVNPay
-    ? { label: "VNPay", icon: "💳", color: "#1d4ed8", bg: "#eff6ff" }
+    ? { label: "VNPay", icon: "", color: "#1d4ed8", bg: "#eff6ff" }
     : COD;
   const pStatus = formatPaymentStatus(latest.paymentStatus);
 
@@ -707,7 +707,7 @@ export default function AdminOrders() {
     if (isLoadingDetail)
       return (
         <div style={{ textAlign: "center", padding: "50px" }}>
-          ⏳ Đang tải thông tin chi tiết...
+          Đang tải thông tin chi tiết...
         </div>
       );
     if (!selectedOrder)
@@ -808,7 +808,7 @@ export default function AdminOrders() {
                   color: "#374151",
                 }}
               >
-                💰 Thanh toán:
+                Thanh toán:
               </p>
               <PaymentInfoBlock paymentList={paymentList} />
             </div>
@@ -930,7 +930,7 @@ export default function AdminOrders() {
       <div className="admin-orders-header">
         <h2 className="admin-orders-title">Quản Lý Đơn Hàng</h2>
         <button className="btn-view" onClick={fetchOrdersData}>
-          🔄 Làm mới
+          Làm mới
         </button>
       </div>
 

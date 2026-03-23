@@ -1,4 +1,4 @@
-/* ===== SPECTRA ADMIN DASHBOARD ===== */
+/* ===== SPECTRA ADMIN DASHBOARD — NEO-BRUTALISM ===== */
 .admin-dashboard-container {
   padding-bottom: 40px;
 }
@@ -7,7 +7,10 @@
   color: var(--color-text);
   margin-top: 0;
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 28px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
 }
 
 /* Filters */
@@ -18,16 +21,15 @@
   align-items: flex-end;
   background: var(--color-surface);
   padding: 22px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   margin-bottom: 24px;
-  border: 1px solid var(--color-border);
+  border: var(--border-thick);
 }
-.filter-group {
+.dashboard-filters .filter-group {
   display: flex;
   gap: 15px;
   padding-right: 20px;
-  border-right: 2px solid var(--color-border);
+  border-right: var(--border-thick);
 }
 .filter-item {
   display: flex;
@@ -35,25 +37,25 @@
 }
 .filter-item label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 6px;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 .filter-item input,
 .filter-item select {
   padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--color-border);
+  border: var(--border-thin);
   outline: none;
   transition: var(--transition-fast);
   background: var(--color-bg);
+  font-weight: 600;
 }
 .filter-item input:focus,
 .filter-item select:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 107, 122, 0.1);
+  border-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-xs);
 }
 .filter-item input {
   width: 140px;
@@ -63,22 +65,20 @@
 }
 
 .btn-filter {
-  padding: 9px 22px;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-light) 100%
-  );
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
+  padding: 10px 24px;
+  background: var(--color-brand-sage);
+  color: var(--color-brand-charcoal);
+  border: var(--border-thin);
   cursor: pointer;
-  font-weight: 700;
-  transition: var(--transition-base);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
 }
 .btn-filter:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  background: var(--color-brand-yellow);
+  transform: translate(-1px, -1px);
   box-shadow: var(--shadow-sm);
 }
 
@@ -87,59 +87,72 @@
   text-align: center;
   padding: 20px;
   font-size: 16px;
-  border-radius: var(--radius-md);
   margin-bottom: 20px;
+  font-weight: 700;
+  border: var(--border-thin);
 }
 .msg-loading {
   color: var(--color-text-muted);
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
 }
 .msg-error {
   color: #b91c1c;
   background: #fee2e2;
-  border: 1px solid #fca5a5;
+  border-color: #ef4444;
 }
 
 /* Summary Cards */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+  gap: 16px;
   margin-bottom: 30px;
 }
 .summary-card {
   background: var(--color-surface);
   padding: 24px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  border-left: 4px solid var(--color-primary);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border: 1px solid var(--color-border);
   transition: var(--transition-fast);
 }
 .summary-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}
+.summary-card:nth-child(1) {
+  border-left: 6px solid var(--color-brand-sage);
+}
+.summary-card:nth-child(2) {
+  border-left: 6px solid var(--color-brand-yellow);
+}
+.summary-card:nth-child(3) {
+  border-left: 6px solid var(--color-brand-forest);
+}
+.summary-card:nth-child(4) {
+  border-left: 6px solid var(--color-brand-olive);
+}
+.summary-card:nth-child(5) {
+  border-left: 6px solid var(--color-brand-mint);
 }
 .card-title {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 700;
+  letter-spacing: 1px;
+  font-weight: 800;
 }
 .card-value {
   font-size: 30px;
-  font-weight: 800;
+  font-weight: 900;
   margin: 10px 0 0 0;
   color: var(--color-text);
 }
 .card-value.highlight {
-  color: var(--color-primary);
+  color: var(--color-brand-forest);
 }
 
 /* Main Grid */
@@ -164,12 +177,11 @@
 .chart-card {
   background: var(--color-surface);
   padding: 24px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   flex: 1;
-  border: 1px solid var(--color-border);
 }
 .chart-title {
   margin-top: 0;
@@ -177,6 +189,9 @@
   color: var(--color-text);
   font-size: 18px;
   font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 .chart-wrapper {
   width: 100%;
@@ -191,39 +206,40 @@
   font-size: 14px;
   text-align: center;
   padding: 20px 0;
-  font-style: italic;
+  font-weight: 600;
 }
 
 /* Top 10 List */
 .top-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
 }
 .top-item {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 2px solid var(--color-border-light);
   padding-bottom: 12px;
   transition: var(--transition-fast);
 }
 .top-item:hover {
-  padding-left: 6px;
+  padding-left: 4px;
 }
 .top-item-index {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 13px;
   margin-right: 14px;
+  border: var(--border-thin);
 }
 .top-item-index.top-3 {
-  background: linear-gradient(135deg, #fef08a, #fde047);
-  color: #a16207;
+  background: var(--color-brand-yellow);
+  color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-xs);
 }
 .top-item-index.normal {
   background: var(--color-bg);
@@ -231,7 +247,7 @@
 }
 .top-item-name {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
   font-size: 14px;
 }
@@ -240,8 +256,9 @@
   color: var(--color-text-muted);
   font-size: 12px;
   margin-top: 4px;
+  font-weight: 600;
 }
 .top-item-sold span {
-  font-weight: 700;
-  color: var(--color-primary);
+  font-weight: 800;
+  color: var(--color-brand-forest);
 }

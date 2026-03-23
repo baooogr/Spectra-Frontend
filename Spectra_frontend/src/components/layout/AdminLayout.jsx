@@ -65,7 +65,7 @@ export default function AdminLayout() {
         </nav>
 
         <button onClick={handleLogout} className="admin-logout-btn">
-          🚪 Thoát Admin
+          Thoat Admin
         </button>
       </aside>
 

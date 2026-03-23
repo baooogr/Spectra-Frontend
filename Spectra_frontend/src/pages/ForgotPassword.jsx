@@ -155,7 +155,7 @@ export default function ForgotPassword() {
               }}
             >
               <p style={{ margin: "0 0 8px", fontWeight: "bold" }}>
-                🛠️ Chế độ phát triển:
+                Chế độ phát triển:
               </p>
               <p style={{ margin: "0 0 8px" }}>
                 Token đặt lại mật khẩu của bạn:

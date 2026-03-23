@@ -1496,7 +1496,7 @@ export default function AdminProducts() {
                           color: "#1e40af",
                         }}
                       >
-                        📸 Tải ảnh mới lên
+                        Tải ảnh mới lên
                       </p>
                       <div
                         style={{
@@ -1575,7 +1575,7 @@ export default function AdminProducts() {
                               fontWeight: "bold",
                             }}
                           >
-                            ⏳ Đang tải lên...
+                            Đang tải lên...
                           </span>
                         )}
                       </div>

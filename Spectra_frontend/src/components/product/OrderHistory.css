@@ -1,4 +1,4 @@
-/* ===== SPECTRA ORDER HISTORY (component) ===== */
+/* ===== SPECTRA ORDER HISTORY — NEO-BRUTALISM ===== */
 .order-container {
   max-width: 960px;
   margin: 40px auto;
@@ -10,12 +10,15 @@
   margin-bottom: 30px;
   font-family: var(--font-display);
   font-size: 28px;
-  color: var(--color-text);
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .order-card {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
   padding: 24px;
   margin-bottom: 20px;
   background: var(--color-surface);
@@ -25,7 +28,7 @@
 
 .order-card:hover {
   box-shadow: var(--shadow-md);
-  border-color: var(--color-primary-light);
+  transform: translate(-2px, -2px);
 }
 
 .order-header {
@@ -41,32 +44,36 @@
 
 .order-status {
   padding: 6px 16px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .order-status.completed {
   background: #ecfdf5;
   color: #059669;
+  border-color: #059669;
 }
 
 .order-status.pending {
   background: #fffbeb;
   color: #d97706;
+  border-color: #d97706;
 }
 
 .order-status.cancelled {
   background: #fef2f2;
   color: #dc2626;
+  border-color: #dc2626;
 }
 
 .order-items {
   margin: 20px 0;
-  border-top: 1px solid var(--color-border-light);
-  border-bottom: 1px solid var(--color-border-light);
+  border-top: var(--border-thin);
+  border-bottom: var(--border-thin);
 }
 
 .order-item {
@@ -85,28 +92,25 @@
 
 .order-total {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 900;
   color: var(--color-primary);
 }
 
 .view-btn {
   padding: 10px 24px;
-  border-radius: var(--radius-full);
-  border: none;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-light) 100%
-  );
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  background: var(--color-primary);
   color: #fff;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 13px;
-  transition: var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: var(--transition-fast);
 }
 
 .view-btn:hover {
-  transform: translateY(-1px);
+  transform: translate(-2px, -2px);
   box-shadow: var(--shadow-md);
-  filter: brightness(1.1);
 }

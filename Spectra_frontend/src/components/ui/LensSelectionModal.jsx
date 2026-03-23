@@ -305,7 +305,7 @@ export default function LensSelectionModal({
             paddingBottom: "10px",
           }}
         >
-          👓 Cấu Hình Tròng Kính
+          Cấu Hình Tròng Kính
         </h3>
         <p style={{ color: "#666", marginBottom: "20px" }}>
           Gọng: <strong>{product?.frameName}</strong> (${basePrice})
@@ -364,7 +364,7 @@ export default function LensSelectionModal({
 
                 if (!isSupported) {
                   alert(
-                    `❌ Gọng kính này không hỗ trợ: ${lens.lensSpecification || lens.typeName}`,
+                    `Gọng kính này không hỗ trợ: ${lens.lensSpecification || lens.typeName}`,
                   );
                   return;
                 }
@@ -391,7 +391,7 @@ export default function LensSelectionModal({
                   >
                     {lens.lensSpecification || lens.typeName} (+$
                     {lens.basePrice || 0})
-                    {!isSupported ? " (🚫 Không hỗ trợ)" : ""}
+                    {!isSupported ? " (Không hỗ trợ)" : ""}
                   </option>
                 );
               })}
@@ -552,7 +552,7 @@ export default function LensSelectionModal({
               <label
                 style={{ fontWeight: "bold", color: "#b91c1c", margin: 0 }}
               >
-                ⚠️ THÔNG SỐ TOA THUỐC
+                THÔNG SỐ TOA THUỐC
               </label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -667,7 +667,7 @@ export default function LensSelectionModal({
                     }}
                   >
                     <h5 style={{ color: "#dc2626", margin: "0 0 10px 0" }}>
-                      👁️ Mắt Phải (OD)
+                      Mắt Phải (OD)
                     </h5>
                     <div style={{ display: "flex", gap: "5px" }}>
                       <div style={{ flex: 1 }}>
@@ -771,7 +771,7 @@ export default function LensSelectionModal({
                     }}
                   >
                     <h5 style={{ color: "#2563eb", margin: "0 0 10px 0" }}>
-                      👁️ Mắt Trái (OS)
+                      Mắt Trái (OS)
                     </h5>
                     <div style={{ display: "flex", gap: "5px" }}>
                       <div style={{ flex: 1 }}>
@@ -912,7 +912,7 @@ export default function LensSelectionModal({
                       fontWeight: "bold",
                     }}
                   >
-                    {isSavingNew ? "⏳ Đang lưu..." : "💾 Lưu & Chọn Toa Này"}
+                    {isSavingNew ? "Đang lưu..." : "Lưu & Chọn Toa Này"}
                   </button>
                 </div>
 
@@ -927,7 +927,7 @@ export default function LensSelectionModal({
                       fontWeight: "500",
                     }}
                   >
-                    ⚠️ {validationErrors.other.join(" | ")}
+                    {validationErrors.other.join(" | ")}
                   </div>
                 )}
               </div>
@@ -952,8 +952,8 @@ export default function LensSelectionModal({
               gap: "8px",
             }}
           >
-            ⚠️ Kính không hỗ trợ thông số đơn thuốc này (SPH hoặc PD ngoài giới
-            hạn của gọng kính).
+            Kính không hỗ trợ thông số đơn thuốc này (SPH hoặc PD ngoài giới hạn
+            của gọng kính).
           </div>
         )}
 
@@ -1040,7 +1040,7 @@ export default function LensSelectionModal({
               backgroundColor: isAddToCartDisabled ? "#9ca3af" : "#111827",
             }}
           >
-            🛒 Thêm Vào Giỏ Hàng
+            Thêm Vào Giỏ Hàng
           </button>
         </div>
       </div>

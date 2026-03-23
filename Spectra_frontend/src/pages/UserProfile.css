@@ -4,9 +4,9 @@
   margin: 48px auto;
   padding: 36px;
   background-color: var(--color-surface);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-lg);
-  border: 1px solid var(--color-border);
+  border: var(--border-thick);
   animation: fadeInUp 0.5s ease-out;
 }
 .profile-title {
@@ -14,25 +14,30 @@
   margin-bottom: 24px;
   font-family: var(--font-display);
   font-size: 28px;
-  color: var(--color-text);
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .profile-msg {
   padding: 12px 16px;
   margin-bottom: 20px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   text-align: center;
-  font-weight: 600;
+  font-weight: 800;
 }
 .profile-msg.success {
   background-color: #ecfdf5;
   color: #059669;
-  border: 1px solid #a7f3d0;
+  border: var(--border-thin);
+  border-color: #059669;
 }
 .profile-msg.error {
   background-color: #fef2f2;
   color: #dc2626;
-  border: 1px solid #fecaca;
+  border: var(--border-thin);
+  border-color: #dc2626;
 }
 
 .profile-form {
@@ -42,26 +47,26 @@
 }
 .form-label {
   display: block;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 6px;
   font-size: 13px;
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 .form-input {
   width: 100%;
   padding: 12px 16px;
-  border-radius: var(--radius-md);
-  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
   box-sizing: border-box;
   background: var(--color-bg);
   transition: var(--transition-fast);
 }
 .form-input:focus {
-  border-color: var(--color-primary);
+  border-color: var(--color-brand-charcoal);
   background: var(--color-surface);
-  box-shadow: 0 0 0 3px rgba(0, 107, 122, 0.1);
+  box-shadow: var(--shadow-xs);
   outline: none;
 }
 .form-input:disabled {
@@ -82,32 +87,27 @@
 }
 .profile-status {
   color: var(--color-success);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .profile-btn-save {
   padding: 14px;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-light) 100%
-  );
+  background: var(--color-primary);
   color: white;
-  font-weight: 700;
-  border: none;
-  border-radius: var(--radius-md);
+  font-weight: 800;
+  border: var(--border-thick);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   margin-top: 10px;
   transition: var(--transition-base);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 .profile-btn-save:disabled {
   background: var(--color-text-muted);
   cursor: not-allowed;
 }
 .profile-btn-save:not(:disabled):hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
 }

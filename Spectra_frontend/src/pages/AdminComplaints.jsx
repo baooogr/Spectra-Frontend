@@ -195,7 +195,7 @@ export default function AdminComplaints() {
         body: JSON.stringify({ refundAmount: amt }),
       });
       if (res.ok) {
-        setActionMsg("✅ Đã thêm số tiền cần hoàn.");
+        setActionMsg("Đã thêm số tiền cần hoàn.");
         setRefundConfirmed(true);
         setRefundAmount("");
         fetchComplaints(activeFilter, page);
@@ -226,7 +226,7 @@ export default function AdminComplaints() {
         body: JSON.stringify({ trackingNumber: trackingNumber.trim() }),
       });
       if (res.ok) {
-        setActionMsg("✅ Đã cập nhật mã vận đơn thành công.");
+        setActionMsg("Đã cập nhật mã vận đơn thành công.");
         setTrackingConfirmed(true);
         setTrackingNumber("");
         fetchComplaints(activeFilter, page);
@@ -415,7 +415,7 @@ export default function AdminComplaints() {
                                       color: "#2563eb",
                                     }}
                                   >
-                                    📎 Xem bằng chứng
+                                    Xem bằng chứng
                                   </a>
                                 )}
                               </div>
@@ -752,7 +752,7 @@ export default function AdminComplaints() {
                               fontSize: "13px",
                             }}
                           >
-                            ✅ Khách đã chọn sản phẩm thay thế
+                            Khách đã chọn sản phẩm thay thế
                           </span>
                         </div>
                         {exchangeOrderDetail && (
@@ -865,7 +865,7 @@ export default function AdminComplaints() {
                             fontWeight: "600",
                           }}
                         >
-                          ⏳ Khách hàng chưa chọn sản phẩm thay thế
+                          Khách hàng chưa chọn sản phẩm thay thế
                         </p>
                         <p
                           style={{
@@ -920,7 +920,7 @@ export default function AdminComplaints() {
                         color: trackingConfirmed ? "#065f46" : "#92400e",
                       }}
                     >
-                      {trackingConfirmed ? "✅ " : "① "}
+                      {trackingConfirmed ? "" : "① "}
                       Mã vận đơn trả hàng / gửi bảo hành
                     </label>
                     {trackingConfirmed ? (
@@ -996,8 +996,7 @@ export default function AdminComplaints() {
                         color: "#065f46",
                       }}
                     >
-                      {refundConfirmed
-                        ? "✅ "
+                        ? "" 
                         : cType === "return"
                           ? "② "
                           : "① "}
@@ -1079,7 +1078,7 @@ export default function AdminComplaints() {
                           fontWeight: "600",
                         }}
                       >
-                        🔒 {statusBlockReason}
+                        {statusBlockReason}
                       </p>
                     </div>
                   )}

@@ -63,7 +63,7 @@ export default function OrderDetail() {
   if (isLoading)
     return (
       <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
-        ⏳ Đang tải chi tiết đơn hàng...
+        Đang tải chi tiết đơn hàng...
       </div>
     );
 
@@ -324,7 +324,7 @@ export default function OrderDetail() {
                 color: "#991b1b",
               }}
             >
-              ⚠️ Bạn có chắc chắn muốn huỷ đơn hàng này?
+              Bạn có chắc chắn muốn huỷ đơn hàng này?
             </p>
             <p
               style={{ margin: "0 0 14px", fontSize: "14px", color: "#7f1d1d" }}
@@ -397,7 +397,7 @@ export default function OrderDetail() {
                 color: "#1e40af",
               }}
             >
-              📦 Bạn đã nhận được đơn hàng chưa?
+              Bạn đã nhận được đơn hàng chưa?
             </p>
             <div
               style={{
@@ -420,7 +420,7 @@ export default function OrderDetail() {
                   cursor: "pointer",
                 }}
               >
-                ✅ Đã nhận
+                Đã nhận
               </button>
               <button
                 onClick={() => setShowNotReceivedInfo(true)}
@@ -435,7 +435,7 @@ export default function OrderDetail() {
                   cursor: "pointer",
                 }}
               >
-                ❌ Chưa nhận
+                Chưa nhận
               </button>
             </div>
 
@@ -460,7 +460,7 @@ export default function OrderDetail() {
                     color: "#dc2626",
                   }}
                 >
-                  📞 1900-0091
+                  1900-0091
                 </p>
                 <p
                   style={{
@@ -620,7 +620,7 @@ export default function OrderDetail() {
 
           const steps = [
             {
-              icon: "📋",
+              icon: "",
               label: "Đơn hàng đã đặt",
               desc: "Đơn hàng đang chờ xác nhận từ cửa hàng",
               time: createdAt,
@@ -628,7 +628,7 @@ export default function OrderDetail() {
               active: statusIdx === 0,
             },
             {
-              icon: "✅",
+              icon: "",
               label: "Đã xác nhận",
               desc: "Cửa hàng đã xác nhận đơn hàng",
               time: createdAt
@@ -638,7 +638,7 @@ export default function OrderDetail() {
               active: statusIdx === 1,
             },
             {
-              icon: "⚙️",
+              icon: "",
               label: "Đang chuẩn bị hàng",
               desc: "Sản phẩm đang được đóng gói và chuẩn bị giao",
               time: null,
@@ -646,7 +646,7 @@ export default function OrderDetail() {
               active: statusIdx === 2,
             },
             {
-              icon: "🚚",
+              icon: "",
               label: shipped
                 ? `Đã giao cho ${shippingCarrier || "hãng vận chuyển"}`
                 : "Chờ giao cho hãng vận chuyển",
@@ -660,7 +660,7 @@ export default function OrderDetail() {
               tracking: true,
             },
             {
-              icon: "📍",
+              icon: "",
               label: "Đang vận chuyển",
               desc: "Đang trên đường đến địa chỉ của bạn",
               time:
@@ -675,7 +675,7 @@ export default function OrderDetail() {
                 (!outForDeliveryTime || now < outForDeliveryTime),
             },
             {
-              icon: "🏠",
+              icon: "",
               label: "Đang giao hàng",
               desc: "Shipper đang trên đường giao đến bạn",
               time:
@@ -693,7 +693,7 @@ export default function OrderDetail() {
                 now >= outForDeliveryTime,
             },
             {
-              icon: "🎉",
+              icon: "",
               label: "Giao hàng thành công",
               desc: confirmedAt
                 ? "Người nhận đã xác nhận"
@@ -707,7 +707,7 @@ export default function OrderDetail() {
           // Add delivery confirmed step if applicable
           if (confirmedAt || statusIdx >= 4) {
             steps.push({
-              icon: "📦",
+              icon: "",
               label: "Đã xác nhận nhận hàng",
               desc: "Bạn đã xác nhận nhận được đơn hàng",
               time: confirmedAt,
@@ -753,7 +753,7 @@ export default function OrderDetail() {
                 }}
               >
                 <h4 style={{ margin: 0, fontSize: "17px", color: "#1e293b" }}>
-                  🗺️ Lộ trình đơn hàng
+                  Lộ trình đơn hàng
                 </h4>
                 {estimated && statusIdx < 4 && (
                   <span
@@ -837,7 +837,7 @@ export default function OrderDetail() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      🔗 Theo dõi trên {shippingCarrier || "website"}
+                      Theo dõi trên {shippingCarrier || "website"}
                     </a>
                   )}
                 </div>
@@ -976,7 +976,6 @@ export default function OrderDetail() {
                   }}
                 >
                   <span>
-                    📦{" "}
                     {order.shippingMethod === "express"
                       ? "Giao hàng nhanh"
                       : "Giao hàng tiêu chuẩn"}
@@ -984,7 +983,7 @@ export default function OrderDetail() {
                   {order.shippingFee !== null &&
                     order.shippingFee !== undefined && (
                       <span>
-                        💰 Phí ship:{" "}
+                        Phí ship:{" "}
                         {order.shippingFee === 0
                           ? "Miễn phí"
                           : `$${order.shippingFee}`}
@@ -1144,7 +1143,7 @@ export default function OrderDetail() {
                               textDecoration: "underline",
                             }}
                           >
-                            👁️ Xem Toa thuốc / Đơn kính
+                            Xem Toa thuốc / Đơn kính
                           </a>
                         )}
                       </div>

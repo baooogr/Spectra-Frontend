@@ -340,7 +340,7 @@ export default function ComplaintForm() {
                 margin: "0 0 8px 0",
               }}
             >
-              📸 Tải ảnh trực tiếp từ thiết bị (tối đa 10MB mỗi ảnh)
+              Tải ảnh trực tiếp từ thiết bị (tối đa 10MB mỗi ảnh)
             </p>
             <input
               type="file"
@@ -354,7 +354,7 @@ export default function ComplaintForm() {
               <p
                 style={{ fontSize: "13px", color: "#3b82f6", marginTop: "8px" }}
               >
-                ⏳ Đang tải ảnh lên...
+                Đang tải ảnh lên...
               </p>
             )}
           </div>

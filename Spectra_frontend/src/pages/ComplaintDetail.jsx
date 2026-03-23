@@ -577,7 +577,7 @@ export default function ComplaintDetail() {
                     color: "#065f46",
                   }}
                 >
-                  ✅ Đơn đổi hàng đã được tạo
+                  Đơn đổi hàng đã được tạo
                 </p>
                 <Link
                   to={`/orders/${exchangeOrderId}`}
@@ -758,7 +758,7 @@ export default function ComplaintDetail() {
                       color: "#047857",
                     }}
                   >
-                    ✅ Đã hoàn tiền ngày{" "}
+                    Đã hoàn tiền ngày{" "}
                     {new Date(refundedAt).toLocaleString("vi-VN")}
                   </p>
                 ) : (
@@ -769,7 +769,7 @@ export default function ComplaintDetail() {
                       color: "#92400e",
                     }}
                   >
-                    ⏳ Đang xử lý hoàn tiền...
+                    Đang xử lý hoàn tiền...
                   </p>
                 )}
               </div>

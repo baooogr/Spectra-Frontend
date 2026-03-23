@@ -140,7 +140,7 @@ export default function CheckoutPage() {
       label: "Giao hàng tiêu chuẩn (J&T Express)",
       fee: 0,
       days: "5-7 ngày",
-      icon: "📦",
+      icon: "",
     },
     {
       key: "express",
@@ -494,7 +494,7 @@ export default function CheckoutPage() {
                     fontWeight: 600,
                   }}
                 >
-                  🎉 Giao hàng tiêu chuẩn J&T Express — Miễn phí vận chuyển!
+                  Giao hàng tiêu chuẩn J&T Express — Miễn phí vận chuyển!
                 </div>
               )}
 
@@ -602,7 +602,7 @@ export default function CheckoutPage() {
                   color: "#92400e",
                 }}
               >
-                🚚 Dự kiến nhận hàng: <strong>{getEstimatedDelivery()}</strong>
+                Dự kiến nhận hàng: <strong>{getEstimatedDelivery()}</strong>
               </div>
             </div>
 
@@ -631,9 +631,9 @@ export default function CheckoutPage() {
                   fontSize: "15px",
                 }}
               >
-                <option value="COD">💵 Thanh toán tiền mặt (COD)</option>
+                <option value="COD">Thanh toán tiền mặt (COD)</option>
                 <option value="VNPAY">
-                  💳 Thanh toán qua VNPay (Quét mã QR / Thẻ ATM)
+                  Thanh toán qua VNPay (Quét mã QR / Thẻ ATM)
                 </option>
               </select>
             </div>

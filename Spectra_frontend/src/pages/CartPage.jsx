@@ -55,7 +55,7 @@ export default function CartPage() {
         style={{ maxWidth: "1200px", margin: "0 auto" }}
       >
         <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>
-          🛒 Giỏ hàng của bạn
+          Giỏ hàng của bạn
         </h1>
         <div
           style={{
@@ -212,7 +212,7 @@ export default function CartPage() {
                           fontSize: "18px",
                         }}
                       >
-                        🗑️
+                        X
                       </button>
                     </div>
                   </div>

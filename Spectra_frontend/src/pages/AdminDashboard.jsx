@@ -48,14 +48,12 @@ export default function AdminDashboard() {
 
     if (startDate || endDate) {
       if (!startDate || !endDate) {
-        setError("⚠️ Vui lòng chọn đầy đủ cả 'Từ ngày' và 'Đến ngày'.");
+        setError("Vui long chon day du ca 'Tu ngay' va 'Den ngay'.");
         setIsLoading(false);
         return;
       }
       if (new Date(startDate) > new Date(endDate)) {
-        setError(
-          "⚠️ 'Từ ngày' không được lớn hơn 'Đến ngày'. Vui lòng chọn lại!",
-        );
+        setError("'Tu ngay' khong duoc lon hon 'Den ngay'. Vui long chon lai!");
         setIsLoading(false);
         return;
       }
@@ -152,7 +150,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-dashboard-container">
-      <h2 className="admin-dashboard-title">📊 Tổng Quan Kinh Doanh</h2>
+      <h2 className="admin-dashboard-title">Tong Quan Kinh Doanh</h2>
 
       <div className="dashboard-filters">
         <div className="filter-group">
@@ -192,7 +190,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {error && <div className="dashboard-msg msg-error">❌ {error}</div>}
+      {error && <div className="dashboard-msg msg-error">{error}</div>}
       {isLoading && (
         <div className="dashboard-msg msg-loading">
           Đang tải dữ liệu báo cáo...
@@ -203,23 +201,23 @@ export default function AdminDashboard() {
         <>
           <div className="summary-grid">
             <div className="summary-card">
-              <h3 className="card-title">💵 Doanh Thu</h3>
+              <h3 className="card-title">Doanh Thu</h3>
               <p className="card-value">{formatVND(stats.totalRevenue)}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">📦 Đơn Hàng</h3>
+              <h3 className="card-title">Don Hang</h3>
               <p className="card-value">{stats.totalOrders}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">👓 Kính Đã Bán</h3>
+              <h3 className="card-title">Kinh Da Ban</h3>
               <p className="card-value">{stats.totalFramesSold ?? 0}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">👥 Khách Mới (30 ngày)</h3>
+              <h3 className="card-title">Khach Moi (30 ngay)</h3>
               <p className="card-value">{stats.newCustomers ?? 0}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">🛍️ Sản Phẩm</h3>
+              <h3 className="card-title">San Pham</h3>
               <p className="card-value highlight">{stats.totalProducts ?? 0}</p>
             </div>
           </div>

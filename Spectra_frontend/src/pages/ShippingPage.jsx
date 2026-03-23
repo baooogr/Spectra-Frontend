@@ -68,7 +68,7 @@ function ShippingMethodBadge({ method }) {
         whiteSpace: "nowrap",
       }}
     >
-      {isExpress ? "⚡ Nhanh" : "📦 Tiêu chuẩn"}
+      {isExpress ? "Nhanh" : "Tiêu chuẩn"}
     </span>
   );
 }
@@ -455,7 +455,7 @@ export default function ShippingPage() {
 
   return (
     <div className="shipping-page-container">
-      <h2 className="shipping-header">🚚 Quản Lý Vận Chuyển & Giao Hàng</h2>
+      <h2 className="shipping-header">Quản Lý Vận Chuyển & Giao Hàng</h2>
 
       {/* Summary cards */}
       <div
@@ -470,28 +470,28 @@ export default function ShippingPage() {
           {
             label: "Chờ giao",
             count: activeCount,
-            icon: "📦",
+            icon: "",
             color: "#7c3aed",
             bg: "#ede9fe",
           },
           {
             label: "Đang giao",
             count: shippedCount,
-            icon: "🚚",
+            icon: "",
             color: "#0891b2",
             bg: "#cffafe",
           },
           {
             label: "Đã giao",
             count: deliveredCount,
-            icon: "✅",
+            icon: "",
             color: "#059669",
             bg: "#d1fae5",
           },
           {
             label: "Tổng đơn",
             count: orders.length,
-            icon: "📋",
+            icon: "",
             color: "#6b7280",
             bg: "#f3f4f6",
           },
@@ -538,22 +538,22 @@ export default function ShippingPage() {
           style={tabStyle("active")}
           onClick={() => setActiveTab("active")}
         >
-          📦 Chờ giao ({activeCount})
+          Chờ giao ({activeCount})
         </button>
         <button
           style={tabStyle("shipped")}
           onClick={() => setActiveTab("shipped")}
         >
-          🚚 Đang vận chuyển ({shippedCount})
+          Đang vận chuyển ({shippedCount})
         </button>
         <button
           style={tabStyle("delivered")}
           onClick={() => setActiveTab("delivered")}
         >
-          ✅ Đã giao ({deliveredCount})
+          Đã giao ({deliveredCount})
         </button>
         <button style={tabStyle("all")} onClick={() => setActiveTab("all")}>
-          📋 Tất cả ({orders.length})
+          Tất cả ({orders.length})
         </button>
       </div>
 
@@ -716,7 +716,7 @@ export default function ShippingPage() {
                                     fontWeight: 600,
                                   }}
                                 >
-                                  🔗 Theo dõi
+                                  Theo dõi
                                 </a>
                               </div>
                             )}
@@ -776,7 +776,7 @@ export default function ShippingPage() {
                               title="Tạo vận đơn J&T Express qua GoShip (lấy mã thật)"
                               style={{ padding: "8px 14px", fontSize: "13px" }}
                             >
-                              🚀 Tạo vận đơn J&T
+                              Tạo vận đơn J&T
                             </button>
                           )}
 
@@ -787,7 +787,7 @@ export default function ShippingPage() {
                               onClick={() => openManualModal(order)}
                               title="Gán mã vận đơn thủ công → Shipped"
                             >
-                              ✏️ Nhập mã
+                              Nhập mã
                             </button>
                           )}
 
@@ -799,7 +799,7 @@ export default function ShippingPage() {
                               style={{ padding: "8px 14px", fontSize: "13px" }}
                               title="Xác nhận khách đã nhận hàng → Delivered"
                             >
-                              ✅ Đã giao
+                              Đã giao
                             </button>
                           )}
                         </div>
@@ -817,7 +817,7 @@ export default function ShippingPage() {
       {showManualModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: "440px" }}>
-            <h3 className="modal-title">✏️ Nhập Mã Vận Đơn Thủ Công</h3>
+            <h3 className="modal-title">Nhập Mã Vận Đơn Thủ Công</h3>
             <p
               style={{
                 fontSize: "13px",
@@ -893,7 +893,7 @@ export default function ShippingPage() {
       {showGoShipModal && goShipOrder && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: "520px" }}>
-            <h3 className="modal-title">🚀 Tạo Vận Đơn J&T Express (GoShip)</h3>
+            <h3 className="modal-title">Tạo Vận Đơn J&T Express (GoShip)</h3>
 
             <p
               style={{
@@ -922,7 +922,7 @@ export default function ShippingPage() {
                   marginBottom: "12px",
                 }}
               >
-                ⚠️ {goShipError}
+                {goShipError}
               </div>
             )}
 
@@ -936,7 +936,7 @@ export default function ShippingPage() {
                     fontSize: "14px",
                   }}
                 >
-                  📍 Địa chỉ người nhận (chọn từ GoShip)
+                  Địa chỉ người nhận (chọn từ GoShip)
                 </p>
                 <div
                   style={{
@@ -1047,7 +1047,7 @@ export default function ShippingPage() {
                     fontSize: "14px",
                   }}
                 >
-                  📦 Thông tin kiện hàng
+                  Thông tin kiện hàng
                 </p>
                 <div
                   style={{
@@ -1157,7 +1157,7 @@ export default function ShippingPage() {
                     fontSize: "14px",
                   }}
                 >
-                  🏷️ Chọn giá cước J&T Express
+                  Chọn giá cước J&T Express
                 </p>
                 <div
                   style={{

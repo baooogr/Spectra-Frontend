@@ -1062,7 +1062,7 @@ export default function UserProfile() {
                     textAlign: "center",
                   }}
                 >
-                  ⚠️ {validationErrors.other.join(" | ")}
+                  {validationErrors.other.join(" | ")}
                 </div>
               )}
 

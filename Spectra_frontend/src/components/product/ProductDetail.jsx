@@ -119,11 +119,11 @@ export default function ProductDetail() {
   };
 
   if (isLoading)
-    return <p className="center-msg">⏳ Đang tải thông tin sản phẩm...</p>;
+    return <p className="center-msg">Đang tải thông tin sản phẩm...</p>;
   if (error || !product)
     return (
       <div className="center-msg">
-        <h2>❌ {error}</h2>
+        <h2>{error}</h2>
       </div>
     );
 
@@ -289,9 +289,7 @@ export default function ProductDetail() {
                             marginLeft: "2px",
                           }}
                           title="Có ảnh riêng cho màu này"
-                        >
-                          📷
-                        </span>
+                        ></span>
                       )}
                     </button>
                   );
@@ -373,9 +371,9 @@ export default function ProductDetail() {
               }
             >
               {isPreorder
-                ? "🛒 Đặt trước ngay (Pre-order)"
+                ? "Đặt trước ngay (Pre-order)"
                 : inStock
-                  ? "🛒 Thêm vào giỏ hàng"
+                  ? "Thêm vào giỏ hàng"
                   : "Out of stock"}
             </button>
 

@@ -1,3 +1,4 @@
+/* ===== SPECTRA MODAL — NEO-BRUTALISM ===== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -10,15 +11,15 @@
   align-items: center;
   z-index: 1000;
   animation: fadeIn 0.2s ease-in-out;
-  backdrop-filter: blur(4px);
 }
 
 .modal-content {
   background: var(--color-surface);
   padding: 32px 40px;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
+  border: var(--border-thick);
   text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   animation: slideUp 0.3s ease-out;
   max-width: 400px;
   width: 90%;
@@ -34,7 +35,7 @@
   stroke-miterlimit: 10;
   margin: 0 auto 15px auto;
   box-shadow: inset 0px 0px 0px var(--color-primary);
-  animation: scale .3s ease-in-out .9s both;
+  animation: scale 0.3s ease-in-out 0.9s both;
 }
 
 .animated-check-circle {
@@ -61,16 +62,23 @@
 }
 
 @keyframes scale {
-  0%, 100% { transform: none; }
-  50% { transform: scale3d(1.1, 1.1, 1); }
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: scale3d(1.1, 1.1, 1);
+  }
 }
 
 .modal-title {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 900;
   margin-bottom: 10px;
-  color: var(--color-text);
+  color: var(--color-brand-charcoal);
   font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .modal-actions {
@@ -82,42 +90,55 @@
 
 .modal-btn {
   padding: 10px 22px;
-  border-radius: var(--radius-md);
-  border: none;
-  font-weight: 700;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  font-weight: 800;
   cursor: pointer;
-  transition: var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: var(--transition-fast);
 }
 
 .modal-btn--outline {
   background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
+  border: var(--border-thin);
   color: var(--color-text);
 }
 
 .modal-btn--outline:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
-}
-
-.modal-btn--primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  color: white;
-}
-
-.modal-btn--primary:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  transform: translate(-2px, -2px);
   box-shadow: var(--shadow-sm);
 }
 
+.modal-btn--primary {
+  background: var(--color-primary);
+  color: white;
+  border: var(--border-thin);
+}
+
+.modal-btn--primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-md);
+}
+
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

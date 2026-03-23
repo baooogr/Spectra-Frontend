@@ -1,4 +1,4 @@
-/* ===== SPECTRA MY COMPLAINTS ===== */
+/* ===== SPECTRA MY COMPLAINTS — NEO-BRUTALISM ===== */
 .mc-container {
   max-width: 960px;
   margin: 30px auto;
@@ -10,7 +10,10 @@
   margin: 0 0 4px;
   font-size: 28px;
   font-family: var(--font-display);
-  color: var(--color-text);
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .mc-loading,
@@ -40,29 +43,30 @@
 
 .mc-filter-btn {
   padding: 7px 18px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-full);
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   font-size: 13px;
   cursor: pointer;
   color: var(--color-text-secondary);
   transition: var(--transition-fast);
-  font-weight: 600;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .mc-filter-btn:hover {
   border-color: var(--color-primary);
   color: var(--color-primary);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .mc-filter-btn.active {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-primary-light) 100%
-  );
+  background: var(--color-primary);
   color: #fff;
-  border-color: var(--color-primary);
+  border-color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Complaint cards */
@@ -74,8 +78,8 @@
 
 .mc-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
   padding: 20px 24px;
   box-shadow: var(--shadow-sm);
   transition: var(--transition-fast);
@@ -83,7 +87,7 @@
 
 .mc-card:hover {
   box-shadow: var(--shadow-md);
-  border-color: var(--color-primary-light);
+  transform: translate(-2px, -2px);
 }
 
 .mc-card-top {
@@ -103,13 +107,14 @@
 
 .mc-type-badge {
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-primary-dark);
   background: var(--color-primary-lighter);
   padding: 4px 14px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 .mc-date {
@@ -131,7 +136,8 @@
   padding: 10px 14px;
   border-radius: var(--radius-sm);
   margin-bottom: 12px;
-  border-left: 3px solid var(--color-primary);
+  border: var(--border-thin);
+  border-left: 4px solid var(--color-primary);
 }
 
 .mc-card-actions {
@@ -144,7 +150,9 @@
   font-size: 14px;
   color: var(--color-primary);
   text-decoration: none;
-  font-weight: 700;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   transition: var(--transition-fast);
 }
 
@@ -157,7 +165,9 @@
   font-size: 13px;
   color: #f59e0b;
   text-decoration: none;
-  font-weight: 700;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   transition: var(--transition-fast);
 }
 

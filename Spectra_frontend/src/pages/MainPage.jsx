@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import "./MainPage.css";
 import ProductCard from "../components/product/ProductCard";
-import { useFrames, useShapes, useMaterials } from "../api";
+import { useFrames } from "../api";
 
 const heroSlides = [
   {
@@ -50,26 +50,9 @@ const categories = [
 ];
 
 export default function MainPage() {
-  const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
+  const { frames: products, isLoading: framesLoading } = useFrames();
 
-  const {
-    frames: products,
-    isLoading: framesLoading,
-    isError: framesError,
-  } = useFrames();
-  const { shapes, isLoading: shapesLoading } = useShapes();
-  const { materials, isLoading: materialsLoading } = useMaterials();
-
-  const isLoading = framesLoading || shapesLoading || materialsLoading;
-  const error = framesError ? "Could not connect to the server." : "";
-
-  const [selectedShapes, setSelectedShapes] = useState([]);
-  const [selectedMaterials, setSelectedMaterials] = useState([]);
-  const [selectedPrice, setSelectedPrice] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
   const [heroIndex, setHeroIndex] = useState(0);
-  const productsPerPage = 12;
 
   // Hero auto-slide
   useEffect(() => {
@@ -79,70 +62,8 @@ export default function MainPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const productName = product.frameName || product.name || "";
-      const searchMatch = productName
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const productShapeName = product.shape?.shapeName || "";
-      const productMaterialName = product.material?.materialName || "";
-      const shapeMatch =
-        selectedShapes.length === 0 ||
-        selectedShapes.includes(productShapeName);
-      const materialMatch =
-        selectedMaterials.length === 0 ||
-        selectedMaterials.includes(productMaterialName);
-      const price = product.basePrice || product.price || 0;
-      let priceMatch = true;
-      if (selectedPrice === "under15") priceMatch = price < 15;
-      else if (selectedPrice === "15to20")
-        priceMatch = price >= 15 && price <= 20;
-      else if (selectedPrice === "over20") priceMatch = price > 20;
-      return searchMatch && shapeMatch && materialMatch && priceMatch;
-    });
-  }, [products, selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedShapes, selectedMaterials, selectedPrice, searchQuery]);
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [currentPage]);
-
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct,
-  );
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  const nextPage = () =>
-    setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
-  const prevPage = () => setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
-
-  const handleCheckboxChange = useCallback((setState, state, value) => {
-    if (state.includes(value)) setState(state.filter((item) => item !== value));
-    else setState([...state, value]);
-  }, []);
-
-  const hasActiveFilters =
-    selectedShapes.length > 0 ||
-    selectedMaterials.length > 0 ||
-    selectedPrice !== "all";
-  const resetFilters = () => {
-    setSelectedShapes([]);
-    setSelectedMaterials([]);
-    setSelectedPrice("all");
-  };
-
-  const scrollToProducts = () => {
-    document
-      .getElementById("products-section")
-      ?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Show first 8 products as featured
+  const featuredProducts = products.slice(0, 8);
 
   return (
     <div className="main-page">
@@ -158,9 +79,9 @@ export default function MainPage() {
               <span className="hero-tag">{slide.tag}</span>
               <h1 className="hero-title">{slide.title}</h1>
               <p className="hero-subtitle">{slide.subtitle}</p>
-              <button className="hero-cta" onClick={scrollToProducts}>
+              <Link to="/shop" className="hero-cta">
                 {slide.cta} →
-              </button>
+              </Link>
             </div>
           </div>
         ))}
@@ -178,28 +99,28 @@ export default function MainPage() {
       {/* ===== FEATURES BAR ===== */}
       <div className="features-bar">
         <div className="feature-item">
-          <span className="feature-icon">🚚</span>
+          <span className="feature-icon">01</span>
           <div className="feature-text">
             <strong>Free Shipping</strong>
             <span>On orders over $50</span>
           </div>
         </div>
         <div className="feature-item">
-          <span className="feature-icon">🔄</span>
+          <span className="feature-icon">02</span>
           <div className="feature-text">
             <strong>Easy Returns</strong>
             <span>30-day money back</span>
           </div>
         </div>
         <div className="feature-item">
-          <span className="feature-icon">🛡️</span>
+          <span className="feature-icon">03</span>
           <div className="feature-text">
             <strong>Quality Guarantee</strong>
             <span>Premium materials</span>
           </div>
         </div>
         <div className="feature-item">
-          <span className="feature-icon">💬</span>
+          <span className="feature-icon">04</span>
           <div className="feature-text">
             <strong>24/7 Support</strong>
             <span>Always here for you</span>
@@ -226,230 +147,35 @@ export default function MainPage() {
         </div>
       </section>
 
-      {/* ===== PRODUCT SECTION ===== */}
-      <div id="products-section" className="main-header">
-        <h1>Explore Our Collection</h1>
-        {searchQuery && (
-          <p
-            style={{
-              marginTop: "10px",
-              fontSize: "16px",
-              color: "var(--color-text-secondary)",
-            }}
-          >
-            Results for: "
-            <span style={{ color: "var(--color-primary)", fontWeight: 700 }}>
-              {searchQuery}
-            </span>
-            "
-          </p>
-        )}
-      </div>
+      {/* ===== FEATURED PRODUCTS ===== */}
+      <section className="featured-section">
+        <div className="section-label">
+          <h2>Featured Products</h2>
+          <p>Handpicked frames to get you started</p>
+        </div>
 
-      <div className="main-content">
-        {/* SIDEBAR FILTER */}
-        <aside className="sidebar-filter">
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <h3 style={{ margin: 0, borderBottom: "none", paddingBottom: 0 }}>
-              Filters
-            </h3>
-            {hasActiveFilters && (
-              <button
-                onClick={resetFilters}
-                style={{
-                  fontSize: "12px",
-                  color: "var(--color-error)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                }}
-              >
-                Clear All
-              </button>
-            )}
+        {framesLoading ? (
+          <div className="featured-loading">
+            <p>Loading products...</p>
           </div>
-          <div
-            style={{
-              borderBottom: "2px solid var(--color-primary)",
-              marginBottom: "20px",
-              marginTop: "10px",
-            }}
-          />
-
-          <div className="filter-group">
-            <h4>Frame Shape</h4>
-            {shapes.length === 0 ? (
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "var(--color-text-muted)",
-                  fontStyle: "italic",
-                }}
-              >
-                Loading...
-              </p>
-            ) : (
-              shapes.map((shape) => {
-                const name = shape.shapeName || shape.name || "";
-                return (
-                  <label
-                    key={shape.shapeId || shape.id}
-                    className="filter-label"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedShapes.includes(name)}
-                      onChange={() =>
-                        handleCheckboxChange(
-                          setSelectedShapes,
-                          selectedShapes,
-                          name,
-                        )
-                      }
-                    />
-                    {name}
-                  </label>
-                );
-              })
-            )}
-          </div>
-
-          <div className="filter-group">
-            <h4>Material</h4>
-            {materials.length === 0 ? (
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "var(--color-text-muted)",
-                  fontStyle: "italic",
-                }}
-              >
-                Loading...
-              </p>
-            ) : (
-              materials.map((mat) => {
-                const name = mat.materialName || mat.name || "";
-                return (
-                  <label
-                    key={mat.materialId || mat.id}
-                    className="filter-label"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedMaterials.includes(name)}
-                      onChange={() =>
-                        handleCheckboxChange(
-                          setSelectedMaterials,
-                          selectedMaterials,
-                          name,
-                        )
-                      }
-                    />
-                    {name}
-                  </label>
-                );
-              })
-            )}
-          </div>
-
-          <div className="filter-group">
-            <h4>Price Range</h4>
-            {[
-              { value: "all", label: "All Prices" },
-              { value: "under15", label: "Under $15" },
-              { value: "15to20", label: "$15 - $20" },
-              { value: "over20", label: "Over $20" },
-            ].map((opt) => (
-              <label key={opt.value} className="filter-label">
-                <input
-                  type="radio"
-                  name="price"
-                  checked={selectedPrice === opt.value}
-                  onChange={() => setSelectedPrice(opt.value)}
+        ) : (
+          <>
+            <div className="featured-grid">
+              {featuredProducts.map((product) => (
+                <ProductCard
+                  key={product.id || product.frameId}
+                  product={product}
                 />
-                {opt.label}
-              </label>
-            ))}
-          </div>
-        </aside>
-
-        {/* PRODUCT GRID */}
-        <section className="product-section">
-          {isLoading && (
-            <div style={{ textAlign: "center", padding: "60px 0" }}>
-              <div style={{ fontSize: "40px", marginBottom: "12px" }}>⏳</div>
-              <p style={{ color: "var(--color-text-muted)", fontSize: "16px" }}>
-                Loading products...
-              </p>
+              ))}
             </div>
-          )}
-          {error && (
-            <div style={{ textAlign: "center", padding: "60px 0" }}>
-              <div style={{ fontSize: "40px", marginBottom: "12px" }}>❌</div>
-              <p style={{ color: "var(--color-error)", fontSize: "16px" }}>
-                {error}
-              </p>
+            <div className="featured-cta">
+              <Link to="/shop" className="browse-all-btn">
+                Browse All Products →
+              </Link>
             </div>
-          )}
-
-          {!isLoading && !error && filteredProducts.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "60px 0" }}>
-              <div style={{ fontSize: "48px", marginBottom: "12px" }}>🔍</div>
-              <p style={{ color: "var(--color-text-muted)", fontSize: "16px" }}>
-                No products found matching your criteria.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="product-grid">
-                {currentProducts.map((product) => (
-                  <ProductCard
-                    key={product.id || product.frameId}
-                    product={product}
-                  />
-                ))}
-              </div>
-
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button
-                    className="page-btn"
-                    onClick={prevPage}
-                    disabled={currentPage === 1}
-                    style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
-                  >
-                    ← Prev
-                  </button>
-                  {[...Array(totalPages)].map((_, index) => (
-                    <button
-                      key={index + 1}
-                      className={`page-btn ${currentPage === index + 1 ? "active" : ""}`}
-                      onClick={() => paginate(index + 1)}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                  <button
-                    className="page-btn"
-                    onClick={nextPage}
-                    disabled={currentPage === totalPages}
-                    style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
-                  >
-                    Next →
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </section>
-      </div>
+          </>
+        )}
+      </section>
     </div>
   );
 }

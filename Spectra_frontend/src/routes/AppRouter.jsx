@@ -15,6 +15,7 @@ import AdminLayout from "../components/layout/AdminLayout";
 
 // --- IMPORT CÁC TRANG KHÁCH HÀNG ---
 import MainPage from "../pages/MainPage";
+import ShopPage from "../pages/ShopPage";
 import OrderHistory from "../pages/OrderHistory";
 import OrderDetail from "../pages/OrderDetail";
 import PreorderDetail from "../pages/PreorderDetail";
@@ -81,6 +82,7 @@ export default function AppRouter() {
         {/* --- ROUTES DÀNH CHO KHÁCH HÀNG CHUNG --- */}
         <Route element={<CustomerLayout />}>
           <Route path="/" element={<MainPage />} />
+          <Route path="/shop" element={<ShopPage />} />
           <Route path="/products/:id" element={<ProductDetail />} />
 
           <Route path="/orders" element={<OrderHistory />} />

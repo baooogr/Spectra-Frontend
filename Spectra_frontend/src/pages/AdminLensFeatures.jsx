@@ -142,7 +142,7 @@ export default function AdminLensFeatures() {
             {isLoading ? (
               <tr>
                 <td colSpan="3" style={{ textAlign: "center" }}>
-                  ⏳ Đang tải dữ liệu...
+                  Đang tải dữ liệu...
                 </td>
               </tr>
             ) : lensFeatures.length === 0 ? (

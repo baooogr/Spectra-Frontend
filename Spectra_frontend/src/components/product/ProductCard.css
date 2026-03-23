@@ -1,20 +1,19 @@
-/* ===== SPECTRA PRODUCT CARD ===== */
+/* ===== SPECTRA PRODUCT CARD — NEO-BRUTALISM ===== */
 .product-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: var(--border-thick);
   overflow: hidden;
   cursor: pointer;
-  transition: var(--transition-base);
+  transition: var(--transition-fast);
   position: relative;
   display: flex;
   flex-direction: column;
+  box-shadow: var(--shadow-md);
 }
 
 .product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--color-primary-light);
+  transform: translate(-3px, -3px);
+  box-shadow: var(--shadow-xl);
 }
 
 /* Badge */
@@ -23,21 +22,22 @@
   top: 12px;
   left: 12px;
   font-size: 11px;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  letter-spacing: 0.3px;
+  font-weight: 900;
+  padding: 6px 14px;
+  letter-spacing: 1px;
   z-index: 2;
   text-transform: uppercase;
+  border: var(--border-thin);
+  box-shadow: var(--shadow-xs);
 }
 
 .product-card__badge--preorder {
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  color: white;
+  background: var(--color-brand-yellow);
+  color: var(--color-brand-charcoal);
 }
 
 .product-card__badge--outofstock {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  background: #ef4444;
   color: white;
 }
 
@@ -46,38 +46,42 @@
   position: relative;
   width: 100%;
   height: 200px;
-  background: #f8fafc;
+  background: var(--color-brand-cream);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-bottom: var(--border-thick);
 }
 
 .product-card__image {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: transform 0.4s ease;
+  transition: transform 0.3s ease;
   padding: 16px;
 }
 
 .product-card:hover .product-card__image {
-  transform: scale(1.08);
+  transform: scale(1.05);
 }
 
 .product-card__image--faded {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .product-card__image-placeholder {
   width: 100%;
   height: 200px;
-  background: linear-gradient(135deg, #f0f3f5 0%, #e8ecf0 100%);
+  background: var(--color-brand-cream);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
   font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* Content area */
@@ -97,24 +101,26 @@
 }
 
 .product-card__price {
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 24px;
+  font-weight: 900;
   color: var(--color-text);
 }
 
 .product-card__price--preorder {
-  color: #2563eb;
+  color: var(--color-brand-forest);
 }
 
 /* Name */
 .product-card__name {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   color: var(--color-text);
   margin: 0 0 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 /* Meta (brand, shape) */
@@ -122,28 +128,29 @@
   font-size: 12px;
   color: var(--color-text-muted);
   margin: 0 0 8px;
+  font-weight: 600;
 }
 
 /* Status chip */
 .product-card__status {
   margin-top: auto;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
+  padding: 8px 12px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 800;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: var(--border-thin);
 }
 
 .product-card__status--preorder {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
+  background: var(--color-brand-mint);
+  color: var(--color-brand-forest);
 }
 
 .product-card__status--outofstock {
   background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  color: #ef4444;
 }
 
 /* Quick-view overlay on hover */
@@ -152,21 +159,18 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(
-    to top,
-    var(--color-primary) 0%,
-    transparent 100%
-  );
-  color: white;
+  background: var(--color-brand-charcoal);
+  color: var(--color-brand-yellow);
   text-align: center;
-  padding: 20px 16px 16px;
-  font-weight: 700;
+  padding: 14px 16px;
+  font-weight: 900;
   font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   opacity: 0;
   transform: translateY(100%);
   transition: var(--transition-base);
+  border-top: var(--border-thick);
 }
 
 .product-card:hover .product-card__quickview {
