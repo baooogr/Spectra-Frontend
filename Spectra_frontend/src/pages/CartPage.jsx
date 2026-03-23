@@ -17,7 +17,7 @@ export default function CartPage() {
       currency: "USD",
     }).format(n);
   const formatVND = (usd) => {
-    const vnd = usd * 26250;
+    const vnd = usd * 25400;
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",

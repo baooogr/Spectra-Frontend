@@ -59,19 +59,93 @@ export default function CheckoutPage() {
   const [errorMsg, setErrorMsg] = useState("");
 
   // ─── SHIPPING METHOD LOGIC ──────────────────────────────────────────────────
-  const FREE_SHIPPING_THRESHOLD = 89;
+  // Zone-based express fee: same_city=$2, southern=$4, central=$6, northern=$7
+  const ZONE_FEE = { same_city: 2, southern: 4, central: 6, northern: 7 };
+  const ZONE_LABELS = {
+    same_city: "Nội thành HCM",
+    southern: "Miền Nam",
+    central: "Miền Trung",
+    northern: "Miền Bắc",
+  };
+
+  const CITY_ZONE_MAP = {
+    "hồ chí minh": "same_city",
+    "ho chi minh": "same_city",
+    hcm: "same_city",
+    "thủ đức": "same_city",
+    "thu duc": "same_city",
+    "bình dương": "southern",
+    "binh duong": "southern",
+    "đồng nai": "southern",
+    "dong nai": "southern",
+    "long an": "southern",
+    "bà rịa": "southern",
+    "ba ria": "southern",
+    "vũng tàu": "southern",
+    "vung tau": "southern",
+    "tây ninh": "southern",
+    "tay ninh": "southern",
+    "cần thơ": "southern",
+    "can tho": "southern",
+    "an giang": "southern",
+    "kiên giang": "southern",
+    "kien giang": "southern",
+    "tiền giang": "southern",
+    "tien giang": "southern",
+    "bến tre": "southern",
+    "ben tre": "southern",
+    "cà mau": "southern",
+    "ca mau": "southern",
+    "đà nẵng": "central",
+    "da nang": "central",
+    huế: "central",
+    hue: "central",
+    "khánh hòa": "central",
+    "khanh hoa": "central",
+    "nha trang": "central",
+    "nghệ an": "central",
+    "nghe an": "central",
+    "thanh hóa": "central",
+    "thanh hoa": "central",
+    "quảng nam": "central",
+    "quang nam": "central",
+    "hà nội": "northern",
+    "ha noi": "northern",
+    hanoi: "northern",
+    "hải phòng": "northern",
+    "hai phong": "northern",
+    "quảng ninh": "northern",
+    "quang ninh": "northern",
+    "nam định": "northern",
+    "nam dinh": "northern",
+    "thái nguyên": "northern",
+    "thai nguyen": "northern",
+  };
+
+  const detectZone = (address) => {
+    if (!address) return "southern";
+    const lower = address.toLowerCase();
+    for (const [key, zone] of Object.entries(CITY_ZONE_MAP)) {
+      if (lower.includes(key)) return zone;
+    }
+    return "southern";
+  };
+
+  const currentZone = useMemo(() => detectZone(form.address), [form.address]);
+  const expressFee = ZONE_FEE[currentZone] || 4;
+
   const SHIPPING_METHODS = [
     {
       key: "standard",
-      label: "Giao hàng tiêu chuẩn",
-      fee: 5,
+      label: "Giao hàng tiêu chuẩn (J&T Express)",
+      fee: 0,
       days: "5-7 ngày",
       icon: "📦",
     },
     {
       key: "express",
-      label: "Giao hàng nhanh",
-      fee: 15,
+      label: "Giao hàng nhanh (J&T Express)",
+      fee: expressFee,
       days: "2-3 ngày",
       icon: "⚡",
     },
@@ -81,11 +155,11 @@ export default function CheckoutPage() {
     () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [items],
   );
-  const isFreeShipping = subtotal >= FREE_SHIPPING_THRESHOLD;
+  const isFreeShipping = form.shippingMethod === "standard";
   const selectedMethod =
     SHIPPING_METHODS.find((m) => m.key === form.shippingMethod) ||
     SHIPPING_METHODS[0];
-  const shippingFee = isFreeShipping ? 0 : selectedMethod.fee;
+  const shippingFee = selectedMethod.fee;
   const total = subtotal + shippingFee;
 
   // Estimated delivery date range
@@ -407,7 +481,7 @@ export default function CheckoutPage() {
                 Phương thức vận chuyển <span className="req">*</span>
               </label>
 
-              {isFreeShipping && (
+              {form.shippingMethod === "standard" && (
                 <div
                   style={{
                     backgroundColor: "#d1fae5",
@@ -420,7 +494,25 @@ export default function CheckoutPage() {
                     fontWeight: 600,
                   }}
                 >
-                  🎉 Đơn hàng từ $89 trở lên — Miễn phí vận chuyển!
+                  🎉 Giao hàng tiêu chuẩn J&T Express — Miễn phí vận chuyển!
+                </div>
+              )}
+
+              {form.shippingMethod === "express" && (
+                <div
+                  style={{
+                    backgroundColor: "#fef3c7",
+                    border: "1px solid #fde68a",
+                    borderRadius: "8px",
+                    padding: "10px 14px",
+                    marginBottom: "12px",
+                    fontSize: "14px",
+                    color: "#92400e",
+                    fontWeight: 600,
+                  }}
+                >
+                  ⚡ Phí giao nhanh J&T Express theo vùng:{" "}
+                  {ZONE_LABELS[currentZone]} — ${expressFee}
                 </div>
               )}
 
@@ -433,7 +525,7 @@ export default function CheckoutPage() {
               >
                 {SHIPPING_METHODS.map((m) => {
                   const isSelected = form.shippingMethod === m.key;
-                  const displayFee = isFreeShipping ? 0 : m.fee;
+                  const displayFee = m.fee;
                   return (
                     <label
                       key={m.key}

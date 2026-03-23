@@ -496,7 +496,7 @@ export default function AdminComplaints() {
             selectedComplaint.RequestType ||
             ""
           ).toLowerCase();
-          const transitions = validTransitions[cStatus] || [];
+          let transitions = validTransitions[cStatus] || [];
 
           // Determine which sections to show based on complaint type
           const needsTracking =
@@ -544,6 +544,21 @@ export default function AdminComplaints() {
               canShowStatusUpdate = false;
               statusBlockReason =
                 "Khách hàng chưa chọn sản phẩm thay thế. Không thể chuyển sang trạng thái 'Đang xử lý' cho đến khi khách hoàn tất chọn sản phẩm đổi.";
+            }
+          }
+
+          // Block resolving exchange complaints unless exchange order is delivered
+          if (cType === "exchange" && cStatus === "in_progress") {
+            const exchangeDelivered =
+              exchangeOrderDetail?.status?.toLowerCase() === "delivered";
+            if (!exchangeDelivered) {
+              // Filter out "resolved" from available transitions
+              transitions = transitions.filter((t) => t !== "resolved");
+              if (transitions.length === 0) {
+                canShowStatusUpdate = false;
+                statusBlockReason =
+                  "Không thể hoàn tất khiếu nại cho đến khi đơn hàng thay thế đã được giao đến khách hàng.";
+              }
             }
           }
 
