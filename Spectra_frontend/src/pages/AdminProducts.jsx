@@ -491,8 +491,10 @@ export default function AdminProducts() {
     const fw = Number(formData.frameWidth || 0);
     if (lw <= 0) errors.lensWidth = "Rộng tròng phải > 0";
     if (bw <= 0) errors.bridgeWidth = "Cầu kính phải > 0";
+    else if (lw > 0 && bw >= lw) errors.bridgeWidth = "Cầu kính phải nhỏ hơn rộng tròng kính";
     if (tl <= 0) errors.templeLength = "Càng kính phải > 0";
     if (fw <= 0) errors.frameWidth = "Rộng khung phải > 0";
+    else if (lw > 0 && fw <= lw) errors.frameWidth = "Rộng toàn khung phải lớn hơn rộng tròng kính";
 
     const minR = parseFloat(formData.minRx);
     const maxR = parseFloat(formData.maxRx);

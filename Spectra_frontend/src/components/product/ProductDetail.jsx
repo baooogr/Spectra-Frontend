@@ -494,7 +494,7 @@ export default function ProductDetail() {
                           fontWeight: "700",
                         }}
                       >
-                        YÊU CẦU ĐƠN THUỐC:
+                      ĐƠN THUỐC HỖ TRỢ:
                       </h4>
 
                       {(product.minRx != null || product.maxRx != null) && (
