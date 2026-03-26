@@ -84,6 +84,13 @@ export default function AdminPreorderCampaigns() {
   };
 
   const handleToggleFrame = (frame) => {
+    const frameStatus = frame.status?.toLowerCase();
+    if (frameStatus === "inactive") {
+      alert(
+        '⚠️ Kính này đang bị vô hiệu hóa. Vui lòng kích hoạt lại kính trong tab "Quản Lý Kính" trước khi thêm vào chiến dịch Pre-order.',
+      );
+      return;
+    }
     const isSelected = formData.frames.some(
       (f) => f.frameId === (frame.id || frame.frameId),
     );
@@ -129,6 +136,12 @@ export default function AdminPreorderCampaigns() {
     }
     if (new Date(formData.startDate) >= new Date(formData.endDate)) {
       alert("Lỗi: Ngày bắt đầu phải TRƯỚC ngày kết thúc!");
+      return;
+    }
+    if (
+      new Date(formData.endDate) >= new Date(formData.estimatedDeliveryDate)
+    ) {
+      alert("Lỗi: Ngày kết thúc chiến dịch phải TRƯỚC ngày giao hàng dự kiến!");
       return;
     }
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import { useExchangeRate } from "../api";
 import DeliveryMap from "../components/DeliveryMap";
 
 export default function PreorderDetail() {
@@ -13,6 +14,7 @@ export default function PreorderDetail() {
   const [error, setError] = useState("");
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [showNotReceivedInfo, setShowNotReceivedInfo] = useState(false);
+  const { rate: exchangeRate } = useExchangeRate();
 
   useEffect(() => {
     const token =
@@ -102,7 +104,6 @@ export default function PreorderDetail() {
     );
 
   // ===== HÀM FORMAT TIỀN: USD + VND =====
-  const EXCHANGE_RATE = 25400;
   const formatPrice = (n) => {
     const usd = new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -110,7 +111,7 @@ export default function PreorderDetail() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(n || 0);
-    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE);
+    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * exchangeRate);
     return `${usd} (${vnd} VND)`;
   };
 
@@ -1172,7 +1173,17 @@ export default function PreorderDetail() {
               </p>
             </div>
             <Link
-              to="/complaints/new"
+              to={(() => {
+                const linkedItems =
+                  linkedOrder?.items || linkedOrder?.orderItems || [];
+                const firstItemId =
+                  linkedItems.length > 0
+                    ? linkedItems[0].orderItemId || linkedItems[0].OrderItemId
+                    : "";
+                return firstItemId
+                  ? `/complaints/new?orderItemId=${firstItemId}`
+                  : "/complaints/new";
+              })()}
               style={{
                 padding: "10px 20px",
                 backgroundColor: "#f97316",

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import { useExchangeRate } from "../api";
 import "./OrderHistory.css";
 
 export default function OrderHistory() {
@@ -14,7 +15,7 @@ export default function OrderHistory() {
   const [activeTab, setActiveTab] = useState("all"); // "all" | "orders" | "preorders"
 
   // ⚡ HÀM FORMAT TIỀN TỆ
-  const EXCHANGE_RATE = 25400;
+  const { rate: exchangeRate } = useExchangeRate();
   const formatPrice = (n) => {
     const usd = new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -22,7 +23,7 @@ export default function OrderHistory() {
       minimumFractionDigits: 0,
     }).format(n);
     const vnd =
-      new Intl.NumberFormat("vi-VN").format(n * EXCHANGE_RATE) + " VND";
+      new Intl.NumberFormat("vi-VN").format(n * exchangeRate) + " VND";
     return `${usd} (${vnd})`;
   };
 
@@ -179,6 +180,30 @@ export default function OrderHistory() {
             >
               <b>Mã đơn:</b> #{order.id || order.orderId}
             </p>
+            {order.convertedFromPreorderId && (
+              <p
+                style={{
+                  margin: "0 0 4px 0",
+                  fontSize: "12px",
+                  color: "#1d4ed8",
+                }}
+              >
+                <span
+                  style={{
+                    backgroundColor: "#bfdbfe",
+                    color: "#1e3a8a",
+                    borderRadius: "12px",
+                    padding: "2px 8px",
+                    fontWeight: "600",
+                    fontSize: "11px",
+                    marginRight: "6px",
+                  }}
+                >
+                  Đã chuyển từ Pre-order
+                </span>
+                #{String(order.convertedFromPreorderId).slice(0, 8)}
+              </p>
+            )}
             <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px" }}>
               Ngày đặt: {formatDate(order.orderDate || order.createdAt)}
             </p>
@@ -352,6 +377,30 @@ export default function OrderHistory() {
             >
               <b>Mã đặt trước:</b> #{order.id || order.preorderId}
             </p>
+            {linkedOrder && (
+              <p
+                style={{
+                  margin: "0 0 4px 0",
+                  fontSize: "12px",
+                  color: "#1d4ed8",
+                }}
+              >
+                <span
+                  style={{
+                    backgroundColor: "#dbeafe",
+                    color: "#1e3a8a",
+                    borderRadius: "12px",
+                    padding: "2px 8px",
+                    fontWeight: "600",
+                    fontSize: "11px",
+                    marginRight: "6px",
+                  }}
+                >
+                  Đã chuyển thành Đơn hàng
+                </span>
+                #{String(linkedOrder.orderId || linkedOrder.id).slice(0, 8)}
+              </p>
+            )}
             <p
               style={{
                 margin: 0,

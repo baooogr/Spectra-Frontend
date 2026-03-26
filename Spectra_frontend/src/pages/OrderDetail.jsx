@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import { useExchangeRate } from "../api";
 import DeliveryMap from "../components/DeliveryMap";
 import "./OrderDetail.css";
 
@@ -15,6 +16,7 @@ export default function OrderDetail() {
   const [showNotReceivedInfo, setShowNotReceivedInfo] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const { rate: exchangeRate } = useExchangeRate();
 
   useEffect(() => {
     const token =
@@ -79,7 +81,6 @@ export default function OrderDetail() {
       </div>
     );
 
-  const EXCHANGE_RATE = 25400;
   const formatPrice = (n) => {
     const usd = new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -87,7 +88,7 @@ export default function OrderDetail() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(n || 0);
-    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE);
+    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * exchangeRate);
     return `${usd}(${vnd} VND)`;
   };
 
@@ -272,6 +273,30 @@ export default function OrderDetail() {
             >
               Mã đơn: <b style={{ color: "#111827" }}>#{order.orderId}</b>
             </p>
+            {order.convertedFromPreorderId && (
+              <p
+                style={{
+                  margin: "4px 0 0",
+                  color: "#1d4ed8",
+                  fontSize: "13px",
+                }}
+              >
+                <span
+                  style={{
+                    backgroundColor: "#dbeafe",
+                    color: "#1e3a8a",
+                    borderRadius: "12px",
+                    padding: "2px 8px",
+                    fontWeight: "600",
+                    fontSize: "11px",
+                    marginRight: "6px",
+                  }}
+                >
+                  Từ Pre-order
+                </span>
+                #{String(order.convertedFromPreorderId).slice(0, 8)}
+              </p>
+            )}
           </div>
           <div
             style={{
@@ -1235,7 +1260,15 @@ export default function OrderDetail() {
               </p>
             </div>
             <Link
-              to="/complaints/new"
+              to={(() => {
+                const firstItemId =
+                  itemsList.length > 0
+                    ? itemsList[0].orderItemId || itemsList[0].OrderItemId
+                    : "";
+                return firstItemId
+                  ? `/complaints/new?orderItemId=${firstItemId}`
+                  : "/complaints/new";
+              })()}
               style={{
                 padding: "10px 20px",
                 backgroundColor: "#f97316",

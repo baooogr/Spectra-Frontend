@@ -1,7 +1,12 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import { UserContext } from "../context/UserContext";
 import { useNavigate, Link } from "react-router-dom";
 import "./UserProfile.css";
+import VIETNAM_PROVINCES, {
+  buildAddressString,
+  parseAddressString,
+} from "../utils/vietnamAddress";
+import { isValidVNPhone } from "../utils/validation";
 
 // --- 1. CÁC HÀM TẠO DỮ LIỆU DROPBOX (Đặt ngoài Component) ---
 const generateOptions = (min, max, step = 0.25) => {
@@ -27,8 +32,12 @@ export default function UserProfile() {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
-    address: "",
+    province: "",
+    district: "",
+    ward: "",
+    addressDetail: "",
   });
+  const [phoneError, setPhoneError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   const [prescriptions, setPrescriptions] = useState([]);
@@ -86,10 +95,14 @@ export default function UserProfile() {
       if (res.ok) {
         const data = await res.json();
         setProfile(data);
+        const parsed = parseAddressString(data.address || "");
         setFormData({
           fullName: data.fullName || "",
           phone: data.phone || "",
-          address: data.address || "",
+          province: parsed.province,
+          district: parsed.district,
+          ward: parsed.ward,
+          addressDetail: parsed.detail,
         });
       }
     } catch (err) {
@@ -155,6 +168,30 @@ export default function UserProfile() {
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    setPhoneError("");
+
+    if (formData.phone && !isValidVNPhone(formData.phone)) {
+      setPhoneError(
+        "Số điện thoại không hợp lệ. Vui lòng nhập đúng định dạng VN (+84 hoặc 0xx).",
+      );
+      return;
+    }
+    if (!formData.province || !formData.district || !formData.ward) {
+      alert("Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện và Phường/Xã.");
+      return;
+    }
+    if (!formData.addressDetail.trim()) {
+      alert("Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường).");
+      return;
+    }
+
+    const fullAddress = buildAddressString({
+      province: formData.province,
+      district: formData.district,
+      ward: formData.ward,
+      detail: formData.addressDetail.trim(),
+    });
+
     try {
       const res = await fetch("https://myspectra.runasp.net/api/Users/me", {
         method: "PUT",
@@ -162,7 +199,11 @@ export default function UserProfile() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          phone: formData.phone,
+          address: fullAddress,
+        }),
       });
       if (res.ok) {
         alert("Cập nhật thành công!");
@@ -442,20 +483,107 @@ export default function UserProfile() {
               <input
                 type="text"
                 value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-                placeholder="Số điện thoại"
+                onChange={(e) => {
+                  setFormData({ ...formData, phone: e.target.value });
+                  setPhoneError("");
+                }}
+                placeholder="Số điện thoại (VD: 0912345678)"
+                required
+                style={{
+                  padding: "10px",
+                  border: phoneError ? "2px solid #ef4444" : undefined,
+                }}
+              />
+              {phoneError && (
+                <p
+                  style={{
+                    color: "#ef4444",
+                    fontSize: "13px",
+                    margin: "4px 0 0 0",
+                  }}
+                >
+                  {phoneError}
+                </p>
+              )}
+
+              {/* Tỉnh/Thành phố */}
+              <select
+                value={formData.province}
+                onChange={(e) => {
+                  setFormData({
+                    ...formData,
+                    province: e.target.value,
+                    district: "",
+                    ward: "",
+                  });
+                }}
                 required
                 style={{ padding: "10px" }}
-              />
+              >
+                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                {VIETNAM_PROVINCES.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Quận/Huyện */}
+              <select
+                value={formData.district}
+                onChange={(e) => {
+                  setFormData({
+                    ...formData,
+                    district: e.target.value,
+                    ward: "",
+                  });
+                }}
+                required
+                disabled={!formData.province}
+                style={{ padding: "10px" }}
+              >
+                <option value="">-- Chọn Quận/Huyện --</option>
+                {(
+                  VIETNAM_PROVINCES.find((p) => p.name === formData.province)
+                    ?.districts || []
+                ).map((d) => (
+                  <option key={d.name} value={d.name}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Phường/Xã */}
+              <select
+                value={formData.ward}
+                onChange={(e) => {
+                  setFormData({ ...formData, ward: e.target.value });
+                }}
+                required
+                disabled={!formData.district}
+                style={{ padding: "10px" }}
+              >
+                <option value="">-- Chọn Phường/Xã --</option>
+                {(
+                  VIETNAM_PROVINCES.find(
+                    (p) => p.name === formData.province,
+                  )?.districts.find((d) => d.name === formData.district)
+                    ?.wards || []
+                ).map((w) => (
+                  <option key={w} value={w}>
+                    {w}
+                  </option>
+                ))}
+              </select>
+
+              {/* Địa chỉ chi tiết */}
               <input
                 type="text"
-                value={formData.address}
+                value={formData.addressDetail}
                 onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
+                  setFormData({ ...formData, addressDetail: e.target.value })
                 }
-                placeholder="Địa chỉ giao hàng"
+                placeholder="Số nhà, tên đường..."
                 required
                 style={{ padding: "10px" }}
               />

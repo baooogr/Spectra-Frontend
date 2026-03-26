@@ -2,7 +2,18 @@ import React, { useState, useEffect, useContext, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useCart } from "../context/CartContext";
-import { useCurrentUser, API_BASE_URL, ENDPOINTS, buildUrl } from "../api";
+import {
+  useCurrentUser,
+  useExchangeRate,
+  API_BASE_URL,
+  ENDPOINTS,
+  buildUrl,
+} from "../api";
+import VIETNAM_PROVINCES, {
+  buildAddressString,
+  parseAddressString,
+} from "../utils/vietnamAddress";
+import { isValidVNPhone, formatPrice } from "../utils/validation";
 import "./CheckoutPage.css";
 
 export default function CheckoutPage() {
@@ -16,27 +27,37 @@ export default function CheckoutPage() {
 
   // Use cached user data
   const { user: apiUser } = useCurrentUser();
+  const { rate: exchangeRate } = useExchangeRate();
+  const fmtPrice = (n) => formatPrice(n, exchangeRate);
 
   const [form, setForm] = useState({
     fullName: currentUser.fullName || "",
     phone: "",
     email: currentUser.email || "",
-    address: "",
+    province: "",
+    district: "",
+    ward: "",
+    addressDetail: "",
     note: "",
     paymentMethod: "COD",
     shippingMethod: "standard",
   });
 
+  const [phoneError, setPhoneError] = useState("");
   const [phoneManualMode, setPhoneManualMode] = useState(false);
 
   // ⚡ Sync form with cached user data when available
   useEffect(() => {
     if (apiUser) {
+      const parsed = parseAddressString(apiUser.address || "");
       setForm((prev) => ({
         ...prev,
         phone: apiUser.phone || prev.phone,
-        address: apiUser.address || prev.address,
         fullName: apiUser.fullName || prev.fullName,
+        province: parsed.province || prev.province,
+        district: parsed.district || prev.district,
+        ward: parsed.ward || prev.ward,
+        addressDetail: parsed.detail || prev.addressDetail,
       }));
       if (!apiUser.phone) {
         setPhoneManualMode(true);
@@ -122,16 +143,16 @@ export default function CheckoutPage() {
     "thai nguyen": "northern",
   };
 
-  const detectZone = (address) => {
-    if (!address) return "southern";
-    const lower = address.toLowerCase();
+  const detectZone = (province) => {
+    if (!province) return "southern";
+    const lower = province.toLowerCase();
     for (const [key, zone] of Object.entries(CITY_ZONE_MAP)) {
       if (lower.includes(key)) return zone;
     }
     return "southern";
   };
 
-  const currentZone = useMemo(() => detectZone(form.address), [form.address]);
+  const currentZone = useMemo(() => detectZone(form.province), [form.province]);
   const expressFee = ZONE_FEE[currentZone] || 4;
 
   const SHIPPING_METHODS = [
@@ -178,19 +199,6 @@ export default function CheckoutPage() {
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  // ⚡ ĐỒNG BỘ ĐỊNH DẠNG FORMAT GIÁ TIỀN ÉP SÁT NGOẶC ($175(4.593.750 VND))
-  const EXCHANGE_RATE = 25400;
-  const formatPrice = (n) => {
-    const usd = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(n || 0);
-    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE);
-    return `${usd}(${vnd} VND)`;
-  };
-
   const placeOrder = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -210,6 +218,34 @@ export default function CheckoutPage() {
       setIsSubmitting(false);
       return;
     }
+
+    if (!isValidVNPhone(form.phone)) {
+      setPhoneError(
+        "Số điện thoại không hợp lệ. Vui lòng nhập đúng SĐT Việt Nam.",
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (
+      !form.province ||
+      !form.district ||
+      !form.ward ||
+      !form.addressDetail.trim()
+    ) {
+      alert(
+        "Vui lòng điền đầy đủ địa chỉ giao hàng (Tỉnh/Thành phố, Quận/Huyện, Phường/Xã, Địa chỉ chi tiết).",
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    const fullAddress = buildAddressString({
+      province: form.province,
+      district: form.district,
+      ward: form.ward,
+      detail: form.addressDetail.trim(),
+    });
 
     try {
       // 1. Chuẩn hóa items theo chuẩn API
@@ -236,10 +272,12 @@ export default function CheckoutPage() {
           const validPrescriptionId = getValidGuid(
             item.lensInfo.prescriptionId,
           );
+          const validIndexId = getValidGuid(item.lensInfo.lensIndexId);
 
           if (validTypeId) detail.lensTypeId = validTypeId;
           if (validFeatureId) detail.featureId = validFeatureId;
           if (validPrescriptionId) detail.prescriptionId = validPrescriptionId;
+          if (validIndexId) detail.lensIndexId = validIndexId;
         }
 
         return detail;
@@ -248,8 +286,9 @@ export default function CheckoutPage() {
       // 2. Payload tạo đơn hàng
       const payload = {
         // ⚡ TRICK: Nhồi Họ tên, SĐT và Email vào đầu chuỗi địa chỉ
-        shippingAddress: `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${form.address.trim()}`,
+        shippingAddress: `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${fullAddress}`,
         shippingMethod: form.shippingMethod,
+        notes: form.note || undefined,
         items: formattedItems,
       };
 
@@ -308,7 +347,7 @@ export default function CheckoutPage() {
               customer: {
                 fullName: form.fullName,
                 phone: form.phone,
-                address: form.address,
+                address: fullAddress,
               },
               total: total, // Truyền đúng tổng tiền thực tế
               items: items, // Truyền đúng giỏ hàng thực tế
@@ -420,6 +459,17 @@ export default function CheckoutPage() {
                     Không tìm thấy SĐT trong hồ sơ. Vui lòng nhập thủ công.
                   </small>
                 )}
+                {phoneError && (
+                  <small
+                    style={{
+                      color: "#ef4444",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
+                    {phoneError}
+                  </small>
+                )}
               </div>
             </div>
 
@@ -435,14 +485,110 @@ export default function CheckoutPage() {
 
             <div className="form-group">
               <label>
-                Địa chỉ giao hàng <span className="req">*</span>
+                Tỉnh/Thành phố <span className="req">*</span>
+              </label>
+              <select
+                name="province"
+                value={form.province}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    province: e.target.value,
+                    district: "",
+                    ward: "",
+                  })
+                }
+                required
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                }}
+              >
+                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                {VIETNAM_PROVINCES.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>
+                  Quận/Huyện <span className="req">*</span>
+                </label>
+                <select
+                  name="district"
+                  value={form.district}
+                  onChange={(e) =>
+                    setForm({ ...form, district: e.target.value, ward: "" })
+                  }
+                  required
+                  disabled={!form.province}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    border: "1px solid #d1d5db",
+                  }}
+                >
+                  <option value="">-- Chọn Quận/Huyện --</option>
+                  {(
+                    VIETNAM_PROVINCES.find((p) => p.name === form.province)
+                      ?.districts || []
+                  ).map((d) => (
+                    <option key={d.name} value={d.name}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>
+                  Phường/Xã <span className="req">*</span>
+                </label>
+                <select
+                  name="ward"
+                  value={form.ward}
+                  onChange={(e) => setForm({ ...form, ward: e.target.value })}
+                  required
+                  disabled={!form.district}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    border: "1px solid #d1d5db",
+                  }}
+                >
+                  <option value="">-- Chọn Phường/Xã --</option>
+                  {(
+                    VIETNAM_PROVINCES.find(
+                      (p) => p.name === form.province,
+                    )?.districts.find((d) => d.name === form.district)?.wards ||
+                    []
+                  ).map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>
+                Địa chỉ chi tiết (Số nhà, đường) <span className="req">*</span>
               </label>
               <input
                 type="text"
-                name="address"
-                value={form.address}
+                name="addressDetail"
+                value={form.addressDetail}
                 onChange={onChange}
                 required
+                placeholder="Số nhà, tên đường..."
               />
             </div>
 
@@ -671,7 +817,7 @@ export default function CheckoutPage() {
                     className="item__price"
                     style={{ fontWeight: "bold", color: "#10b981" }}
                   >
-                    {formatPrice(item.price * item.quantity)}
+                    {fmtPrice(item.price * item.quantity)}
                   </div>
                 </div>
               ))}
@@ -679,14 +825,14 @@ export default function CheckoutPage() {
 
             <div className="summary__row">
               <span>Tạm tính</span>
-              <span>{formatPrice(subtotal)}</span>
+              <span>{fmtPrice(subtotal)}</span>
             </div>
             <div className="summary__row">
               <span>Phí giao hàng ({selectedMethod.label})</span>
               <span
                 style={{ color: shippingFee === 0 ? "#059669" : undefined }}
               >
-                {shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}
+                {shippingFee === 0 ? "Miễn phí" : fmtPrice(shippingFee)}
               </span>
             </div>
             <div
@@ -699,7 +845,7 @@ export default function CheckoutPage() {
               }}
             >
               <span>Tổng thanh toán</span>
-              <span style={{ color: "#10b981" }}>{formatPrice(total)}</span>
+              <span style={{ color: "#10b981" }}>{fmtPrice(total)}</span>
             </div>
 
             <button
@@ -721,7 +867,7 @@ export default function CheckoutPage() {
             >
               {isSubmitting
                 ? "Đang xử lý..."
-                : `Xác Nhận Đặt Hàng - ${formatPrice(total)}`}
+                : `Xác Nhận Đặt Hàng - ${fmtPrice(total)}`}
             </button>
           </div>
         </form>

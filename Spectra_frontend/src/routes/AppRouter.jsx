@@ -32,6 +32,7 @@ import ResetPassword from "../pages/ResetPassword";
 
 import AdminUsers from "../pages/AdminUsers";
 import AdminLensFeatures from "../pages/AdminLensFeatures";
+import AdminLensIndices from "../pages/AdminLensIndices";
 import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
@@ -71,6 +72,7 @@ export default function AppRouter() {
             <Route path="products" element={<AdminProducts />} />
             <Route path="lenstypes" element={<AdminLensTypes />} />
             <Route path="lensfeatures" element={<AdminLensFeatures />} />
+            <Route path="lensindices" element={<AdminLensIndices />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="campaigns" element={<AdminPreorderCampaigns />} />

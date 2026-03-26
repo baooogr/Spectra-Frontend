@@ -2,6 +2,12 @@ import React, { useState, useEffect, useContext, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useCart } from "../context/CartContext";
+import { useExchangeRate } from "../api";
+import VIETNAM_PROVINCES, {
+  buildAddressString,
+  parseAddressString,
+} from "../utils/vietnamAddress";
+import { isValidVNPhone, formatPrice } from "../utils/validation";
 import "./CheckoutPage.css"; // Dùng chung CSS với trang Checkout thường để giữ đúng bố cục
 
 export default function CheckoutPreorderPage() {
@@ -9,6 +15,8 @@ export default function CheckoutPreorderPage() {
   const { user } = useContext(UserContext);
   const { cartItems, clearCart } = useCart();
   const location = useLocation();
+  const { rate: exchangeRate } = useExchangeRate();
+  const fmtPrice = (n) => formatPrice(n, exchangeRate);
 
   // Lấy items từ state hoặc cartItems, sau đó lọc CHỈ lấy hàng Pre-order
   const allItems = location.state?.cartItems || cartItems;
@@ -20,11 +28,15 @@ export default function CheckoutPreorderPage() {
     fullName: currentUser.fullName || "",
     phone: "", // Sẽ được tự động điền từ API
     email: currentUser.email || "",
-    address: "", // Sẽ được tự động điền từ API
+    province: "",
+    district: "",
+    ward: "",
+    addressDetail: "",
     note: "",
     paymentMethod: "VNPAY", // Preorder bắt buộc thanh toán trước qua VNPay
   });
 
+  const [phoneError, setPhoneError] = useState("");
   const [phoneManualMode, setPhoneManualMode] = useState(false);
 
   // ⚡ GỌI API LẤY THÔNG TIN USER (Đồng bộ với Checkout thường)
@@ -38,10 +50,14 @@ export default function CheckoutPreorderPage() {
         });
         if (res.ok) {
           const data = await res.json();
+          const parsed = parseAddressString(data.address || "");
           setForm((prev) => ({
             ...prev,
             phone: data.phone || "",
-            address: data.address || "",
+            province: parsed.province,
+            district: parsed.district,
+            ward: parsed.ward,
+            addressDetail: parsed.detail,
             fullName: data.fullName || prev.fullName,
           }));
           if (!data.phone) {
@@ -85,19 +101,6 @@ export default function CheckoutPreorderPage() {
 
   const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  // ⚡ ĐỒNG BỘ ĐỊNH DẠNG FORMAT GIÁ TIỀN ÉP SÁT NGOẶC
-  const EXCHANGE_RATE = 25400;
-  const formatPrice = (n) => {
-    const usd = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(n || 0);
-    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE);
-    return `${usd}(${vnd} VND)`;
-  };
-
   const placeOrder = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -114,6 +117,21 @@ export default function CheckoutPreorderPage() {
       alert(
         "Số điện thoại không được để trống. Vui lòng cập nhật SĐT trong phần hồ sơ cá nhân.",
       );
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!isValidVNPhone(form.phone)) {
+      setPhoneError(
+        "Số điện thoại không hợp lệ (VD: 0912345678 hoặc +84912345678)",
+      );
+      setIsSubmitting(false);
+      return;
+    }
+    setPhoneError("");
+
+    if (!form.province || !form.district || !form.ward) {
+      alert("Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện và Phường/Xã.");
       setIsSubmitting(false);
       return;
     }
@@ -156,11 +174,17 @@ export default function CheckoutPreorderPage() {
       });
 
       // 2. Payload tạo đơn ĐẶT TRƯỚC (TUÂN THỦ API Swagger)
+      const fullAddress = buildAddressString({
+        province: form.province,
+        district: form.district,
+        ward: form.ward,
+        detail: form.addressDetail,
+      });
       const payload = {
         campaignId: items[0].campaignId,
         expectedDate:
           items[0].estimatedDeliveryDate || new Date().toISOString(),
-        shippingAddress: `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${form.address.trim()}`,
+        shippingAddress: `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${fullAddress}`,
         items: formattedItems,
       };
 
@@ -315,6 +339,17 @@ export default function CheckoutPreorderPage() {
                     Không tìm thấy SĐT trong hồ sơ. Vui lòng nhập thủ công.
                   </small>
                 )}
+                {phoneError && (
+                  <small
+                    style={{
+                      color: "#dc2626",
+                      marginTop: "4px",
+                      display: "block",
+                    }}
+                  >
+                    {phoneError}
+                  </small>
+                )}
               </div>
             </div>
 
@@ -330,15 +365,107 @@ export default function CheckoutPreorderPage() {
 
             <div className="form-group">
               <label>
-                Địa chỉ hiện tại <span className="req">*</span>
+                Tỉnh / Thành phố <span className="req">*</span>
               </label>
+              <select
+                name="province"
+                value={form.province}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    province: e.target.value,
+                    district: "",
+                    ward: "",
+                  })
+                }
+                required
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                }}
+              >
+                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                {VIETNAM_PROVINCES.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>
+                  Quận / Huyện <span className="req">*</span>
+                </label>
+                <select
+                  name="district"
+                  value={form.district}
+                  onChange={(e) =>
+                    setForm({ ...form, district: e.target.value, ward: "" })
+                  }
+                  required
+                  disabled={!form.province}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    border: "1px solid #d1d5db",
+                  }}
+                >
+                  <option value="">-- Chọn Quận/Huyện --</option>
+                  {(
+                    VIETNAM_PROVINCES.find((p) => p.name === form.province)
+                      ?.districts || []
+                  ).map((d) => (
+                    <option key={d.name} value={d.name}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>
+                  Phường / Xã <span className="req">*</span>
+                </label>
+                <select
+                  name="ward"
+                  value={form.ward}
+                  onChange={(e) => setForm({ ...form, ward: e.target.value })}
+                  required
+                  disabled={!form.district}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    border: "1px solid #d1d5db",
+                  }}
+                >
+                  <option value="">-- Chọn Phường/Xã --</option>
+                  {(
+                    VIETNAM_PROVINCES.find(
+                      (p) => p.name === form.province,
+                    )?.districts.find((d) => d.name === form.district)?.wards ||
+                    []
+                  ).map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Địa chỉ chi tiết (Số nhà, đường...)</label>
               <input
                 type="text"
-                name="address"
-                value={form.address}
+                name="addressDetail"
+                value={form.addressDetail}
                 onChange={onChange}
-                required
-                placeholder=""
+                placeholder="VD: Số 12, Đường Nguyễn Huệ"
               />
             </div>
 
@@ -450,7 +577,7 @@ export default function CheckoutPreorderPage() {
                       textAlign: "right",
                     }}
                   >
-                    {formatPrice(item.price * item.quantity)}
+                    {fmtPrice(item.price * item.quantity)}
                   </div>
                 </div>
               ))}
@@ -458,7 +585,7 @@ export default function CheckoutPreorderPage() {
 
             <div className="summary__row">
               <span>Tạm tính</span>
-              <span>{formatPrice(subtotal)}</span>
+              <span>{fmtPrice(subtotal)}</span>
             </div>
             <div className="summary__row">
               <span>Phí giao hàng</span>
@@ -482,7 +609,7 @@ export default function CheckoutPreorderPage() {
               }}
             >
               <span>Tổng thanh toán</span>
-              <span style={{ color: "#10b981" }}>{formatPrice(total)}</span>
+              <span style={{ color: "#10b981" }}>{fmtPrice(total)}</span>
             </div>
 
             <button

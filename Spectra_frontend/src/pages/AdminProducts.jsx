@@ -99,10 +99,30 @@ export default function AdminProducts() {
   /* ================= FETCH DATA ================= */
   const fetchFrames = async () => {
     try {
-      const res = await fetch("https://myspectra.runasp.net/api/Frames");
-      if (res.ok) {
-        const data = await res.json();
+      const token = getToken();
+      const response = await fetch(
+        "https://myspectra.runasp.net/api/Frames/all?page=1&pageSize=100",
+        {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : {},
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
         setAllFrames(data.items || data || []);
+      } else if (response.status === 401 || response.status === 403) {
+        // Fallback: anonymous endpoint if manager/admin token is not available
+        const fallback = await fetch(
+          "https://myspectra.runasp.net/api/Frames?page=1&pageSize=100",
+        );
+        if (fallback.ok) {
+          const fallbackData = await fallback.json();
+          setAllFrames(fallbackData.items || fallbackData || []);
+        }
       }
     } catch (error) {
       console.error("Lỗi fetch Kính", error);
@@ -491,8 +511,12 @@ export default function AdminProducts() {
     const fw = Number(formData.frameWidth || 0);
     if (lw <= 0) errors.lensWidth = "Rộng tròng phải > 0";
     if (bw <= 0) errors.bridgeWidth = "Cầu kính phải > 0";
+    else if (lw > 0 && bw >= lw)
+      errors.bridgeWidth = "Cầu kính phải nhỏ hơn rộng tròng kính";
     if (tl <= 0) errors.templeLength = "Càng kính phải > 0";
     if (fw <= 0) errors.frameWidth = "Rộng khung phải > 0";
+    else if (lw > 0 && fw <= lw)
+      errors.frameWidth = "Rộng toàn khung phải lớn hơn rộng tròng kính";
 
     const minR = parseFloat(formData.minRx);
     const maxR = parseFloat(formData.maxRx);
@@ -558,7 +582,12 @@ export default function AdminProducts() {
   };
 
   const handleDeleteFrame = async (id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa kính này?")) return;
+    if (
+      !window.confirm(
+        "Bạn có chắc chắn muốn ẩn/vô hiệu hóa kính này? Kính sẽ không hiển thị trên trang chủ nhưng vẫn có thể được khôi phục.",
+      )
+    )
+      return;
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`, {
         method: "DELETE",
@@ -566,7 +595,34 @@ export default function AdminProducts() {
       });
       if (res.ok) {
         fetchFrames();
-        alert("Đã xóa kính thành công!");
+        alert("Đã vô hiệu hóa kính thành công!");
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data?.message || "Không thể vô hiệu hóa kính");
+      }
+    } catch (error) {
+      alert(`Lỗi kết nối: ${error.message}`);
+    }
+  };
+
+  const handleReactivateFrame = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn kích hoạt lại kính này?"))
+      return;
+    try {
+      const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ status: "available" }),
+      });
+      if (res.ok) {
+        fetchFrames();
+        alert("Đã kích hoạt lại kính thành công!");
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data?.message || "Không thể kích hoạt lại kính");
       }
     } catch (error) {
       alert(`Lỗi kết nối: ${error.message}`);
@@ -675,6 +731,21 @@ export default function AdminProducts() {
                           ▶
                         </button>
                         {frame.frameName}
+                        {frame.status?.toLowerCase() === "inactive" && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              color: "#fff",
+                              backgroundColor: "#ef4444",
+                              padding: "1px 6px",
+                              borderRadius: "4px",
+                              marginLeft: "6px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Đã ẩn
+                          </span>
+                        )}
                         <span
                           style={{
                             fontSize: "12px",
@@ -711,15 +782,31 @@ export default function AdminProducts() {
                         >
                           Sửa chi tiết & Ảnh
                         </button>
-                        <button
-                          onClick={() =>
-                            handleDeleteFrame(frame.frameId || frame.id)
-                          }
-                          className="btn-delete"
-                          style={{ padding: "6px 12px" }}
-                        >
-                          Xóa kính
-                        </button>
+                        {frame.status?.toLowerCase() === "inactive" ? (
+                          <button
+                            onClick={() =>
+                              handleReactivateFrame(frame.frameId || frame.id)
+                            }
+                            className="btn-edit"
+                            style={{
+                              padding: "6px 12px",
+                              backgroundColor: "#059669",
+                              color: "#fff",
+                            }}
+                          >
+                            Kích hoạt lại
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleDeleteFrame(frame.frameId || frame.id)
+                            }
+                            className="btn-delete"
+                            style={{ padding: "6px 12px" }}
+                          >
+                            Vô hiệu hóa
+                          </button>
+                        )}
                       </td>
                     </tr>
 

@@ -250,7 +250,7 @@ export default function ProductReviews({ frameId }) {
       )}
 
       {/* Write review button */}
-      {token && !showForm && (
+      {token && !showForm && isVerified && (
         <button
           onClick={() => {
             resetForm();
@@ -267,8 +267,23 @@ export default function ProductReviews({ frameId }) {
             fontWeight: "600",
           }}
         >
-          {isVerified ? "Viết đánh giá (Đã mua hàng)" : "Viết đánh giá"}
+          Viết đánh giá (Đã mua hàng)
         </button>
+      )}
+      {token && !showForm && !isVerified && (
+        <div
+          style={{
+            marginBottom: "16px",
+            padding: "12px 16px",
+            backgroundColor: "#fef3c7",
+            border: "1px solid #f59e0b",
+            borderRadius: "8px",
+            color: "#92400e",
+            fontSize: "14px",
+          }}
+        >
+          Bạn cần mua sản phẩm này trước khi có thể viết đánh giá.
+        </div>
       )}
 
       {/* Review form */}

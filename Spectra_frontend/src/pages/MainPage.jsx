@@ -37,11 +37,11 @@ const categories = [
     title: "Eyeglasses",
     desc: "Classic & modern frames",
   },
-  {
-    image: "/Images/bradyn-trollip-10zIqwA5VL0-unsplash.jpg",
-    title: "Sunglasses",
-    desc: "UV protection in style",
-  },
+  // {
+  //   image: "/Images/bradyn-trollip-10zIqwA5VL0-unsplash.jpg",
+  //   title: "Sunglasses",
+  //   desc: "UV protection in style",
+  // },
   {
     image: "/Images/lensabl-FwtWEIzyNJI-unsplash.jpg",
     title: "Prescription Lenses",

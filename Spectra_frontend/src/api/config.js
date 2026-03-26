@@ -39,6 +39,7 @@ export const ENDPOINTS = {
   // Lens
   LENS_TYPES: "/LensTypes",
   LENS_FEATURES: "/LensFeatures",
+  LENS_INDICES: "/LensIndices",
   // Orders
   ORDERS: {
     LIST: "/Orders",
@@ -98,6 +99,10 @@ export const ENDPOINTS = {
   // Shipping
   SHIPPING: {
     TRACKING: (id) => `/Shipping/orders/${id}/tracking`,
+  },
+  // Exchange Rate
+  EXCHANGE_RATE: {
+    USD_VND: "/ExchangeRate/usd-vnd",
   },
 };
 

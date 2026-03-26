@@ -150,6 +150,7 @@ export default function ProductDetail() {
       color: colorObj.colorName || "Mặc định",
       colorId: colorObj.id || colorObj.colorId || null,
       quantity: quantity,
+      maxStock: maxAllowedQuantity,
       isPreorder: isPreorder,
       campaignId: isPreorder ? preorderInfo.campaignId : null,
       estimatedDeliveryDate: isPreorder
@@ -158,14 +159,19 @@ export default function ProductDetail() {
       lensInfo: cartDataOptions.lensIncluded
         ? {
             typeId: cartDataOptions.lensDetails.typeId,
+            lensIndexId: cartDataOptions.lensDetails.lensIndexId || null,
             featureId: cartDataOptions.lensDetails.featureId,
             prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
             type:
               cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
+            lensIndex:
+              cartDataOptions.lensDetails.lensIndex?.indexValue || null,
             feature:
               cartDataOptions.lensDetails.lensFeature?.featureSpecification ||
               "Không có",
             typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0,
+            indexPrice:
+              cartDataOptions.lensDetails.lensIndex?.additionalPrice || 0,
             featurePrice:
               cartDataOptions.lensDetails.lensFeature?.extraPrice || 0,
           }
@@ -494,7 +500,7 @@ export default function ProductDetail() {
                           fontWeight: "700",
                         }}
                       >
-                        YÊU CẦU ĐƠN THUỐC:
+                        ĐƠN THUỐC HỖ TRỢ:
                       </h4>
 
                       {(product.minRx != null || product.maxRx != null) && (

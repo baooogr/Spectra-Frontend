@@ -153,11 +153,14 @@ export default function ComplaintForm() {
     const isFromPreorder = !!(
       o.convertedFromPreorderId || o.ConvertedFromPreorderId
     );
+    const preorderId =
+      o.convertedFromPreorderId || o.ConvertedFromPreorderId || null;
     return items.map((item) => ({
       ...item,
       orderId: o.orderId || o.OrderId,
       orderDate: o.createdAt || o.CreatedAt || o.orderDate || o.OrderDate,
       isFromPreorder,
+      preorderId,
     }));
   });
 
@@ -229,12 +232,13 @@ export default function ComplaintForm() {
                 const name =
                   item.frameName || item.productName || item.name || "Sản phẩm";
                 const color = item.colorName || item.color || "";
-                const preorderTag = item.isFromPreorder ? " [Pre-order]" : "";
+                const orderLabel =
+                  item.isFromPreorder && item.preorderId
+                    ? `Đặt trước #${String(item.preorderId).slice(0, 8)}`
+                    : `Đơn #${String(item.orderId).slice(0, 8)}`;
                 return (
                   <option key={itemId} value={itemId}>
-                    {name} {color ? `(${color})` : ""} — Đơn #
-                    {String(item.orderId).slice(0, 8)}
-                    {preorderTag}
+                    {name} {color ? `(${color})` : ""} — {orderLabel}
                   </option>
                 );
               })}

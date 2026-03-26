@@ -1,10 +1,12 @@
 import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./CheckoutSuccess.css";
+import { useExchangeRate } from "../api";
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { rate: exchangeRate } = useExchangeRate();
 
   const orderId = useMemo(() => {
     return (
@@ -20,8 +22,6 @@ export default function CheckoutSuccess() {
   const formatCurrency = (amountInUSD) => {
     if (typeof amountInUSD !== "number") return null;
 
-    const EXCHANGE_RATE = 25400; 
-    
     // 1. Format USD: bỏ phần thập phân .00 nếu là số chẵn
     const formattedUSD = new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -31,7 +31,7 @@ export default function CheckoutSuccess() {
     }).format(amountInUSD);
 
     // 2. Format VND: Chỉ lấy phần số (để có dấu chấm 4.593.750), không dùng style "currency" để tránh bị dính ký hiệu ₫
-    const amountInVND = amountInUSD * EXCHANGE_RATE;
+    const amountInVND = amountInUSD * exchangeRate;
     const formattedVND = new Intl.NumberFormat("vi-VN").format(amountInVND);
 
     // 3. Ghép chuỗi: Ép sát ngoặc đơn vào USD và thêm chữ VND
@@ -94,8 +94,6 @@ export default function CheckoutSuccess() {
             Về trang chủ
           </button>
         </div>
-
-        
       </div>
     </div>
   );

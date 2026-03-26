@@ -2,10 +2,12 @@ import React, { useMemo } from "react";
 import "./CartPage.css";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useExchangeRate } from "../api";
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { cartItems, updateQty, removeItem } = useCart();
+  const { rate: exchangeRate } = useExchangeRate();
 
   const subtotal = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -17,7 +19,7 @@ export default function CartPage() {
       currency: "USD",
     }).format(n);
   const formatVND = (usd) => {
-    const vnd = usd * 25400;
+    const vnd = usd * exchangeRate;
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",

@@ -43,6 +43,9 @@ export default function AdminLayout() {
           <Link to="/admin/lensfeatures" className="admin-link">
             Quản lý Tính Năng Tròng
           </Link>
+          <Link to="/admin/lensindices" className="admin-link">
+            Quản lý Chiết Suất Tròng
+          </Link>
           <Link to="/admin/orders" className="admin-link">
             Đơn hàng
           </Link>
