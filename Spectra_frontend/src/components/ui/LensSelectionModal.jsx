@@ -19,7 +19,8 @@ const formatVND = (usdAmount, rate) => {
     style: "currency",
     currency: "VND",
     currencyDisplay: "code",
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(vndAmount);
 };
 

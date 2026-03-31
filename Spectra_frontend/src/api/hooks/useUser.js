@@ -2,13 +2,27 @@ import useSWR from "swr";
 import { buildUrl, ENDPOINTS } from "../config";
 import { authFetcher } from "../fetcher";
 
+// Helper to get auth token from either storage key
+function getToken() {
+  if (typeof window === "undefined") return null;
+  let token = localStorage.getItem("token");
+  if (!token) {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      token = user?.token;
+    } catch {
+      // ignore
+    }
+  }
+  return token;
+}
+
 /**
  * Hook for fetching current user data with caching
  * Only fetches when user is authenticated (has token)
  */
 export function useCurrentUser() {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = getToken();
   const url = token ? buildUrl(ENDPOINTS.USERS.ME) : null;
 
   const { data, error, isLoading, mutate } = useSWR(url, authFetcher, {

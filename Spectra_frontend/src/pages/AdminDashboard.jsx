@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { UserContext } from "../context/UserContext";
+import { useExchangeRate } from "../api";
+import { FALLBACK_EXCHANGE_RATE, formatVNDNumber } from "../utils/validation";
 import {
   LineChart,
   Line,
@@ -19,12 +21,17 @@ import "./AdminDashboard.css"; // IMPORT FILE CSS MỚI
 
 export default function AdminDashboard() {
   const { user } = useContext(UserContext);
+  const { rate: exchangeRate } = useExchangeRate();
 
   const [stats, setStats] = useState(null);
   const [dailyRevenue, setDailyRevenue] = useState([]);
   const [monthlyRevenue, setMonthlyRevenue] = useState([]);
   const [popularFrames, setPopularFrames] = useState([]);
   const [orderSummary, setOrderSummary] = useState([]);
+  const [glassesSoldBreakdown, setGlassesSoldBreakdown] = useState({
+    regularSold: 0,
+    preorderSold: 0,
+  });
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -85,28 +92,37 @@ export default function AdminDashboard() {
         Authorization: `Bearer ${token}`,
       };
 
-      const [statsRes, dailyRes, monthlyRes, popularRes, orderRes] =
-        await Promise.all([
-          fetch(
-            `https://myspectra.runasp.net/api/Dashboard/statistics${dailyQueryString}`,
-            { headers },
-          ),
-          fetch(
-            `https://myspectra.runasp.net/api/Dashboard/revenue/daily${dailyQueryString}`,
-            { headers },
-          ),
-          fetch(
-            `https://myspectra.runasp.net/api/Dashboard/revenue/monthly?year=${selectedYear}`,
-            { headers },
-          ),
-          fetch(
-            `https://myspectra.runasp.net/api/Dashboard/popular-frames?${popularParams.toString()}`,
-            { headers },
-          ),
-          fetch(`https://myspectra.runasp.net/api/Dashboard/orders/summary`, {
-            headers,
-          }),
-        ]);
+      const [
+        statsRes,
+        dailyRes,
+        monthlyRes,
+        popularRes,
+        orderRes,
+        allOrdersRes,
+      ] = await Promise.all([
+        fetch(
+          `https://myspectra.runasp.net/api/Dashboard/statistics${dailyQueryString}`,
+          { headers },
+        ),
+        fetch(
+          `https://myspectra.runasp.net/api/Dashboard/revenue/daily${dailyQueryString}`,
+          { headers },
+        ),
+        fetch(
+          `https://myspectra.runasp.net/api/Dashboard/revenue/monthly?year=${selectedYear}`,
+          { headers },
+        ),
+        fetch(
+          `https://myspectra.runasp.net/api/Dashboard/popular-frames?${popularParams.toString()}`,
+          { headers },
+        ),
+        fetch(`https://myspectra.runasp.net/api/Dashboard/orders/summary`, {
+          headers,
+        }),
+        fetch(`https://myspectra.runasp.net/api/OrdersV2?page=1&pageSize=500`, {
+          headers,
+        }),
+      ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
       if (dailyRes.ok) {
@@ -121,11 +137,36 @@ export default function AdminDashboard() {
       if (monthlyRes.ok) {
         const mData = await monthlyRes.json();
         setMonthlyRevenue(
-          mData.map((m) => ({ month: `Tháng ${m.month}`, revenue: m.revenue })),
+          mData.map((m) => ({
+            month: `Tháng ${new Date(m.date).getMonth() + 1}`,
+            revenue: m.revenue,
+          })),
         );
       }
       if (popularRes.ok) setPopularFrames(await popularRes.json());
       if (orderRes.ok) setOrderSummary(await orderRes.json());
+      if (allOrdersRes.ok) {
+        const ordersData = await allOrdersRes.json();
+        const allOrders = ordersData.items || ordersData.Items || [];
+        const delivered = allOrders.filter(
+          (o) => (o.status || o.Status || "").toLowerCase() === "delivered",
+        );
+        let regularSold = 0;
+        let preorderSold = 0;
+        delivered.forEach((o) => {
+          const items = o.items || o.orderItems || o.OrderItems || [];
+          const qty = items.reduce(
+            (sum, item) => sum + (item.quantity || item.Quantity || 0),
+            0,
+          );
+          if (o.convertedFromPreorderId || o.ConvertedFromPreorderId) {
+            preorderSold += qty;
+          } else {
+            regularSold += qty;
+          }
+        });
+        setGlassesSoldBreakdown({ regularSold, preorderSold });
+      }
     } catch (err) {
       setError("Không thể kết nối đến máy chủ.");
     } finally {
@@ -142,11 +183,11 @@ export default function AdminDashboard() {
     fetchData();
   };
 
-  const formatVND = (value) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(value);
+  const formatVND = (usdValue) => {
+    const r = exchangeRate || FALLBACK_EXCHANGE_RATE;
+    const vndAmount = (usdValue || 0) * r;
+    return `${formatVNDNumber(vndAmount)} VND`;
+  };
 
   return (
     <div className="admin-dashboard-container">
@@ -205,19 +246,33 @@ export default function AdminDashboard() {
               <p className="card-value">{formatVND(stats.totalRevenue)}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">Don Hang</h3>
-              <p className="card-value">{stats.totalOrders}</p>
+              <h3 className="card-title">Đơn Hàng Thường</h3>
+              <p className="card-value">{stats.totalOrders ?? 0}</p>
+            </div>
+            <div className="summary-card card-preorder">
+              <h3 className="card-title">Đơn Đặt Trước (Preorder)</h3>
+              <p className="card-value">{stats.totalPreorders ?? 0}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">Kinh Da Ban</h3>
+              <h3 className="card-title">Kính Đã Bán</h3>
               <p className="card-value">{stats.totalFramesSold ?? 0}</p>
+              <div className="card-breakdown">
+                <span className="breakdown-item">
+                  <span className="breakdown-dot dot-order"></span>
+                  Đơn thường: {glassesSoldBreakdown.regularSold}
+                </span>
+                <span className="breakdown-item">
+                  <span className="breakdown-dot dot-preorder"></span>
+                  Đặt trước: {glassesSoldBreakdown.preorderSold}
+                </span>
+              </div>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">Khach Moi (30 ngay)</h3>
+              <h3 className="card-title">Khách Mới (30 ngày)</h3>
               <p className="card-value">{stats.newCustomers ?? 0}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">San Pham</h3>
+              <h3 className="card-title">Sản Phẩm</h3>
               <p className="card-value highlight">{stats.totalProducts ?? 0}</p>
             </div>
           </div>
@@ -313,10 +368,7 @@ export default function AdminDashboard() {
                             {frame.name || frame.frameName || "Tên kính"}
                           </p>
                           <p className="top-item-sold">
-                            Đã bán:{" "}
-                            <span>
-                              {frame.soldQuantity || frame.quantity || 0}
-                            </span>
+                            Đã bán: <span>{frame.totalSold ?? 0}</span>
                           </p>
                         </div>
                       </div>
@@ -329,35 +381,51 @@ export default function AdminDashboard() {
 
               <div className="chart-card">
                 <h3 className="chart-title">Trạng Thái Đơn Hàng</h3>
-                {orderSummary.length > 0 ? (
-                  <div className="pie-wrapper">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={orderSummary}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="count"
-                          nameKey="status"
-                        >
-                          {orderSummary.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend verticalAlign="bottom" height={36} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p className="empty-data-msg">Không có dữ liệu.</p>
-                )}
+                {(() => {
+                  const statusData = [
+                    { status: "Chờ xác nhận", count: stats.pendingOrders ?? 0 },
+                    {
+                      status: "Đã xác nhận",
+                      count: stats.confirmedOrders ?? 0,
+                    },
+                    {
+                      status: "Đang xử lý",
+                      count: stats.processingOrders ?? 0,
+                    },
+                    { status: "Đang giao", count: stats.shippedOrders ?? 0 },
+                    { status: "Đã giao", count: stats.deliveredOrders ?? 0 },
+                    { status: "Đã huỷ", count: stats.cancelledOrders ?? 0 },
+                  ].filter((d) => d.count > 0);
+                  return statusData.length > 0 ? (
+                    <div className="pie-wrapper">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={statusData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="count"
+                            nameKey="status"
+                          >
+                            {statusData.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend verticalAlign="bottom" height={36} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p className="empty-data-msg">Không có dữ liệu.</p>
+                  );
+                })()}
               </div>
             </div>
           </div>

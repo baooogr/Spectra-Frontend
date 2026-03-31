@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { UserContext } from "../context/UserContext";
+import { getAddressDisplayString } from "../utils/vietnamAddress";
 import "./AdminOrders.css";
 
 // =============================================================================
@@ -467,7 +468,7 @@ export default function AdminOrders() {
     setIsLoading(true);
     try {
       const [ordersRes, preordersRes] = await Promise.all([
-        fetch("https://myspectra.runasp.net/api/Orders?page=1&pageSize=100", {
+        fetch("https://myspectra.runasp.net/api/OrdersV2?page=1&pageSize=100", {
           headers,
         }),
         fetch(
@@ -606,7 +607,7 @@ export default function AdminOrders() {
         const newOrderId = newOrder.orderId || newOrder.id;
         if (newOrderId) {
           await fetch(
-            `https://myspectra.runasp.net/api/Orders/${newOrderId}/status`,
+            `https://myspectra.runasp.net/api/OrdersV2/${newOrderId}/status`,
             {
               method: "PUT",
               headers,
@@ -698,7 +699,13 @@ export default function AdminOrders() {
       style: "currency",
       currency: "USD",
     }).format(n || 0);
-  const displayList = activeTab === "orders" ? orders : preorders;
+  const displayList = (activeTab === "orders" ? orders : preorders)
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.orderDate || b.createdAt || 0) -
+        new Date(a.orderDate || a.createdAt || 0),
+    );
 
   // ---------------------------------------------------------------------------
   // RENDER MODAL BODY
@@ -739,6 +746,9 @@ export default function AdminOrders() {
       displayEmail = parsed.email || selectedOrder.user?.email || null;
       displayAddress = parsed.address || "N/A";
     }
+
+    // Strip |||structured data from address for clean display
+    displayAddress = getAddressDisplayString(displayAddress);
 
     const itemsList = selectedOrder.isPreorder
       ? selectedOrder.preorderItems ||
@@ -865,7 +875,7 @@ export default function AdminOrders() {
                       SL: <b>{item.quantity || 1}</b> | Giá:{" "}
                       <b>{formatUSD(unitPrice)}</b>
                     </p>
-                    {(lensType || lensFeature) && (
+                    {lensType || lensFeature ? (
                       <p
                         className="item-meta"
                         style={{ color: "#4338ca", marginTop: "4px" }}
@@ -887,6 +897,17 @@ export default function AdminOrders() {
                             Cần đơn kính
                           </span>
                         )}
+                      </p>
+                    ) : (
+                      <p
+                        className="item-meta"
+                        style={{
+                          color: "#92400e",
+                          marginTop: "4px",
+                          fontWeight: "600",
+                        }}
+                      >
+                        🔧 Chỉ mua gọng (Không kèm tròng kính)
                       </p>
                     )}
                     {(prescriptionId || embeddedRx) && (
@@ -1029,7 +1050,7 @@ export default function AdminOrders() {
                         {getStatusBadge(order.status)}
                         <select
                           className="status-select"
-                          value={order.status?.toLowerCase()}
+                          value=""
                           onChange={(e) =>
                             handleUpdateStatus(id, isPreorder, e.target.value)
                           }
@@ -1037,22 +1058,43 @@ export default function AdminOrders() {
                           <option value="" disabled>
                             Đổi trạng thái
                           </option>
-                          {isPreorder ? (
-                            <>
-                              <option value="pending">Pending</option>
-                              <option value="confirmed">Confirmed</option>
-                              <option value="paid">Paid</option>
-                              <option value="converted">Processing</option>
-                              <option value="cancelled">Cancelled</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="pending">Pending</option>
-                              <option value="confirmed">Confirmed</option>
-                              <option value="processing">Processing</option>
-                              <option value="cancelled">Cancelled</option>
-                            </>
-                          )}
+                          {isPreorder
+                            ? (() => {
+                                const s = (order.status || "").toLowerCase();
+                                const preorderTransitions = {
+                                  pending: ["confirmed", "cancelled"],
+                                  confirmed: ["paid", "cancelled"],
+                                  paid: ["converted", "cancelled"],
+                                  converted: [],
+                                  cancelled: [],
+                                };
+                                const allowed = preorderTransitions[s] || [];
+                                return allowed.map((st) => (
+                                  <option key={st} value={st}>
+                                    {st === "converted"
+                                      ? "Processing"
+                                      : st.charAt(0).toUpperCase() +
+                                        st.slice(1)}
+                                  </option>
+                                ));
+                              })()
+                            : (() => {
+                                const s = (order.status || "").toLowerCase();
+                                const orderTransitions = {
+                                  pending: ["confirmed", "cancelled"],
+                                  confirmed: ["processing", "cancelled"],
+                                  processing: ["shipped", "cancelled"],
+                                  shipped: ["delivered"],
+                                  delivered: [],
+                                  cancelled: [],
+                                };
+                                const allowed = orderTransitions[s] || [];
+                                return allowed.map((st) => (
+                                  <option key={st} value={st}>
+                                    {st.charAt(0).toUpperCase() + st.slice(1)}
+                                  </option>
+                                ));
+                              })()}
                         </select>
                       </div>
                     </td>

@@ -137,6 +137,13 @@
 .summary-card:nth-child(5) {
   border-left: 6px solid var(--color-brand-mint);
 }
+.summary-card:nth-child(6) {
+  border-left: 6px solid #8b5cf6;
+}
+.summary-card.card-preorder {
+  border-left: 6px solid #f59e0b;
+  background: linear-gradient(135deg, var(--color-surface) 90%, #fef3c720);
+}
 .card-title {
   margin: 0;
   color: var(--color-text-muted);
@@ -153,6 +160,35 @@
 }
 .card-value.highlight {
   color: var(--color-brand-forest);
+}
+
+/* Glasses sold breakdown */
+.card-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.breakdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.breakdown-dot.dot-order {
+  background-color: #3b82f6;
+}
+.breakdown-dot.dot-preorder {
+  background-color: #f59e0b;
 }
 
 /* Main Grid */

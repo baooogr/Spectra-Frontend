@@ -3,6 +3,7 @@ import "./CartPage.css";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useExchangeRate } from "../api";
+import { formatVNDNumber, roundVND } from "../utils/validation";
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -20,11 +21,7 @@ export default function CartPage() {
     }).format(n);
   const formatVND = (usd) => {
     const vnd = usd * exchangeRate;
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-      currencyDisplay: "code",
-    }).format(vnd);
+    return `${formatVNDNumber(vnd)} VND`;
   };
 
   const goCheckout = () => {

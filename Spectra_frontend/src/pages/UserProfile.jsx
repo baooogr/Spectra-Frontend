@@ -5,6 +5,8 @@ import "./UserProfile.css";
 import VIETNAM_PROVINCES, {
   buildAddressString,
   parseAddressString,
+  formatAddressForDisplay,
+  getAddressDisplayString,
 } from "../utils/vietnamAddress";
 import { isValidVNPhone } from "../utils/validation";
 
@@ -448,7 +450,10 @@ export default function UserProfile() {
                 <b>Số điện thoại:</b> {profile?.phone || "Chưa cập nhật"}
               </p>
               <p>
-                <b>Địa chỉ:</b> {profile?.address || "Chưa cập nhật"}
+                <b>Địa chỉ:</b>{" "}
+                {profile?.address
+                  ? getAddressDisplayString(profile.address)
+                  : "Chưa cập nhật"}
               </p>
               <button
                 onClick={() => setEditMode(true)}
@@ -1251,7 +1256,7 @@ export default function UserProfile() {
           >
             <h3 style={{ margin: 0 }}>Danh sách khiếu nại</h3>
             <Link
-              to="/complaints/new"
+              to="/orders"
               style={{
                 padding: "10px 20px",
                 background: "#111827",
@@ -1263,7 +1268,7 @@ export default function UserProfile() {
                 fontSize: "14px",
               }}
             >
-              + Tạo khiếu nại mới
+              Xem đơn hàng để khiếu nại
             </Link>
           </div>
 

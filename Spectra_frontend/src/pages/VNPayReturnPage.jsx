@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { roundVND, formatVNDNumber } from "../utils/validation";
+import { useExchangeRate } from "../api";
 
 export default function VNPayReturnPage() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading");
+  const { rate: exchangeRate = 25400 } = useExchangeRate();
 
   // Các params có thể nhận được từ VNPay hoặc Backend của bạn
   const responseCode = searchParams.get("vnp_ResponseCode");
@@ -54,7 +57,7 @@ export default function VNPayReturnPage() {
   const formatAmount = (raw) => {
     if (!raw) return "—";
 
-    const EXCHANGE_RATE = 25400;
+    const EXCHANGE_RATE = exchangeRate || 25400;
     let amountUSD = 0;
     let amountVND = 0;
     let rawNumber = Number(raw);
@@ -84,11 +87,11 @@ export default function VNPayReturnPage() {
       minimumFractionDigits: 0,
     }).format(amountUSD);
 
-    // Định dạng VND (ví dụ: 4.725.000 VND)
-    const formattedVND =
-      new Intl.NumberFormat("vi-VN").format(amountVND) + " VND";
+    // Round VND to 500 and format (e.g. 4.725.000 VND)
+    const roundedVND = roundVND(amountVND);
+    const formattedVND = formatVNDNumber(roundedVND) + " VND";
 
-    // Trả về chuỗi ghép: $180 (4.725.000 VND)
+    // Return: $180 (4.725.000 VND)
     return `${formattedUSD} (${formattedVND})`;
   };
 

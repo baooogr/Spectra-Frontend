@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useExchangeRate } from "../api";
+import { formatPrice } from "../utils/validation";
 import "./OrderHistory.css";
 
 export default function OrderHistory() {
@@ -14,18 +15,8 @@ export default function OrderHistory() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // "all" | "orders" | "preorders"
 
-  // ⚡ HÀM FORMAT TIỀN TỆ
   const { rate: exchangeRate } = useExchangeRate();
-  const formatPrice = (n) => {
-    const usd = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-    }).format(n);
-    const vnd =
-      new Intl.NumberFormat("vi-VN").format(n * exchangeRate) + " VND";
-    return `${usd} (${vnd})`;
-  };
+  // formatPrice from utils handles VND rounding rules (500 VND step) now
 
   useEffect(() => {
     const token =
@@ -42,7 +33,7 @@ export default function OrderHistory() {
         // Gọi song song cả 2 API
         const [ordersRes, preordersRes] = await Promise.all([
           fetch(
-            "https://myspectra.runasp.net/api/Orders/my?page=1&pageSize=100",
+            "https://myspectra.runasp.net/api/OrdersV2/my?page=1&pageSize=100",
             {
               headers: {
                 "Content-Type": "application/json",
@@ -451,6 +442,11 @@ export default function OrderHistory() {
               const frameName =
                 item.frame?.frameName || item.frameName || "Gọng kính";
               const qty = item.quantity || item.qty || 1;
+              const hasLens = !!(
+                item.lensType ||
+                item.lensTypeId ||
+                item.lensTypeName
+              );
               return (
                 <p
                   key={item.preorderItemId || item.orderItemId || idx}
@@ -461,6 +457,18 @@ export default function OrderHistory() {
                   }}
                 >
                   • {frameName} <span style={{ color: "#1e40af" }}>x{qty}</span>
+                  {!hasLens && (
+                    <span
+                      style={{
+                        marginLeft: "6px",
+                        fontSize: "12px",
+                        color: "#92400e",
+                        fontWeight: "600",
+                      }}
+                    >
+                      (Chỉ mua gọng)
+                    </span>
+                  )}
                 </p>
               );
             })}
@@ -611,21 +619,31 @@ export default function OrderHistory() {
 
         {!isLoading && (
           <>
-            {/* TAB: TẤT CẢ */}
+            {/* TAB: TẤT CẢ — Gộp và sắp xếp theo ngày mới nhất */}
             {activeTab === "all" && (
               <>
-                {sortedPreorders.map((order) => (
-                  <PreorderCard
-                    key={`pre-${order.id || order.preorderId}`}
-                    order={order}
-                  />
-                ))}
-                {sortedOrders.map((order) => (
-                  <OrderCard
-                    key={`ord-${order.id || order.orderId}`}
-                    order={order}
-                  />
-                ))}
+                {[
+                  ...sortedOrders.map((o) => ({ ...o, _type: "order" })),
+                  ...sortedPreorders.map((o) => ({ ...o, _type: "preorder" })),
+                ]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.orderDate || b.createdAt || 0) -
+                      new Date(a.orderDate || a.createdAt || 0),
+                  )
+                  .map((item) =>
+                    item._type === "preorder" ? (
+                      <PreorderCard
+                        key={`pre-${item.id || item.preorderId}`}
+                        order={item}
+                      />
+                    ) : (
+                      <OrderCard
+                        key={`ord-${item.id || item.orderId}`}
+                        order={item}
+                      />
+                    ),
+                  )}
                 {totalCount === 0 && !error && (
                   <p style={{ textAlign: "center", color: "#6b7280" }}>
                     Chưa có đơn hàng nào.

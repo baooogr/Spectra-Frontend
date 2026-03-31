@@ -135,9 +135,10 @@ export default function ProductDetail() {
   const maxAllowedQuantity = isPreorder
     ? preorderInfo.maxQuantityPerOrder
     : currentStock;
+  const colorExtraCost = selectedColor?.colorExtraCost || 0;
   const displayPrice = isPreorder
     ? preorderInfo.campaignPrice
-    : product.basePrice;
+    : product.basePrice + colorExtraCost;
   const productForModal = { ...product, basePrice: displayPrice };
 
   const handleConfirmAddToCart = (cartDataOptions) => {
@@ -219,6 +220,18 @@ export default function ProductDetail() {
             >
               ${displayPrice}
             </p>
+
+            {colorExtraCost > 0 && (
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#6b7280",
+                  margin: "-8px 0 10px",
+                }}
+              >
+                (Giá gốc: ${product.basePrice} + Phụ phí màu: ${colorExtraCost})
+              </p>
+            )}
 
             {isPreorder && (
               <div

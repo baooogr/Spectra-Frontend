@@ -1388,21 +1388,65 @@ const VIETNAM_PROVINCES = [
 
 export default VIETNAM_PROVINCES;
 
+// Address structure delimiter for reliable parsing
+const ADDR_DELIM = "|||";
+
 /**
  * Build a formatted address string from province/district/ward/detail
+ * Uses a delimiter-based format for reliable parsing while maintaining human readability
+ * Format: "Human readable address|||province|||district|||ward|||detail"
  */
 export function buildAddressString({ province, district, ward, detail }) {
+  // Human readable part comes first
+  const parts = [detail, ward, district, province].filter(Boolean);
+  const humanReadable = parts.join(", ");
+  // Append structured data for reliable parsing
+  return `${humanReadable}${ADDR_DELIM}${province || ""}${ADDR_DELIM}${district || ""}${ADDR_DELIM}${ward || ""}${ADDR_DELIM}${detail || ""}`;
+}
+
+/**
+ * Build human-readable display string from address components
+ */
+export function formatAddressForDisplay({ province, district, ward, detail }) {
   const parts = [detail, ward, district, province].filter(Boolean);
   return parts.join(", ");
 }
 
 /**
- * Try to parse an address string back into components (best effort)
+ * Get the display version of an address (human-readable part only)
+ */
+export function getAddressDisplayString(address) {
+  if (!address) return "";
+  const delimIndex = address.indexOf(ADDR_DELIM);
+  if (delimIndex !== -1) {
+    return address.substring(0, delimIndex);
+  }
+  return address;
+}
+
+/**
+ * Try to parse an address string back into components
+ * Supports both new structured format and legacy format
  */
 export function parseAddressString(address) {
   if (!address) return { province: "", district: "", ward: "", detail: "" };
 
-  // Try to match Vietnamese province names
+  // Check for new delimiter-based format first
+  const delimIndex = address.indexOf(ADDR_DELIM);
+  if (delimIndex !== -1) {
+    const parts = address.split(ADDR_DELIM);
+    // parts[0] = human readable, parts[1] = province, parts[2] = district, parts[3] = ward, parts[4] = detail
+    if (parts.length >= 5) {
+      return {
+        province: parts[1] || "",
+        district: parts[2] || "",
+        ward: parts[3] || "",
+        detail: parts[4] || "",
+      };
+    }
+  }
+
+  // Legacy parsing: Try to match Vietnamese province names
   for (const prov of VIETNAM_PROVINCES) {
     if (address.includes(prov.name)) {
       for (const dist of prov.districts) {

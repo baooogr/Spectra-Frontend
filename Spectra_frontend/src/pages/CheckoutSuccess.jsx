@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./CheckoutSuccess.css";
 import { useExchangeRate } from "../api";
+import { formatPrice } from "../utils/validation";
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
@@ -18,24 +19,10 @@ export default function CheckoutSuccess() {
   const customer = location.state?.customer;
   const total = location.state?.total; // Giả sử total này đang là USD
 
-  // Hàm chuyển đổi tỷ giá và format ra định dạng "$100 (2.625.000 ₫)"
+  // Use centralized formatter to apply VND rounding policy
   const formatCurrency = (amountInUSD) => {
     if (typeof amountInUSD !== "number") return null;
-
-    // 1. Format USD: bỏ phần thập phân .00 nếu là số chẵn
-    const formattedUSD = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amountInUSD);
-
-    // 2. Format VND: Chỉ lấy phần số (để có dấu chấm 4.593.750), không dùng style "currency" để tránh bị dính ký hiệu ₫
-    const amountInVND = amountInUSD * exchangeRate;
-    const formattedVND = new Intl.NumberFormat("vi-VN").format(amountInVND);
-
-    // 3. Ghép chuỗi: Ép sát ngoặc đơn vào USD và thêm chữ VND
-    return `${formattedUSD}(${formattedVND} VND)`;
+    return formatPrice(amountInUSD, exchangeRate);
   };
 
   return (

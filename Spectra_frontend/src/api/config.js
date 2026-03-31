@@ -42,12 +42,12 @@ export const ENDPOINTS = {
   LENS_INDICES: "/LensIndices",
   // Orders
   ORDERS: {
-    LIST: "/Orders",
-    MY: "/Orders/my",
-    DETAIL: (id) => `/Orders/${id}`,
-    STATUS: (id) => `/Orders/${id}/status`,
-    CONFIRM_DELIVERY: (id) => `/Orders/${id}/confirm-delivery`,
-    CANCEL: (id) => `/Orders/${id}/cancel`,
+    LIST: "/OrdersV2",
+    MY: "/OrdersV2/my",
+    DETAIL: (id) => `/OrdersV2/${id}`,
+    STATUS: (id) => `/OrdersV2/${id}/status`,
+    CONFIRM_DELIVERY: (id) => `/OrdersV2/${id}/confirm-delivery`,
+    CANCEL: (id) => `/OrdersV2/${id}/cancel`,
   },
   // Preorders
   PREORDERS: {
@@ -99,10 +99,36 @@ export const ENDPOINTS = {
   // Shipping
   SHIPPING: {
     TRACKING: (id) => `/Shipping/orders/${id}/tracking`,
+    METHODS: "/Shipping/methods",
+    CALCULATE: "/Shipping/calculate",
+    // Ahamove (legacy - kept for backward compatibility)
+    AHAMOVE_STATUS: "/Shipping/ahamove/status",
+    AHAMOVE_ESTIMATE: "/Shipping/ahamove/estimate",
+    AHAMOVE_ORDERS: "/Shipping/ahamove/orders",
+    AHAMOVE_ORDER_DETAIL: (ahamoveOrderId) =>
+      `/Shipping/ahamove/orders/${ahamoveOrderId}`,
+    // GHN (Giao Hàng Nhanh) - Primary shipping provider
+    GHN_STATUS: "/Shipping/ghn/status",
+    GHN_PROVINCES: "/Shipping/ghn/provinces",
+    GHN_DISTRICTS: (provinceId) => `/Shipping/ghn/districts/${provinceId}`,
+    GHN_WARDS: (districtId) => `/Shipping/ghn/wards/${districtId}`,
+    GHN_SERVICES: "/Shipping/ghn/services",
+    GHN_CALCULATE: "/Shipping/ghn/calculate",
+    GHN_ORDERS: "/Shipping/ghn/orders",
+    GHN_ORDER_DETAIL: (orderCode) => `/Shipping/ghn/orders/${orderCode}`,
+    GHN_SWITCH_STATUS: (orderCode) =>
+      `/Shipping/ghn/orders/${orderCode}/switch-status`,
   },
   // Exchange Rate
   EXCHANGE_RATE: {
     USD_VND: "/ExchangeRate/usd-vnd",
+  },
+  // Business Rules
+  BUSINESS_RULES: {
+    LIST: "/BusinessRules",
+    BY_CATEGORY: (category) => `/BusinessRules/category/${category}`,
+    DETAIL: (ruleKey) => `/BusinessRules/${ruleKey}`,
+    PUBLIC: "/BusinessRules/public",
   },
 };
 

@@ -312,7 +312,10 @@ export default function AdminProducts() {
       if (isChecked) {
         return {
           ...prev,
-          colorVariants: [...prev.colorVariants, { colorId, stockQuantity: 0 }],
+          colorVariants: [
+            ...prev.colorVariants,
+            { colorId, stockQuantity: 0, colorExtraCost: 0 },
+          ],
         };
       } else {
         return {
@@ -330,6 +333,15 @@ export default function AdminProducts() {
       ...prev,
       colorVariants: prev.colorVariants.map((v) =>
         v.colorId === colorId ? { ...v, stockQuantity: Number(quantity) } : v,
+      ),
+    }));
+  };
+
+  const handleColorExtraCostChange = (colorId, cost) => {
+    setFormData((prev) => ({
+      ...prev,
+      colorVariants: prev.colorVariants.map((v) =>
+        v.colorId === colorId ? { ...v, colorExtraCost: Number(cost) } : v,
       ),
     }));
   };
@@ -377,6 +389,7 @@ export default function AdminProducts() {
         frame.frameColors?.map((fc) => ({
           colorId: fc.colorId || fc.color?.colorId,
           stockQuantity: fc.stockQuantity || 0,
+          colorExtraCost: fc.colorExtraCost || 0,
         })) || [],
       minRx:
         frame.minRx !== null && frame.minRx !== undefined ? frame.minRx : "",
@@ -1381,35 +1394,83 @@ export default function AdminProducts() {
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              gap: "8px",
+                              gap: "12px",
                             }}
                           >
-                            <label
+                            <div
                               style={{
-                                fontSize: "13px",
-                                color: "#4b5563",
-                                margin: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
                               }}
                             >
-                              Tồn kho:
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              value={variant.stockQuantity}
-                              onChange={(e) =>
-                                handleColorStockQuantityChange(
-                                  c.colorId,
-                                  e.target.value,
-                                )
-                              }
+                              <label
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#4b5563",
+                                  margin: 0,
+                                }}
+                              >
+                                Tồn kho:
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={variant.stockQuantity}
+                                onChange={(e) =>
+                                  handleColorStockQuantityChange(
+                                    c.colorId,
+                                    e.target.value,
+                                  )
+                                }
+                                style={{
+                                  width: "70px",
+                                  padding: "6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #cbd5e1",
+                                }}
+                              />
+                            </div>
+                            <div
                               style={{
-                                width: "80px",
-                                padding: "6px",
-                                borderRadius: "4px",
-                                border: "1px solid #cbd5e1",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
                               }}
-                            />
+                            >
+                              <label
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#4b5563",
+                                  margin: 0,
+                                }}
+                              >
+                                Phí thêm:
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={variant.colorExtraCost || 0}
+                                onChange={(e) =>
+                                  handleColorExtraCostChange(
+                                    c.colorId,
+                                    e.target.value,
+                                  )
+                                }
+                                style={{
+                                  width: "90px",
+                                  padding: "6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #cbd5e1",
+                                }}
+                                placeholder="0"
+                              />
+                              <span
+                                style={{ fontSize: "12px", color: "#9ca3af" }}
+                              >
+                                ₫
+                              </span>
+                            </div>
                           </div>
                         )}
                       </div>

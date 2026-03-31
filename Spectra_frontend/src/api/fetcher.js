@@ -1,5 +1,19 @@
 import { API_BASE_URL, getAuthHeaders } from "./config";
 
+// Helper to get auth token from either storage key
+function getToken() {
+  let token = localStorage.getItem("token");
+  if (!token) {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      token = user?.token;
+    } catch {
+      // ignore
+    }
+  }
+  return token;
+}
+
 // Generic fetcher for SWR (public endpoints)
 export const fetcher = async (url) => {
   const res = await fetch(url);
@@ -14,7 +28,7 @@ export const fetcher = async (url) => {
 
 // Authenticated fetcher for SWR (protected endpoints)
 export const authFetcher = async (url) => {
-  const token = localStorage.getItem("token");
+  const token = getToken();
   if (!token) {
     throw new Error("No authentication token");
   }
@@ -34,7 +48,7 @@ export const authFetcher = async (url) => {
 
 // POST request helper
 export const postData = async (endpoint, data, authenticated = true) => {
-  const token = localStorage.getItem("token");
+  const token = getToken();
   const url = endpoint.startsWith("http")
     ? endpoint
     : `${API_BASE_URL}${endpoint}`;
@@ -58,7 +72,7 @@ export const postData = async (endpoint, data, authenticated = true) => {
 
 // PUT request helper
 export const putData = async (endpoint, data) => {
-  const token = localStorage.getItem("token");
+  const token = getToken();
   const url = endpoint.startsWith("http")
     ? endpoint
     : `${API_BASE_URL}${endpoint}`;

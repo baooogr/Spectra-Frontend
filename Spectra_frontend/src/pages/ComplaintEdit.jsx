@@ -62,6 +62,14 @@ export default function ComplaintEdit() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!mediaUrl.trim()) {
+      setError(
+        "Vui lòng nhập link hình ảnh/video minh chứng để staff có thể xác nhận vấn đề.",
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch(`${API}/${id}`, {
@@ -187,7 +195,7 @@ export default function ComplaintEdit() {
               fontSize: "14px",
             }}
           >
-            Link hình ảnh/video
+            Link hình ảnh/video <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <input
             value={mediaUrl}

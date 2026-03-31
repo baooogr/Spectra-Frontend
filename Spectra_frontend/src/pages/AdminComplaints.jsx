@@ -3,18 +3,8 @@ import { UserContext } from "../context/UserContext";
 import "./AdminComplaints.css";
 
 const API = "https://myspectra.runasp.net/api/Complaints";
-const API_ORDERS = "https://myspectra.runasp.net/api/Orders";
+const API_ORDERS = "https://myspectra.runasp.net/api/OrdersV2";
 const API_SHIPPING = "https://myspectra.runasp.net/api/Shipping";
-
-// Default warehouse address (HCM) — GoShip numeric IDs
-const WAREHOUSE_ADDRESS = {
-  name: "Spectra Glasses Warehouse",
-  phone: "0909123456",
-  street: "123 Nguyễn Văn Linh",
-  ward: "9233",
-  district: "700700",
-  city: "700000",
-};
 
 const statusMap = {
   pending: { text: "Chờ xử lý", color: "#d97706", bg: "#fef3c7" },
@@ -76,29 +66,19 @@ export default function AdminComplaints() {
   // Exchange order detail
   const [exchangeOrderDetail, setExchangeOrderDetail] = useState(null);
 
-  // GoShip wizard state for complaint shipments
-  const [gsMode, setGsMode] = useState("goship"); // "goship" or "manual"
-  const [goShipStep, setGoShipStep] = useState(1); // 1=address+parcel, 2=rates, 3=creating
-  const [goShipParcel, setGoShipParcel] = useState({
-    weight: 500,
-    width: 20,
-    height: 10,
-    length: 25,
-    cod: 0,
-  });
-  const [goShipRates, setGoShipRates] = useState([]);
-  const [goShipSelectedRate, setGoShipSelectedRate] = useState(null);
-  const [goShipLoading, setGoShipLoading] = useState(false);
-  const [goShipError, setGoShipError] = useState("");
-  const [gsCities, setGsCities] = useState([]);
-  const [gsDistricts, setGsDistricts] = useState([]);
-  const [gsWards, setGsWards] = useState([]);
-  const [gsSelectedCity, setGsSelectedCity] = useState("");
-  const [gsSelectedDistrict, setGsSelectedDistrict] = useState("");
-  const [gsSelectedWard, setGsSelectedWard] = useState("");
-  const [gsReceiverName, setGsReceiverName] = useState("");
-  const [gsReceiverPhone, setGsReceiverPhone] = useState("");
-  const [gsReceiverStreet, setGsReceiverStreet] = useState("");
+  // Ahamove wizard state for complaint shipments
+  const [gsMode, setGsMode] = useState("ahamove"); // "ahamove" or "manual"
+  const [ahamoveStep, setAhamoveStep] = useState(1); // 1=address, 2=services, 3=creating
+  const [ahamoveLoading, setAhamoveLoading] = useState(false);
+  const [ahamoveError, setAhamoveError] = useState("");
+  const [ahamoveServices, setAhamoveServices] = useState([]);
+  const [ahamoveSelectedService, setAhamoveSelectedService] = useState(null);
+  const [destAddress, setDestAddress] = useState("");
+  const [destLat, setDestLat] = useState("");
+  const [destLng, setDestLng] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [packageWeight, setPackageWeight] = useState(500);
 
   const headers = {
     "Content-Type": "application/json",
@@ -154,8 +134,8 @@ export default function AdminComplaints() {
     setTrackingConfirmed(hasTracking);
     setRefundConfirmed(hasRefund);
 
-    // Reset GoShip state for complaint tracking
-    resetGoShipState();
+    // Reset Ahamove state for complaint tracking
+    resetAhamoveState();
 
     // Fetch full complaint detail for exchange order info
     const cId = complaint.requestId || complaint.RequestId;
@@ -280,144 +260,95 @@ export default function AdminComplaints() {
     setUpdating(false);
   };
 
-  // ─── GoShip helper functions for complaint shipments ───
+  // ─── Ahamove helper functions for complaint shipments ───
 
-  const resetGoShipState = () => {
-    setGsMode("goship");
-    setGoShipStep(1);
-    setGoShipRates([]);
-    setGoShipSelectedRate(null);
-    setGoShipError("");
-    setGoShipParcel({ weight: 500, width: 20, height: 10, length: 25, cod: 0 });
-    setGsDistricts([]);
-    setGsWards([]);
-    setGsSelectedCity("");
-    setGsSelectedDistrict("");
-    setGsSelectedWard("");
-    setGsReceiverName("");
-    setGsReceiverPhone("");
-    setGsReceiverStreet("");
-    // Load cities if not cached
-    if (gsCities.length === 0) {
-      fetch(`${API_SHIPPING}/goship/cities`, { headers })
-        .then((r) => (r.ok ? r.json() : []))
-        .then((data) => setGsCities(data || []))
-        .catch(() => {});
-    }
+  const resetAhamoveState = () => {
+    setGsMode("ahamove");
+    setAhamoveStep(1);
+    setAhamoveServices([]);
+    setAhamoveSelectedService(null);
+    setAhamoveError("");
+    setDestAddress("");
+    setDestLat("");
+    setDestLng("");
+    setRecipientName("");
+    setRecipientPhone("");
+    setPackageWeight(500);
   };
 
-  const handleGsCityChange = (cityId) => {
-    setGsSelectedCity(cityId);
-    setGsSelectedDistrict("");
-    setGsSelectedWard("");
-    setGsDistricts([]);
-    setGsWards([]);
-    if (!cityId) return;
-    fetch(`${API_SHIPPING}/goship/cities/${cityId}/districts`, { headers })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setGsDistricts(data || []))
-      .catch(() => {});
-  };
-
-  const handleGsDistrictChange = (districtId) => {
-    setGsSelectedDistrict(districtId);
-    setGsSelectedWard("");
-    setGsWards([]);
-    if (!districtId) return;
-    fetch(`${API_SHIPPING}/goship/districts/${districtId}/wards`, { headers })
-      .then((r) => (r.ok ? r.json() : []))
-      .then((data) => setGsWards(data || []))
-      .catch(() => {});
-  };
-
-  const handleGsGetRates = async () => {
-    if (!gsSelectedCity || !gsSelectedDistrict || !gsSelectedWard) {
-      setGoShipError("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện, Phường/Xã.");
+  const handleAhamoveEstimate = async () => {
+    if (!destAddress.trim() || !destLat || !destLng) {
+      setAhamoveError("Vui lòng nhập đầy đủ địa chỉ và tọa độ người nhận.");
       return;
     }
-    setGoShipLoading(true);
-    setGoShipError("");
+    setAhamoveLoading(true);
+    setAhamoveError("");
     try {
-      const addressTo = {
-        name: gsReceiverName || "Khách hàng",
-        phone: gsReceiverPhone || "0900000000",
-        street: gsReceiverStreet || "",
-        ward: gsSelectedWard,
-        district: gsSelectedDistrict,
-        city: gsSelectedCity,
-      };
-      const res = await fetch(`${API_SHIPPING}/goship/rates`, {
+      const res = await fetch(`${API_SHIPPING}/ahamove/estimate`, {
         method: "POST",
         headers,
         body: JSON.stringify({
-          addressFrom: WAREHOUSE_ADDRESS,
-          addressTo,
-          parcel: goShipParcel,
+          destinationAddress: destAddress.trim(),
+          destinationLat: destLat,
+          destinationLng: destLng,
+          recipientName: recipientName || "Khách hàng",
+          recipientPhone: recipientPhone || "0900000000",
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        const rates = data.data || data.Data || [];
-        if (rates.length === 0) {
-          setGoShipError(
-            "Không tìm thấy tuyến vận chuyển J&T cho địa chỉ này.",
-          );
+        if (data.length === 0) {
+          setAhamoveError("Không tìm thấy dịch vụ vận chuyển cho địa chỉ này.");
         } else {
-          setGoShipRates(rates);
-          setGoShipStep(2);
+          setAhamoveServices(data);
+          setAhamoveStep(2);
         }
       } else {
         const err = await res.json().catch(() => null);
-        setGoShipError(err?.message || "Không thể lấy giá cước từ GoShip.");
+        setAhamoveError(err?.message || "Không thể lấy giá cước từ Ahamove.");
       }
     } catch {
-      setGoShipError("Lỗi kết nối GoShip.");
+      setAhamoveError("Lỗi kết nối Ahamove.");
     } finally {
-      setGoShipLoading(false);
+      setAhamoveLoading(false);
     }
   };
 
-  const handleGsCreateShipment = async () => {
-    if (!goShipSelectedRate) return;
-    setGoShipLoading(true);
-    setGoShipError("");
-    setGoShipStep(3);
+  const handleAhamoveCreateOrder = async () => {
+    if (!ahamoveSelectedService) return;
+    setAhamoveLoading(true);
+    setAhamoveError("");
+    setAhamoveStep(3);
     try {
-      const addressTo = {
-        name: gsReceiverName || "Khách hàng",
-        phone: gsReceiverPhone || "0900000000",
-        street: gsReceiverStreet || "",
-        ward: gsSelectedWard,
-        district: gsSelectedDistrict,
-        city: gsSelectedCity,
-      };
       const cId = selectedComplaint.requestId || selectedComplaint.RequestId;
-      const res = await fetch(`${API_SHIPPING}/goship/shipments`, {
+      const res = await fetch(`${API_SHIPPING}/ahamove/orders`, {
         method: "POST",
         headers,
         body: JSON.stringify({
-          rateId: goShipSelectedRate,
           complaintId: cId,
-          addressFrom: WAREHOUSE_ADDRESS,
-          addressTo,
-          parcel: goShipParcel,
+          destinationAddress: destAddress.trim(),
+          destinationLat: destLat,
+          destinationLng: destLng,
+          recipientName: recipientName || "Khách hàng",
+          recipientPhone: recipientPhone || "0900000000",
+          serviceId: ahamoveSelectedService,
         }),
       });
       if (res.ok) {
-        setActionMsg("Đã tạo vận đơn J&T Express thành công!");
+        setActionMsg("Đã tạo vận đơn Ahamove thành công!");
         setTrackingConfirmed(true);
-        setGoShipStep(1);
+        setAhamoveStep(1);
         fetchComplaints(activeFilter, page);
       } else {
         const err = await res.json().catch(() => null);
-        setGoShipError(err?.message || "Không thể tạo vận đơn GoShip.");
-        setGoShipStep(2);
+        setAhamoveError(err?.message || "Không thể tạo vận đơn Ahamove.");
+        setAhamoveStep(2);
       }
     } catch {
-      setGoShipError("Lỗi kết nối khi tạo vận đơn.");
-      setGoShipStep(2);
+      setAhamoveError("Lỗi kết nối khi tạo vận đơn.");
+      setAhamoveStep(2);
     } finally {
-      setGoShipLoading(false);
+      setAhamoveLoading(false);
     }
   };
 
@@ -1166,7 +1097,7 @@ export default function AdminComplaints() {
                   </div>
                 )}
 
-                {/* Step 1: Return tracking section (GoShip wizard or manual) */}
+                {/* Step 1: Return tracking section (Ahamove wizard or manual) */}
                 {needsTracking && (
                   <div
                     style={{
@@ -1212,7 +1143,7 @@ export default function AdminComplaints() {
                       </div>
                     ) : (
                       <div>
-                        {/* Toggle between GoShip and Manual */}
+                        {/* Toggle between Ahamove and Manual */}
                         <div
                           style={{
                             display: "flex",
@@ -1222,8 +1153,8 @@ export default function AdminComplaints() {
                         >
                           <button
                             onClick={() => {
-                              setGsMode("goship");
-                              setGoShipError("");
+                              setGsMode("ahamove");
+                              setAhamoveError("");
                             }}
                             style={{
                               padding: "6px 14px",
@@ -1231,22 +1162,22 @@ export default function AdminComplaints() {
                               fontSize: "13px",
                               fontWeight: 600,
                               border:
-                                gsMode === "goship"
+                                gsMode === "ahamove"
                                   ? "2px solid #d97706"
                                   : "1px solid #d1d5db",
                               backgroundColor:
-                                gsMode === "goship" ? "#fef3c7" : "#fff",
+                                gsMode === "ahamove" ? "#fef3c7" : "#fff",
                               color:
-                                gsMode === "goship" ? "#92400e" : "#6b7280",
+                                gsMode === "ahamove" ? "#92400e" : "#6b7280",
                               cursor: "pointer",
                             }}
                           >
-                            J&T Express (GoShip)
+                            Ahamove
                           </button>
                           <button
                             onClick={() => {
                               setGsMode("manual");
-                              setGoShipError("");
+                              setAhamoveError("");
                             }}
                             style={{
                               padding: "6px 14px",
@@ -1268,7 +1199,7 @@ export default function AdminComplaints() {
                           </button>
                         </div>
 
-                        {goShipError && (
+                        {ahamoveError && (
                           <div
                             style={{
                               backgroundColor: "#fee2e2",
@@ -1279,7 +1210,7 @@ export default function AdminComplaints() {
                               marginBottom: "10px",
                             }}
                           >
-                            {goShipError}
+                            {ahamoveError}
                           </div>
                         )}
 
@@ -1326,9 +1257,9 @@ export default function AdminComplaints() {
                             </button>
                           </div>
                         ) : (
-                          /* GoShip 3-step wizard */
+                          /* Ahamove 3-step wizard */
                           <div>
-                            {goShipStep === 1 && (
+                            {ahamoveStep === 1 && (
                               <div>
                                 <p
                                   style={{
@@ -1337,7 +1268,7 @@ export default function AdminComplaints() {
                                     fontSize: "13px",
                                   }}
                                 >
-                                  Địa chỉ người nhận (chọn từ GoShip)
+                                  Địa chỉ người nhận
                                 </p>
                                 <div
                                   style={{
@@ -1359,9 +1290,9 @@ export default function AdminComplaints() {
                                     </label>
                                     <input
                                       type="text"
-                                      value={gsReceiverName}
+                                      value={recipientName}
                                       onChange={(e) =>
-                                        setGsReceiverName(e.target.value)
+                                        setRecipientName(e.target.value)
                                       }
                                       style={{
                                         width: "100%",
@@ -1385,9 +1316,9 @@ export default function AdminComplaints() {
                                     </label>
                                     <input
                                       type="text"
-                                      value={gsReceiverPhone}
+                                      value={recipientPhone}
                                       onChange={(e) =>
-                                        setGsReceiverPhone(e.target.value)
+                                        setRecipientPhone(e.target.value)
                                       }
                                       style={{
                                         width: "100%",
@@ -1407,14 +1338,16 @@ export default function AdminComplaints() {
                                         color: "#374151",
                                       }}
                                     >
-                                      Địa chỉ (số nhà, đường):
+                                      Địa chỉ đầy đủ:{" "}
+                                      <span style={{ color: "red" }}>*</span>
                                     </label>
                                     <input
                                       type="text"
-                                      value={gsReceiverStreet}
+                                      value={destAddress}
                                       onChange={(e) =>
-                                        setGsReceiverStreet(e.target.value)
+                                        setDestAddress(e.target.value)
                                       }
+                                      placeholder="VD: 123 Nguyễn Huệ, Quận 1, TP.HCM"
                                       style={{
                                         width: "100%",
                                         padding: "6px 10px",
@@ -1433,31 +1366,25 @@ export default function AdminComplaints() {
                                         color: "#374151",
                                       }}
                                     >
-                                      Tỉnh/Thành phố:{" "}
+                                      Vĩ độ (Lat):{" "}
                                       <span style={{ color: "red" }}>*</span>
                                     </label>
-                                    <select
-                                      value={gsSelectedCity}
+                                    <input
+                                      type="text"
+                                      value={destLat}
                                       onChange={(e) =>
-                                        handleGsCityChange(e.target.value)
+                                        setDestLat(e.target.value)
                                       }
+                                      placeholder="VD: 10.7769"
                                       style={{
                                         width: "100%",
-                                        padding: "6px 8px",
-                                        borderRadius: "6px",
+                                        padding: "6px 10px",
                                         border: "1px solid #d1d5db",
+                                        borderRadius: "6px",
                                         fontSize: "13px",
+                                        boxSizing: "border-box",
                                       }}
-                                    >
-                                      <option value="">
-                                        -- Chọn tỉnh/thành --
-                                      </option>
-                                      {gsCities.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                          {c.name}
-                                        </option>
-                                      ))}
-                                    </select>
+                                    />
                                   </div>
                                   <div>
                                     <label
@@ -1467,67 +1394,25 @@ export default function AdminComplaints() {
                                         color: "#374151",
                                       }}
                                     >
-                                      Quận/Huyện:{" "}
+                                      Kinh độ (Lng):{" "}
                                       <span style={{ color: "red" }}>*</span>
                                     </label>
-                                    <select
-                                      value={gsSelectedDistrict}
+                                    <input
+                                      type="text"
+                                      value={destLng}
                                       onChange={(e) =>
-                                        handleGsDistrictChange(e.target.value)
+                                        setDestLng(e.target.value)
                                       }
-                                      disabled={!gsSelectedCity}
+                                      placeholder="VD: 106.7009"
                                       style={{
                                         width: "100%",
-                                        padding: "6px 8px",
-                                        borderRadius: "6px",
+                                        padding: "6px 10px",
                                         border: "1px solid #d1d5db",
-                                        fontSize: "13px",
-                                      }}
-                                    >
-                                      <option value="">
-                                        -- Chọn quận/huyện --
-                                      </option>
-                                      {gsDistricts.map((d) => (
-                                        <option key={d.id} value={d.id}>
-                                          {d.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                  <div>
-                                    <label
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: 500,
-                                        color: "#374151",
-                                      }}
-                                    >
-                                      Phường/Xã:{" "}
-                                      <span style={{ color: "red" }}>*</span>
-                                    </label>
-                                    <select
-                                      value={gsSelectedWard}
-                                      onChange={(e) =>
-                                        setGsSelectedWard(e.target.value)
-                                      }
-                                      disabled={!gsSelectedDistrict}
-                                      style={{
-                                        width: "100%",
-                                        padding: "6px 8px",
                                         borderRadius: "6px",
-                                        border: "1px solid #d1d5db",
                                         fontSize: "13px",
+                                        boxSizing: "border-box",
                                       }}
-                                    >
-                                      <option value="">
-                                        -- Chọn phường/xã --
-                                      </option>
-                                      {gsWards.map((w) => (
-                                        <option key={w.id} value={String(w.id)}>
-                                          {w.name}
-                                        </option>
-                                      ))}
-                                    </select>
+                                    />
                                   </div>
                                 </div>
                                 <p
@@ -1539,189 +1424,57 @@ export default function AdminComplaints() {
                                 >
                                   Thông tin kiện hàng
                                 </p>
-                                <div
-                                  style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "1fr 1fr 1fr",
-                                    gap: "8px",
-                                    marginBottom: "10px",
-                                  }}
-                                >
-                                  <div>
-                                    <label
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: 500,
-                                        color: "#374151",
-                                      }}
-                                    >
-                                      Cân nặng (g):
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={goShipParcel.weight}
-                                      min={1}
-                                      onChange={(e) =>
-                                        setGoShipParcel({
-                                          ...goShipParcel,
-                                          weight: Number(e.target.value),
-                                        })
-                                      }
-                                      style={{
-                                        width: "100%",
-                                        padding: "6px 10px",
-                                        border: "1px solid #d1d5db",
-                                        borderRadius: "6px",
-                                        fontSize: "13px",
-                                        boxSizing: "border-box",
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: 500,
-                                        color: "#374151",
-                                      }}
-                                    >
-                                      Dài (cm):
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={goShipParcel.length}
-                                      min={1}
-                                      onChange={(e) =>
-                                        setGoShipParcel({
-                                          ...goShipParcel,
-                                          length: Number(e.target.value),
-                                        })
-                                      }
-                                      style={{
-                                        width: "100%",
-                                        padding: "6px 10px",
-                                        border: "1px solid #d1d5db",
-                                        borderRadius: "6px",
-                                        fontSize: "13px",
-                                        boxSizing: "border-box",
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: 500,
-                                        color: "#374151",
-                                      }}
-                                    >
-                                      Rộng (cm):
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={goShipParcel.width}
-                                      min={1}
-                                      onChange={(e) =>
-                                        setGoShipParcel({
-                                          ...goShipParcel,
-                                          width: Number(e.target.value),
-                                        })
-                                      }
-                                      style={{
-                                        width: "100%",
-                                        padding: "6px 10px",
-                                        border: "1px solid #d1d5db",
-                                        borderRadius: "6px",
-                                        fontSize: "13px",
-                                        boxSizing: "border-box",
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: 500,
-                                        color: "#374151",
-                                      }}
-                                    >
-                                      Cao (cm):
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={goShipParcel.height}
-                                      min={1}
-                                      onChange={(e) =>
-                                        setGoShipParcel({
-                                          ...goShipParcel,
-                                          height: Number(e.target.value),
-                                        })
-                                      }
-                                      style={{
-                                        width: "100%",
-                                        padding: "6px 10px",
-                                        border: "1px solid #d1d5db",
-                                        borderRadius: "6px",
-                                        fontSize: "13px",
-                                        boxSizing: "border-box",
-                                      }}
-                                    />
-                                  </div>
-                                  <div>
-                                    <label
-                                      style={{
-                                        fontSize: "12px",
-                                        fontWeight: 500,
-                                        color: "#374151",
-                                      }}
-                                    >
-                                      COD (VND):
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={goShipParcel.cod}
-                                      min={0}
-                                      onChange={(e) =>
-                                        setGoShipParcel({
-                                          ...goShipParcel,
-                                          cod: Number(e.target.value),
-                                        })
-                                      }
-                                      style={{
-                                        width: "100%",
-                                        padding: "6px 10px",
-                                        border: "1px solid #d1d5db",
-                                        borderRadius: "6px",
-                                        fontSize: "13px",
-                                        boxSizing: "border-box",
-                                      }}
-                                    />
-                                  </div>
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 500,
+                                      color: "#374151",
+                                    }}
+                                  >
+                                    Cân nặng (g):
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={packageWeight}
+                                    min={1}
+                                    onChange={(e) =>
+                                      setPackageWeight(Number(e.target.value))
+                                    }
+                                    style={{
+                                      width: "120px",
+                                      padding: "6px 10px",
+                                      border: "1px solid #d1d5db",
+                                      borderRadius: "6px",
+                                      fontSize: "13px",
+                                      marginLeft: "8px",
+                                    }}
+                                  />
                                 </div>
                                 <button
-                                  onClick={handleGsGetRates}
-                                  disabled={goShipLoading}
+                                  onClick={handleAhamoveEstimate}
+                                  disabled={ahamoveLoading}
                                   style={{
                                     padding: "8px 20px",
                                     backgroundColor: "#d97706",
                                     color: "#fff",
                                     border: "none",
                                     borderRadius: "8px",
-                                    cursor: goShipLoading
+                                    cursor: ahamoveLoading
                                       ? "not-allowed"
                                       : "pointer",
                                     fontWeight: "600",
                                     fontSize: "13px",
                                   }}
                                 >
-                                  {goShipLoading
+                                  {ahamoveLoading
                                     ? "Đang tải..."
                                     : "Lấy giá cước →"}
                                 </button>
                               </div>
                             )}
 
-                            {goShipStep === 2 && (
+                            {ahamoveStep === 2 && (
                               <div>
                                 <p
                                   style={{
@@ -1730,8 +1483,8 @@ export default function AdminComplaints() {
                                     fontSize: "13px",
                                   }}
                                 >
-                                  Chọn gói vận chuyển ({goShipRates.length}{" "}
-                                  tuyến)
+                                  Chọn dịch vụ ({ahamoveServices.length} dịch
+                                  vụ)
                                 </p>
                                 <div
                                   style={{
@@ -1740,22 +1493,26 @@ export default function AdminComplaints() {
                                     marginBottom: "10px",
                                   }}
                                 >
-                                  {goShipRates.map((rate) => (
+                                  {ahamoveServices.map((svc) => (
                                     <div
-                                      key={rate.id}
+                                      key={svc.id || svc._id}
                                       onClick={() =>
-                                        setGoShipSelectedRate(rate.id)
+                                        setAhamoveSelectedService(
+                                          svc.id || svc._id,
+                                        )
                                       }
                                       style={{
                                         padding: "10px 12px",
                                         marginBottom: "6px",
                                         borderRadius: "8px",
                                         border:
-                                          goShipSelectedRate === rate.id
+                                          ahamoveSelectedService ===
+                                          (svc.id || svc._id)
                                             ? "2px solid #d97706"
                                             : "1px solid #e5e7eb",
                                         backgroundColor:
-                                          goShipSelectedRate === rate.id
+                                          ahamoveSelectedService ===
+                                          (svc.id || svc._id)
                                             ? "#fef3c7"
                                             : "#fff",
                                         cursor: "pointer",
@@ -1763,9 +1520,10 @@ export default function AdminComplaints() {
                                       }}
                                     >
                                       <div style={{ fontWeight: 600 }}>
-                                        {rate.carrier_name ||
-                                          rate.carrierName ||
-                                          "J&T Express"}
+                                        {svc.name ||
+                                          svc.serviceName ||
+                                          svc.id ||
+                                          "Dịch vụ"}
                                       </div>
                                       <div
                                         style={{
@@ -1773,13 +1531,7 @@ export default function AdminComplaints() {
                                           fontSize: "12px",
                                         }}
                                       >
-                                        {rate.service ||
-                                          rate.carrier_short_name ||
-                                          ""}{" "}
-                                        —{" "}
-                                        {rate.est_pick_time ||
-                                          rate.estPickTime ||
-                                          "N/A"}
+                                        {svc.description || ""}
                                       </div>
                                       <div
                                         style={{
@@ -1789,8 +1541,9 @@ export default function AdminComplaints() {
                                         }}
                                       >
                                         {(
-                                          rate.total_fee ||
-                                          rate.totalFee ||
+                                          svc.totalPrice ||
+                                          svc.total_price ||
+                                          svc.total_fee ||
                                           0
                                         ).toLocaleString("vi-VN")}{" "}
                                         VND
@@ -1801,9 +1554,9 @@ export default function AdminComplaints() {
                                 <div style={{ display: "flex", gap: "8px" }}>
                                   <button
                                     onClick={() => {
-                                      setGoShipStep(1);
-                                      setGoShipRates([]);
-                                      setGoShipSelectedRate(null);
+                                      setAhamoveStep(1);
+                                      setAhamoveServices([]);
+                                      setAhamoveSelectedService(null);
                                     }}
                                     style={{
                                       padding: "8px 16px",
@@ -1818,27 +1571,28 @@ export default function AdminComplaints() {
                                     ← Quay lại
                                   </button>
                                   <button
-                                    onClick={handleGsCreateShipment}
+                                    onClick={handleAhamoveCreateOrder}
                                     disabled={
-                                      !goShipSelectedRate || goShipLoading
+                                      !ahamoveSelectedService || ahamoveLoading
                                     }
                                     style={{
                                       padding: "8px 20px",
-                                      backgroundColor: goShipSelectedRate
+                                      backgroundColor: ahamoveSelectedService
                                         ? "#059669"
                                         : "#d1d5db",
                                       color: "#fff",
                                       border: "none",
                                       borderRadius: "8px",
                                       cursor:
-                                        goShipSelectedRate && !goShipLoading
+                                        ahamoveSelectedService &&
+                                        !ahamoveLoading
                                           ? "pointer"
                                           : "not-allowed",
                                       fontWeight: "600",
                                       fontSize: "13px",
                                     }}
                                   >
-                                    {goShipLoading
+                                    {ahamoveLoading
                                       ? "Đang tạo..."
                                       : "Tạo vận đơn ✓"}
                                   </button>
@@ -1846,7 +1600,7 @@ export default function AdminComplaints() {
                               </div>
                             )}
 
-                            {goShipStep === 3 && (
+                            {ahamoveStep === 3 && (
                               <div
                                 style={{
                                   textAlign: "center",

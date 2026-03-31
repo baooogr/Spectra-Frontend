@@ -65,6 +65,11 @@ export default function AdminLayout() {
               Quản lý Người Dùng
             </Link>
           )}
+          {(role === "admin" || role === "manager") && (
+            <Link to="/admin/business-rules" className="admin-link">
+              Quy Tắc Kinh Doanh
+            </Link>
+          )}
         </nav>
 
         <button onClick={handleLogout} className="admin-logout-btn">

@@ -40,6 +40,7 @@ import AdminOrders from "../pages/AdminOrders";
 import AdminPreorderCampaigns from "../pages/AdminPreorderCampaigns";
 import AdminComplaints from "../pages/AdminComplaints";
 import ShippingPage from "../pages/ShippingPage";
+import AdminBusinessRules from "../pages/AdminBusinessRules";
 import MyComplaints from "../pages/MyComplaints";
 import ComplaintDetail from "../pages/ComplaintDetail";
 import ComplaintForm from "../pages/ComplaintForm";
@@ -78,6 +79,7 @@ export default function AppRouter() {
             <Route path="campaigns" element={<AdminPreorderCampaigns />} />
             <Route path="complaints" element={<AdminComplaints />} />
             <Route path="/admin/shipping" element={<ShippingPage />} />
+            <Route path="business-rules" element={<AdminBusinessRules />} />
           </Route>
         </Route>
 

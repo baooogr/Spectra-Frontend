@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useExchangeRate } from "../api";
+import { formatPrice } from "../utils/validation";
 import DeliveryMap from "../components/DeliveryMap";
 
 export default function PreorderDetail() {
@@ -43,7 +44,7 @@ export default function PreorderDetail() {
           if (data.status?.toLowerCase() === "converted") {
             try {
               const ordersRes = await fetch(
-                "https://myspectra.runasp.net/api/Orders/my?page=1&pageSize=100",
+                "https://myspectra.runasp.net/api/OrdersV2/my?page=1&pageSize=100",
                 { headers: { Authorization: `Bearer ${token}` } },
               );
               if (ordersRes.ok) {
@@ -102,18 +103,6 @@ export default function PreorderDetail() {
         </Link>
       </div>
     );
-
-  // ===== HÀM FORMAT TIỀN: USD + VND =====
-  const formatPrice = (n) => {
-    const usd = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(n || 0);
-    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * exchangeRate);
-    return `${usd} (${vnd} VND)`;
-  };
 
   const formatDate = (d) => (d ? new Date(d).toLocaleString("vi-VN") : "—");
 
@@ -175,7 +164,7 @@ export default function PreorderDetail() {
     if (!token) return;
     try {
       const res = await fetch(
-        `https://myspectra.runasp.net/api/Orders/${deliveryOrderId}/confirm-delivery`,
+        `https://myspectra.runasp.net/api/OrdersV2/${deliveryOrderId}/confirm-delivery`,
         {
           method: "PUT",
           headers: {
@@ -976,6 +965,7 @@ export default function PreorderDetail() {
               const lensFeatureObj = item.lensFeature || item.feature;
               const lensFeature = lensFeatureObj?.featureSpecification || null;
               const prescriptionUrl = item.prescription?.imageUrl || null;
+              const prescription = item.prescription || null;
 
               return (
                 <div
@@ -1100,6 +1090,107 @@ export default function PreorderDetail() {
                     </div>
                   )}
 
+                  {/* Prescription details */}
+                  {prescription &&
+                    (prescription.sphereLeft != null ||
+                      prescription.sphereRight != null ||
+                      prescription.pupillaryDistance != null) && (
+                      <div
+                        style={{
+                          backgroundColor: "#faf5ff",
+                          padding: "12px 14px",
+                          borderRadius: "6px",
+                          border: "1px solid #e9d5ff",
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: "0 0 8px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "#7c3aed",
+                          }}
+                        >
+                          Đơn kính (Prescription)
+                        </p>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: "4px 16px",
+                            fontSize: "13px",
+                            color: "#374151",
+                          }}
+                        >
+                          <div>
+                            <b>Mắt phải (OD):</b>
+                          </div>
+                          <div>
+                            <b>Mắt trái (OS):</b>
+                          </div>
+                          <div>
+                            SPH: {prescription.sphereRight ?? "—"} | CYL:{" "}
+                            {prescription.cylinderRight ?? "—"} | Axis:{" "}
+                            {prescription.axisRight ?? "—"}
+                          </div>
+                          <div>
+                            SPH: {prescription.sphereLeft ?? "—"} | CYL:{" "}
+                            {prescription.cylinderLeft ?? "—"} | Axis:{" "}
+                            {prescription.axisLeft ?? "—"}
+                          </div>
+                        </div>
+                        {prescription.pupillaryDistance != null && (
+                          <p
+                            style={{
+                              margin: "6px 0 0",
+                              fontSize: "13px",
+                              color: "#374151",
+                            }}
+                          >
+                            <b>PD (Khoảng cách đồng tử):</b>{" "}
+                            {prescription.pupillaryDistance} mm
+                          </p>
+                        )}
+                        {(prescription.doctorName ||
+                          prescription.clinicName) && (
+                          <p
+                            style={{
+                              margin: "4px 0 0",
+                              fontSize: "12px",
+                              color: "#6b7280",
+                            }}
+                          >
+                            {prescription.doctorName &&
+                              `BS. ${prescription.doctorName}`}
+                            {prescription.doctorName &&
+                              prescription.clinicName &&
+                              " — "}
+                            {prescription.clinicName}
+                          </p>
+                        )}
+                        {prescription.expirationDate && (
+                          <p
+                            style={{
+                              margin: "4px 0 0",
+                              fontSize: "12px",
+                              color:
+                                new Date(prescription.expirationDate) <
+                                new Date()
+                                  ? "#dc2626"
+                                  : "#6b7280",
+                            }}
+                          >
+                            Hạn sử dụng:{" "}
+                            {new Date(
+                              prescription.expirationDate,
+                            ).toLocaleDateString("vi-VN")}
+                            {new Date(prescription.expirationDate) <
+                              new Date() && " (Đã hết hạn)"}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                   {/* HÀNG 3: TẠM TÍNH */}
                   <div
                     style={{
@@ -1136,68 +1227,70 @@ export default function PreorderDetail() {
         </div>
 
         {/* Complaint button for delivered preorders */}
-        {(displayStatus || "").toLowerCase() === "delivered" && (
-          <div
-            style={{
-              marginTop: "20px",
-              padding: "16px",
-              backgroundColor: "#fff7ed",
-              borderRadius: "10px",
-              border: "1px solid #fed7aa",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "12px",
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  margin: 0,
-                  fontWeight: "600",
-                  fontSize: "15px",
-                  color: "#9a3412",
-                }}
-              >
-                Có vấn đề với đơn đặt trước?
-              </p>
-              <p
-                style={{
-                  margin: "4px 0 0",
-                  fontSize: "13px",
-                  color: "#78716c",
-                }}
-              >
-                Bạn có thể gửi khiếu nại, trả/đổi hàng hoặc yêu cầu bảo hành.
-              </p>
-            </div>
-            <Link
-              to={(() => {
-                const linkedItems =
-                  linkedOrder?.items || linkedOrder?.orderItems || [];
-                const firstItemId =
-                  linkedItems.length > 0
-                    ? linkedItems[0].orderItemId || linkedItems[0].OrderItemId
-                    : "";
-                return firstItemId
-                  ? `/complaints/new?orderItemId=${firstItemId}`
-                  : "/complaints/new";
-              })()}
+        {(displayStatus || "").toLowerCase() === "delivered" &&
+          deliveryConfirmed && (
+            <div
               style={{
-                padding: "10px 20px",
-                backgroundColor: "#f97316",
-                color: "#fff",
-                borderRadius: "8px",
-                textDecoration: "none",
-                fontWeight: "600",
-                fontSize: "14px",
+                marginTop: "20px",
+                padding: "16px",
+                backgroundColor: "#fff7ed",
+                borderRadius: "10px",
+                border: "1px solid #fed7aa",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
               }}
             >
-              Gửi khiếu nại
-            </Link>
-          </div>
-        )}
+              <div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontWeight: "600",
+                    fontSize: "15px",
+                    color: "#9a3412",
+                  }}
+                >
+                  Có vấn đề với đơn đặt trước?
+                </p>
+                <p
+                  style={{
+                    margin: "4px 0 0",
+                    fontSize: "13px",
+                    color: "#78716c",
+                  }}
+                >
+                  Bạn có thể yêu cầu đổi hàng (trong 7 ngày kể từ khi nhận
+                  hàng).
+                </p>
+              </div>
+              <Link
+                to={(() => {
+                  const linkedItems =
+                    linkedOrder?.items || linkedOrder?.orderItems || [];
+                  const firstItemId =
+                    linkedItems.length > 0
+                      ? linkedItems[0].orderItemId || linkedItems[0].OrderItemId
+                      : "";
+                  return firstItemId
+                    ? `/complaints/new?orderItemId=${firstItemId}`
+                    : "/complaints/new";
+                })()}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#f97316",
+                  color: "#fff",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Yêu cầu đổi hàng
+              </Link>
+            </div>
+          )}
       </div>
     </div>
   );

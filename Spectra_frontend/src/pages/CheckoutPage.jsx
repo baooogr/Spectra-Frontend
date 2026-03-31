@@ -13,7 +13,12 @@ import VIETNAM_PROVINCES, {
   buildAddressString,
   parseAddressString,
 } from "../utils/vietnamAddress";
-import { isValidVNPhone, formatPrice } from "../utils/validation";
+import {
+  isValidVNPhone,
+  formatPrice,
+  formatVNDNumber,
+  roundVND,
+} from "../utils/validation";
 import "./CheckoutPage.css";
 
 export default function CheckoutPage() {
@@ -78,15 +83,75 @@ export default function CheckoutPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [businessRules, setBusinessRules] = useState({});
 
-  // ─── SHIPPING METHOD LOGIC ──────────────────────────────────────────────────
-  // Zone-based express fee: same_city=$2, southern=$4, central=$6, northern=$7
-  const ZONE_FEE = { same_city: 2, southern: 4, central: 6, northern: 7 };
-  const ZONE_LABELS = {
-    same_city: "Nội thành HCM",
-    southern: "Miền Nam",
-    central: "Miền Trung",
-    northern: "Miền Bắc",
+  useEffect(() => {
+    const fetchBusinessRules = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}${ENDPOINTS.BUSINESS_RULES.PUBLIC}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setBusinessRules(data || {});
+        }
+      } catch (err) {
+        console.error("Không thể tải quy tắc vận chuyển:", err);
+      }
+    };
+    fetchBusinessRules();
+  }, []);
+
+  // ─── SHIPPING FEE LOGIC (distance-based) ─────────────────────────────────
+  // Rules: Base 20,000₫ for first 3km, +5,000₫/km beyond, max 150,000₫
+  // Free shipping if order total > 1,500,000₫
+  // Express = 1.5x multiplier, still capped at 150,000₫
+  const parseRuleNumber = (ruleKey, defaultValue) => {
+    const value = Number(businessRules?.[ruleKey]);
+    return Number.isFinite(value) && value >= 0 ? value : defaultValue;
+  };
+  const SHIPPING_RULES = {
+    BASE_FEE_VND: 20000,
+    BASE_DISTANCE_KM: 3,
+    PER_KM_FEE_VND: 5000,
+    MAX_FEE_VND: 150000,
+    FREE_THRESHOLD_VND: 1500000,
+    EXPRESS_MULTIPLIER: 1.5,
+  };
+
+  const shippingRules = {
+    BASE_FEE_VND: parseRuleNumber(
+      "shipping.base_fee_vnd",
+      SHIPPING_RULES.BASE_FEE_VND,
+    ),
+    BASE_DISTANCE_KM: parseRuleNumber(
+      "shipping.base_distance_km",
+      SHIPPING_RULES.BASE_DISTANCE_KM,
+    ),
+    PER_KM_FEE_VND: parseRuleNumber(
+      "shipping.per_km_fee_vnd",
+      SHIPPING_RULES.PER_KM_FEE_VND,
+    ),
+    MAX_FEE_VND: parseRuleNumber(
+      "shipping.max_fee_vnd",
+      SHIPPING_RULES.MAX_FEE_VND,
+    ),
+    FREE_THRESHOLD_VND: parseRuleNumber(
+      "shipping.free_threshold_vnd",
+      SHIPPING_RULES.FREE_THRESHOLD_VND,
+    ),
+    EXPRESS_MULTIPLIER: parseRuleNumber(
+      "shipping.express_multiplier",
+      SHIPPING_RULES.EXPRESS_MULTIPLIER,
+    ),
+  };
+
+  // Zone → estimated distance from HCM warehouse
+  const ZONE_DISTANCE_KM = {
+    same_city: 10,
+    southern: 80,
+    central: 600,
+    northern: 1500,
   };
 
   const CITY_ZONE_MAP = {
@@ -153,35 +218,58 @@ export default function CheckoutPage() {
   };
 
   const currentZone = useMemo(() => detectZone(form.province), [form.province]);
-  const expressFee = ZONE_FEE[currentZone] || 4;
 
-  const SHIPPING_METHODS = [
-    {
-      key: "standard",
-      label: "Giao hàng tiêu chuẩn (J&T Express)",
-      fee: 0,
-      days: "5-7 ngày",
-      icon: "",
-    },
-    {
-      key: "express",
-      label: "Giao hàng nhanh (J&T Express)",
-      fee: expressFee,
-      days: "2-3 ngày",
-      icon: "⚡",
-    },
-  ];
+  // Calculate shipping fee in VND based on distance
+  const calcShippingFeeVND = (zone, method) => {
+    const distKm = ZONE_DISTANCE_KM[zone] || 80;
+    let fee = shippingRules.BASE_FEE_VND;
+    if (distKm > shippingRules.BASE_DISTANCE_KM) {
+      fee +=
+        (distKm - shippingRules.BASE_DISTANCE_KM) *
+        shippingRules.PER_KM_FEE_VND;
+    }
+    if (fee > shippingRules.MAX_FEE_VND) fee = shippingRules.MAX_FEE_VND;
+    if (method === "express") {
+      fee *= shippingRules.EXPRESS_MULTIPLIER;
+      if (fee > shippingRules.MAX_FEE_VND) fee = shippingRules.MAX_FEE_VND;
+    }
+    return roundVND(fee);
+  };
 
   const subtotal = useMemo(
     () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [items],
   );
-  const isFreeShipping = form.shippingMethod === "standard";
-  const selectedMethod =
-    SHIPPING_METHODS.find((m) => m.key === form.shippingMethod) ||
-    SHIPPING_METHODS[0];
-  const shippingFee = selectedMethod.fee;
+
+  const subtotalVND = subtotal * (exchangeRate || 25400);
+  const isFreeShipping = subtotalVND >= shippingRules.FREE_THRESHOLD_VND;
+
+  const shippingFeeVND = isFreeShipping
+    ? 0
+    : calcShippingFeeVND(currentZone, form.shippingMethod);
+  // Convert VND fee to USD for backend storage
+  const shippingFee = isFreeShipping
+    ? 0
+    : Math.round((roundVND(shippingFeeVND) / (exchangeRate || 25400)) * 100) /
+      100;
   const total = subtotal + shippingFee;
+
+  const SHIPPING_METHODS = [
+    {
+      key: "standard",
+      label: "Giao hàng tiêu chuẩn",
+      feeVND: isFreeShipping ? 0 : calcShippingFeeVND(currentZone, "standard"),
+      days: "5-7 ngày",
+      icon: "📦",
+    },
+    {
+      key: "express",
+      label: "Giao hàng nhanh",
+      feeVND: isFreeShipping ? 0 : calcShippingFeeVND(currentZone, "express"),
+      days: "2-3 ngày",
+      icon: "⚡",
+    },
+  ];
 
   // Estimated delivery date range
   const getEstimatedDelivery = () => {
@@ -284,15 +372,26 @@ export default function CheckoutPage() {
       });
 
       // 2. Payload tạo đơn hàng
+      const ORDER_SHIPPING_ADDRESS_LIMIT = 300;
+      const composedAddress = `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${fullAddress}`;
+
+      if (composedAddress.length > ORDER_SHIPPING_ADDRESS_LIMIT) {
+        setErrorMsg(
+          "Địa chỉ giao hàng quá dài. Vui lòng rút gọn địa chỉ chi tiết hoặc bỏ bớt thông tin không cần thiết.",
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload = {
-        // ⚡ TRICK: Nhồi Họ tên, SĐT và Email vào đầu chuỗi địa chỉ
-        shippingAddress: `[${form.fullName.trim()} - ${form.phone.trim()} - ${form.email.trim()}] ${fullAddress}`,
+        shippingAddress: composedAddress,
         shippingMethod: form.shippingMethod,
         notes: form.note || undefined,
         items: formattedItems,
       };
 
-      const res = await fetch("https://myspectra.runasp.net/api/Orders", {
+      console.log("[Checkout] sending order payload", payload);
+      const res = await fetch("https://myspectra.runasp.net/api/OrdersV2", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -305,8 +404,8 @@ export default function CheckoutPage() {
         const result = await res.json();
         const createdId = result.id || result.orderId || result.orderSummaryId;
 
-        // 3. Xử lý logic Payment
         if (form.paymentMethod === "VNPAY") {
+          // Wait for order creation response, then call /api/Payments, then redirect
           try {
             const paymentRes = await fetch(
               "https://myspectra.runasp.net/api/Payments",
@@ -339,7 +438,7 @@ export default function CheckoutPage() {
             alert("Lỗi mạng khi tạo thanh toán VNPay");
           }
         } else {
-          // ⚡ ĐÃ FIX LỖI CRASH KHI TRUYỀN DỮ LIỆU SANG CHECKOUT-SUCCESS
+          // COD flow unchanged
           clearCart();
           navigate("/checkout-success", {
             state: {
@@ -349,8 +448,8 @@ export default function CheckoutPage() {
                 phone: form.phone,
                 address: fullAddress,
               },
-              total: total, // Truyền đúng tổng tiền thực tế
-              items: items, // Truyền đúng giỏ hàng thực tế
+              total: total,
+              items: items,
               createdAt: new Date().toISOString(),
             },
           });
@@ -627,7 +726,7 @@ export default function CheckoutPage() {
                 Phương thức vận chuyển <span className="req">*</span>
               </label>
 
-              {form.shippingMethod === "standard" && (
+              {isFreeShipping && (
                 <div
                   style={{
                     backgroundColor: "#d1fae5",
@@ -640,25 +739,7 @@ export default function CheckoutPage() {
                     fontWeight: 600,
                   }}
                 >
-                  Giao hàng tiêu chuẩn J&T Express — Miễn phí vận chuyển!
-                </div>
-              )}
-
-              {form.shippingMethod === "express" && (
-                <div
-                  style={{
-                    backgroundColor: "#fef3c7",
-                    border: "1px solid #fde68a",
-                    borderRadius: "8px",
-                    padding: "10px 14px",
-                    marginBottom: "12px",
-                    fontSize: "14px",
-                    color: "#92400e",
-                    fontWeight: 600,
-                  }}
-                >
-                  ⚡ Phí giao nhanh J&T Express theo vùng:{" "}
-                  {ZONE_LABELS[currentZone]} — ${expressFee}
+                  🎉 Đơn hàng trên 1.500.000₫ — Miễn phí vận chuyển!
                 </div>
               )}
 
@@ -671,7 +752,7 @@ export default function CheckoutPage() {
               >
                 {SHIPPING_METHODS.map((m) => {
                   const isSelected = form.shippingMethod === m.key;
-                  const displayFee = m.fee;
+                  const fmtVND = (v) => formatVNDNumber(v) + "₫";
                   return (
                     <label
                       key={m.key}
@@ -726,10 +807,10 @@ export default function CheckoutPage() {
                         style={{
                           fontWeight: "bold",
                           fontSize: "15px",
-                          color: displayFee === 0 ? "#059669" : "#dc2626",
+                          color: m.feeVND === 0 ? "#059669" : "#dc2626",
                         }}
                       >
-                        {displayFee === 0 ? "Miễn phí" : `$${displayFee}`}
+                        {m.feeVND === 0 ? "Miễn phí" : fmtVND(m.feeVND)}
                       </div>
                     </label>
                   );
@@ -828,7 +909,17 @@ export default function CheckoutPage() {
               <span>{fmtPrice(subtotal)}</span>
             </div>
             <div className="summary__row">
-              <span>Phí giao hàng ({selectedMethod.label})</span>
+              <span>
+                Phí giao hàng (
+                {
+                  (
+                    SHIPPING_METHODS.find(
+                      (m) => m.key === form.shippingMethod,
+                    ) || SHIPPING_METHODS[0]
+                  ).label
+                }
+                )
+              </span>
               <span
                 style={{ color: shippingFee === 0 ? "#059669" : undefined }}
               >

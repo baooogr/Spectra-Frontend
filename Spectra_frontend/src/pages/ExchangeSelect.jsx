@@ -274,8 +274,12 @@ export default function ExchangeSelect() {
   const filteredFrames = frames.filter(
     (f) => !search || f.frameName?.toLowerCase().includes(search.toLowerCase()),
   );
+  const colorExtraCost = selectedColor?.colorExtraCost || 0;
   const displayPrice =
-    frameDetail?.basePrice || selectedFrame?.basePrice || selectedFrame?.price;
+    (frameDetail?.basePrice ||
+      selectedFrame?.basePrice ||
+      selectedFrame?.price ||
+      0) + colorExtraCost;
 
   // Price comparison
   const originalPrice =
@@ -574,20 +578,15 @@ export default function ExchangeSelect() {
                 </div>
               </div>
 
-              {/* Price difference banner */}
+              {/* Price difference banner — only allow equal price */}
               {priceDiff !== null && originalItem && (
                 <div
                   style={{
                     marginBottom: "20px",
                     padding: "14px 18px",
                     borderRadius: "10px",
-                    border: `1px solid ${priceDiff > 0 ? "#fbbf24" : priceDiff < 0 ? "#34d399" : "#93c5fd"}`,
-                    backgroundColor:
-                      priceDiff > 0
-                        ? "#fffbeb"
-                        : priceDiff < 0
-                          ? "#ecfdf5"
-                          : "#eff6ff",
+                    border: `1px solid ${priceDiff === 0 ? "#93c5fd" : "#fca5a5"}`,
+                    backgroundColor: priceDiff === 0 ? "#eff6ff" : "#fef2f2",
                   }}
                 >
                   <div
@@ -605,19 +604,12 @@ export default function ExchangeSelect() {
                           margin: "0 0 4px",
                           fontWeight: 700,
                           fontSize: "15px",
-                          color:
-                            priceDiff > 0
-                              ? "#92400e"
-                              : priceDiff < 0
-                                ? "#065f46"
-                                : "#1e40af",
+                          color: priceDiff === 0 ? "#1e40af" : "#991b1b",
                         }}
                       >
-                        {priceDiff > 0
-                          ? "⬆ Nâng cấp — Bạn cần trả thêm"
-                          : priceDiff < 0
-                            ? "⬇ Hạ cấp — Bạn được hoàn lại"
-                            : "✓ Giá tương đương"}
+                        {priceDiff === 0
+                          ? "✓ Giá tương đương — Có thể đổi hàng"
+                          : "✗ Giá không tương đương — Không thể đổi hàng"}
                       </p>
                       <p
                         style={{
@@ -636,7 +628,7 @@ export default function ExchangeSelect() {
                           margin: 0,
                           fontSize: "22px",
                           fontWeight: 800,
-                          color: priceDiff > 0 ? "#b45309" : "#059669",
+                          color: "#dc2626",
                         }}
                       >
                         {priceDiff > 0 ? "+" : "-"}
@@ -644,30 +636,17 @@ export default function ExchangeSelect() {
                       </p>
                     )}
                   </div>
-                  {priceDiff > 0 && (
+                  {priceDiff !== 0 && (
                     <p
                       style={{
                         margin: "8px 0 0",
                         fontSize: "12px",
-                        color: "#92400e",
+                        color: "#991b1b",
                         fontStyle: "italic",
                       }}
                     >
-                      Bạn sẽ cần thanh toán phần chênh lệch sau khi đơn đổi hàng
-                      được tạo.
-                    </p>
-                  )}
-                  {priceDiff < 0 && (
-                    <p
-                      style={{
-                        margin: "8px 0 0",
-                        fontSize: "12px",
-                        color: "#065f46",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      Phần chênh lệch sẽ được hoàn lại cho bạn sau khi nhân viên
-                      xử lý.
+                      Chỉ được đổi sang sản phẩm có giá tương đương. Vui lòng
+                      chọn sản phẩm khác hoặc thay đổi cấu hình tròng kính.
                     </p>
                   )}
                 </div>
@@ -954,16 +933,24 @@ export default function ExchangeSelect() {
               <div style={{ display: "flex", gap: "12px" }}>
                 <button
                   onClick={handleSubmit}
-                  disabled={submitting}
+                  disabled={
+                    submitting || (priceDiff !== null && priceDiff !== 0)
+                  }
                   style={{
                     padding: "12px 28px",
-                    backgroundColor: submitting ? "#9ca3af" : "#2563eb",
+                    backgroundColor:
+                      submitting || (priceDiff !== null && priceDiff !== 0)
+                        ? "#9ca3af"
+                        : "#2563eb",
                     color: "#fff",
                     border: "none",
                     borderRadius: "8px",
                     fontWeight: "bold",
                     fontSize: "15px",
-                    cursor: submitting ? "not-allowed" : "pointer",
+                    cursor:
+                      submitting || (priceDiff !== null && priceDiff !== 0)
+                        ? "not-allowed"
+                        : "pointer",
                   }}
                 >
                   {submitting ? "Đang tạo đơn..." : "Xác nhận đổi hàng"}
