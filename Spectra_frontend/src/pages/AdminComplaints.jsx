@@ -90,8 +90,8 @@ export default function AdminComplaints() {
     try {
       const url =
         statusFilter === "all"
-          ? `${API}?page=${p}&pageSize=15`
-          : `${API}/status/${statusFilter}?page=${p}&pageSize=15`;
+          ? `${API}?page=${p}&pageSize=10`
+          : `${API}/status/${statusFilter}?page=${p}&pageSize=10`;
       const res = await fetch(url, { headers });
       if (res.ok) {
         const data = await res.json();

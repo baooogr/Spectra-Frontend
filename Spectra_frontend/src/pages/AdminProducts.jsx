@@ -20,6 +20,9 @@ export default function AdminProducts() {
   const [frameImages, setFrameImages] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all"); // "all" | "active" | "inactive"
+  const PAGE_SIZE = 10;
 
   // FIX: state chọn màu khi upload ảnh
   const [uploadColorId, setUploadColorId] = useState("");
@@ -657,6 +660,23 @@ export default function AdminProducts() {
     .map((v) => colors.find((c) => c.colorId === v.colorId))
     .filter(Boolean);
 
+  // Pagination + filter computation
+  const filteredFrames = allFrames
+    .slice()
+    .reverse()
+    .filter((f) => {
+      if (statusFilter === "inactive")
+        return f.status?.toLowerCase() === "inactive";
+      if (statusFilter === "active")
+        return f.status?.toLowerCase() !== "inactive";
+      return true;
+    });
+  const totalPages = Math.ceil(filteredFrames.length / PAGE_SIZE);
+  const pagedFrames = filteredFrames.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
   /* ================= RENDER GIAO DIỆN ================= */
   return (
     <div className="admin-products-container">
@@ -700,6 +720,46 @@ export default function AdminProducts() {
         </button>
       </div>
 
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+        {[
+          { key: "all", label: "Tất cả" },
+          { key: "active", label: "Đang bán" },
+          { key: "inactive", label: "Đã ẩn" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => {
+              setStatusFilter(tab.key);
+              setCurrentPage(1);
+            }}
+            style={{
+              padding: "6px 16px",
+              border:
+                statusFilter === tab.key
+                  ? "2px solid #2563eb"
+                  : "1px solid #d1d5db",
+              borderRadius: "6px",
+              backgroundColor: statusFilter === tab.key ? "#eff6ff" : "#fff",
+              color: statusFilter === tab.key ? "#1d4ed8" : "#6b7280",
+              fontWeight: statusFilter === tab.key ? "bold" : "normal",
+              cursor: "pointer",
+              fontSize: "13px",
+            }}
+          >
+            {tab.label} (
+            {tab.key === "all"
+              ? allFrames.length
+              : allFrames.filter((f) =>
+                  tab.key === "inactive"
+                    ? f.status?.toLowerCase() === "inactive"
+                    : f.status?.toLowerCase() !== "inactive",
+                ).length}
+            )
+          </button>
+        ))}
+      </div>
+
       <div className="table-container">
         <table className="admin-table">
           <thead>
@@ -713,8 +773,8 @@ export default function AdminProducts() {
             </tr>
           </thead>
           <tbody>
-            {allFrames.length > 0 ? (
-              allFrames.map((frame) => {
+            {pagedFrames.length > 0 ? (
+              pagedFrames.map((frame) => {
                 const isExpanded = expandedRows[frame.frameId || frame.id];
                 const totalStock = frame.stockQuantity || 0;
 
@@ -906,6 +966,49 @@ export default function AdminProducts() {
             )}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px",
+              padding: "16px 0",
+            }}
+          >
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "4px",
+                border: "1px solid #d1d5db",
+                background: currentPage <= 1 ? "#f3f4f6" : "#fff",
+                cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              ← Trước
+            </button>
+            <span style={{ fontWeight: "bold", color: "#374151" }}>
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "4px",
+                border: "1px solid #d1d5db",
+                background: currentPage >= totalPages ? "#f3f4f6" : "#fff",
+                cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              Sau →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ================= MODAL QUẢN LÝ KÍNH ================= */}
@@ -1334,7 +1437,7 @@ export default function AdminProducts() {
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
-                    gap: "15px",
+                    gap: "10px",
                   }}
                 >
                   {colors.map((c) => {
@@ -1347,14 +1450,16 @@ export default function AdminProducts() {
                         key={c.colorId}
                         style={{
                           display: "flex",
-                          alignItems: "center",
-                          gap: "15px",
+                          alignItems: isSelected ? "flex-start" : "center",
+                          flexDirection: isSelected ? "column" : "row",
+                          gap: isSelected ? "8px" : "15px",
                           padding: "8px",
                           background: isSelected ? "#fff" : "transparent",
                           borderRadius: "6px",
                           border: isSelected
                             ? "1px solid #cbd5e1"
                             : "1px solid transparent",
+                          gridColumn: isSelected ? "1 / -1" : "auto",
                         }}
                       >
                         <label

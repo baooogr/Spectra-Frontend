@@ -95,65 +95,69 @@ export default function AdminBusinessRules() {
         <h2 className="admin-rules-title">Quản Lý Quy Tắc Kinh Doanh</h2>
       </div>
 
-      {Object.entries(grouped).map(([category, categoryRules]) => (
-        <div key={category} className="rules-category-section">
-          <h3 className="rules-category-title">
-            {CATEGORY_LABELS[category] || category}
-          </h3>
-          <div className="table-container">
-            <table className="rules-table">
-              <thead>
-                <tr>
-                  <th>Mã Quy Tắc</th>
-                  <th>Mô Tả</th>
-                  <th>Giá Trị</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {categoryRules.map((rule) => {
-                  const currentValue =
-                    editValues[rule.ruleKey] !== undefined
-                      ? editValues[rule.ruleKey]
-                      : rule.ruleValue;
-                  const isDirty =
-                    editValues[rule.ruleKey] !== undefined &&
-                    editValues[rule.ruleKey] !== rule.ruleValue;
+      <div
+        style={{ maxHeight: "70vh", overflowY: "auto", paddingRight: "4px" }}
+      >
+        {Object.entries(grouped).map(([category, categoryRules]) => (
+          <div key={category} className="rules-category-section">
+            <h3 className="rules-category-title">
+              {CATEGORY_LABELS[category] || category}
+            </h3>
+            <div className="table-container">
+              <table className="rules-table">
+                <thead>
+                  <tr>
+                    <th>Mã Quy Tắc</th>
+                    <th>Mô Tả</th>
+                    <th>Giá Trị</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categoryRules.map((rule) => {
+                    const currentValue =
+                      editValues[rule.ruleKey] !== undefined
+                        ? editValues[rule.ruleKey]
+                        : rule.ruleValue;
+                    const isDirty =
+                      editValues[rule.ruleKey] !== undefined &&
+                      editValues[rule.ruleKey] !== rule.ruleValue;
 
-                  return (
-                    <tr key={rule.ruleKey}>
-                      <td className="rule-key">{rule.ruleKey}</td>
-                      <td className="rule-desc">{rule.description || "—"}</td>
-                      <td>
-                        <input
-                          className="rule-input"
-                          type="text"
-                          value={currentValue}
-                          onChange={(e) =>
-                            handleValueChange(rule.ruleKey, e.target.value)
-                          }
-                        />
-                      </td>
-                      <td>
-                        <button
-                          className="btn-save-rule"
-                          disabled={!isDirty || saving[rule.ruleKey]}
-                          onClick={() => handleSave(rule)}
-                        >
-                          {saving[rule.ruleKey] ? "..." : "Lưu"}
-                        </button>
-                        {saved[rule.ruleKey] && (
-                          <span className="rules-success">✓ Đã lưu</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={rule.ruleKey}>
+                        <td className="rule-key">{rule.ruleKey}</td>
+                        <td className="rule-desc">{rule.description || "—"}</td>
+                        <td>
+                          <input
+                            className="rule-input"
+                            type="text"
+                            value={currentValue}
+                            onChange={(e) =>
+                              handleValueChange(rule.ruleKey, e.target.value)
+                            }
+                          />
+                        </td>
+                        <td>
+                          <button
+                            className="btn-save-rule"
+                            disabled={!isDirty || saving[rule.ruleKey]}
+                            onClick={() => handleSave(rule)}
+                          >
+                            {saving[rule.ruleKey] ? "..." : "Lưu"}
+                          </button>
+                          {saved[rule.ruleKey] && (
+                            <span className="rules-success">✓ Đã lưu</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

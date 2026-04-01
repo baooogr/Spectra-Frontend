@@ -159,6 +159,8 @@ export default function ShippingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState("active");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   // --- MODAL: Manual tracking ---
   const [showManualModal, setShowManualModal] = useState(false);
@@ -211,7 +213,7 @@ export default function ShippingPage() {
     setIsLoading(true);
     setErrorMsg("");
     try {
-      const res = await fetch(`${API_BASE}/Orders?page=1&pageSize=100`, {
+      const res = await fetch(`${API_BASE}/OrdersV2?page=1&pageSize=100`, {
         headers: authHeaders,
       });
       if (res.ok) {
@@ -297,7 +299,7 @@ export default function ShippingPage() {
     )
       return;
     try {
-      const res = await fetch(`${API_BASE}/Orders/${id}/status`, {
+      const res = await fetch(`${API_BASE}/OrdersV2/${id}/status`, {
         method: "PUT",
         headers: authHeaders,
         body: JSON.stringify({ status: "delivered" }),
@@ -353,7 +355,7 @@ export default function ShippingPage() {
 
       const trackData = await trackRes.json();
       if (trackData.status?.toLowerCase() !== "shipped") {
-        await fetch(`${API_BASE}/Orders/${id}/status`, {
+        await fetch(`${API_BASE}/OrdersV2/${id}/status`, {
           method: "PUT",
           headers: authHeaders,
           body: JSON.stringify({ status: "shipped" }),
@@ -761,23 +763,38 @@ export default function ShippingPage() {
       >
         <button
           style={tabStyle("active")}
-          onClick={() => setActiveTab("active")}
+          onClick={() => {
+            setActiveTab("active");
+            setCurrentPage(1);
+          }}
         >
           Chờ giao ({activeCount})
         </button>
         <button
           style={tabStyle("shipped")}
-          onClick={() => setActiveTab("shipped")}
+          onClick={() => {
+            setActiveTab("shipped");
+            setCurrentPage(1);
+          }}
         >
           Đang vận chuyển ({shippedCount})
         </button>
         <button
           style={tabStyle("delivered")}
-          onClick={() => setActiveTab("delivered")}
+          onClick={() => {
+            setActiveTab("delivered");
+            setCurrentPage(1);
+          }}
         >
           Đã giao ({deliveredCount})
         </button>
-        <button style={tabStyle("all")} onClick={() => setActiveTab("all")}>
+        <button
+          style={tabStyle("all")}
+          onClick={() => {
+            setActiveTab("all");
+            setCurrentPage(1);
+          }}
+        >
           Tất cả ({orders.length})
         </button>
       </div>
@@ -797,239 +814,314 @@ export default function ShippingPage() {
         ) : isLoading ? (
           <p style={{ padding: "24px", color: "#6b7280" }}>⏳ Đang tải...</p>
         ) : (
-          <table className="shipping-table">
-            <thead>
-              <tr>
-                <th>Mã Đơn</th>
-                <th>Khách Hàng</th>
-                <th>Địa Chỉ Giao</th>
-                <th>Vận Chuyển</th>
-                <th>Trạng Thái</th>
-                <th>Mã Vận Đơn</th>
-                <th>Dự Kiến Giao</th>
-                <th>Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.length === 0 ? (
+          <>
+            <table className="shipping-table">
+              <thead>
                 <tr>
-                  <td
-                    colSpan="8"
-                    style={{
-                      textAlign: "center",
-                      padding: "32px",
-                      color: "#9ca3af",
-                    }}
-                  >
-                    Không có đơn nào trong mục này.
-                  </td>
+                  <th>Mã Đơn</th>
+                  <th>Khách Hàng</th>
+                  <th>Địa Chỉ Giao</th>
+                  <th>Vận Chuyển</th>
+                  <th>Trạng Thái</th>
+                  <th>Mã Vận Đơn</th>
+                  <th>Dự Kiến Giao</th>
+                  <th>Thao Tác</th>
                 </tr>
-              ) : (
-                filteredOrders.map((order) => {
-                  const rawId = order.orderId || order.id;
-                  const status = order.status?.toLowerCase();
-                  const canManual = status === "processing";
-                  const canDeliver = status === "shipped";
-                  const hasTracking = !!order.trackingNumber;
-                  const addr = parseAddress(order.shippingAddress);
-                  const carrier = order.shippingCarrier?.toLowerCase() || "";
-                  const isGhn = carrier.includes("ghn");
-                  const hasTrackingSupport = isGhn; // Add more carriers here as needed
+              </thead>
+              <tbody>
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="8"
+                      style={{
+                        textAlign: "center",
+                        padding: "32px",
+                        color: "#9ca3af",
+                      }}
+                    >
+                      Không có đơn nào trong mục này.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders
+                    .slice(
+                      (currentPage - 1) * PAGE_SIZE,
+                      currentPage * PAGE_SIZE,
+                    )
+                    .map((order) => {
+                      const rawId = order.orderId || order.id;
+                      const status = order.status?.toLowerCase();
+                      const canManual = status === "processing";
+                      const canDeliver = status === "shipped";
+                      const hasTracking = !!order.trackingNumber;
+                      const addr = parseAddress(order.shippingAddress);
+                      const carrier =
+                        order.shippingCarrier?.toLowerCase() || "";
+                      const isGhn = carrier.includes("ghn");
+                      const hasTrackingSupport = isGhn; // Add more carriers here as needed
 
-                  return (
-                    <tr key={rawId}>
-                      <td>
-                        {order.convertedFromPreorderId ? (
-                          <div>
-                            <strong
-                              style={{
-                                fontFamily: "monospace",
-                                fontSize: "13px",
-                              }}
-                            >
-                              #
-                              {String(order.convertedFromPreorderId).substring(
-                                0,
-                                8,
-                              )}
-                            </strong>
-                            <div
-                              style={{
-                                fontSize: "11px",
-                                color: "#9ca3af",
-                                marginTop: "2px",
-                              }}
-                            >
-                              Pre-order
-                            </div>
-                          </div>
-                        ) : (
-                          <strong
-                            style={{
-                              fontFamily: "monospace",
-                              fontSize: "13px",
-                            }}
-                          >
-                            #{String(rawId).substring(0, 8)}
-                          </strong>
-                        )}
-                      </td>
-
-                      <td>
-                        <div style={{ fontWeight: "bold" }}>
-                          {addr.name || order.user?.fullName || "Khách hàng"}
-                        </div>
-                        <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                          {addr.phone || order.user?.phone || "—"}
-                        </div>
-                      </td>
-
-                      <td>
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            maxWidth: "200px",
-                            lineHeight: "1.4",
-                          }}
-                        >
-                          {getAddressDisplayString(
-                            addr.street || order.shippingAddress || "—",
-                          )}
-                        </div>
-                      </td>
-
-                      <td>
-                        <ShippingMethodBadge method={order.shippingMethod} />
-                      </td>
-
-                      <td>
-                        <StatusBadge status={order.status} />
-                      </td>
-
-                      <td>
-                        {hasTracking ? (
-                          <div>
-                            {order.shippingCarrier && (
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  color: "#6b7280",
-                                  marginBottom: "2px",
-                                }}
-                              >
-                                {order.shippingCarrier}
-                              </div>
-                            )}
-                            <span className="badge-tracking">
-                              {order.trackingNumber}
-                            </span>
-                            {hasTrackingSupport && (
-                              <div style={{ marginTop: "4px" }}>
-                                <button
-                                  onClick={() =>
-                                    openTrackingDetail(
-                                      order.trackingNumber,
-                                      order.shippingCarrier,
-                                    )
-                                  }
+                      return (
+                        <tr key={rawId}>
+                          <td>
+                            {order.convertedFromPreorderId ? (
+                              <div>
+                                <strong
                                   style={{
-                                    fontSize: "11px",
-                                    color: "#059669",
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    fontWeight: 600,
-                                    padding: 0,
-                                    textDecoration: "underline",
+                                    fontFamily: "monospace",
+                                    fontSize: "13px",
                                   }}
                                 >
-                                  Theo dõi {isGhn ? "GHN" : "vận đơn"}
-                                </button>
+                                  #
+                                  {String(
+                                    order.convertedFromPreorderId,
+                                  ).substring(0, 8)}
+                                </strong>
+                                <div
+                                  style={{
+                                    fontSize: "11px",
+                                    color: "#9ca3af",
+                                    marginTop: "2px",
+                                  }}
+                                >
+                                  Pre-order
+                                </div>
                               </div>
+                            ) : (
+                              <strong
+                                style={{
+                                  fontFamily: "monospace",
+                                  fontSize: "13px",
+                                }}
+                              >
+                                #{String(rawId).substring(0, 8)}
+                              </strong>
                             )}
-                          </div>
-                        ) : (
-                          <span style={{ color: "#9ca3af", fontSize: "13px" }}>
-                            Chưa có
-                          </span>
-                        )}
-                      </td>
+                          </td>
 
-                      <td>
-                        {order.estimatedDeliveryDate ? (
-                          <span
-                            style={{
-                              fontSize: "13px",
-                              color: "#1e40af",
-                              fontWeight: 600,
-                            }}
-                          >
-                            {new Date(
-                              order.estimatedDeliveryDate,
-                            ).toLocaleDateString("vi-VN", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            })}
-                          </span>
-                        ) : order.shippedAt ? (
-                          <span style={{ fontSize: "12px", color: "#6b7280" }}>
-                            ~
-                            {new Date(
-                              new Date(order.shippedAt).getTime() +
-                                (order.shippingMethod === "express" ? 3 : 7) *
-                                  86400000,
-                            ).toLocaleDateString("vi-VN", {
-                              day: "2-digit",
-                              month: "2-digit",
-                            })}
-                          </span>
-                        ) : (
-                          <span style={{ color: "#d1d5db", fontSize: "13px" }}>
-                            —
-                          </span>
-                        )}
-                      </td>
+                          <td>
+                            <div style={{ fontWeight: "bold" }}>
+                              {addr.name ||
+                                order.user?.fullName ||
+                                "Khách hàng"}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                              {addr.phone || order.user?.phone || "—"}
+                            </div>
+                          </td>
 
-                      <td>
-                        <div className="actions-group">
-                          {canManual && (
-                            <button
-                              className="btn-confirm"
-                              onClick={() => openGhnModal(order)}
-                              title="Tạo vận đơn qua GHN"
-                              style={{ padding: "8px 14px", fontSize: "13px" }}
+                          <td>
+                            <div
+                              style={{
+                                fontSize: "13px",
+                                maxWidth: "200px",
+                                lineHeight: "1.4",
+                              }}
                             >
-                              Gửi GHN
-                            </button>
-                          )}
-                          {canManual && (
-                            <button
-                              className="btn-manual"
-                              onClick={() => openManualModal(order)}
-                              title="Gán mã vận đơn thủ công → Shipped"
-                            >
-                              Nhập mã
-                            </button>
-                          )}
-                          {canDeliver && (
-                            <button
-                              className="btn-confirm"
-                              onClick={() => handleMarkDelivered(order)}
-                              style={{ padding: "8px 14px", fontSize: "13px" }}
-                              title="Xác nhận khách đã nhận hàng → Delivered"
-                            >
-                              Đã giao
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                              {getAddressDisplayString(
+                                addr.street || order.shippingAddress || "—",
+                              )}
+                            </div>
+                          </td>
+
+                          <td>
+                            <ShippingMethodBadge
+                              method={order.shippingMethod}
+                            />
+                          </td>
+
+                          <td>
+                            <StatusBadge status={order.status} />
+                          </td>
+
+                          <td>
+                            {hasTracking ? (
+                              <div>
+                                {order.shippingCarrier && (
+                                  <div
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "#6b7280",
+                                      marginBottom: "2px",
+                                    }}
+                                  >
+                                    {order.shippingCarrier}
+                                  </div>
+                                )}
+                                <span className="badge-tracking">
+                                  {order.trackingNumber}
+                                </span>
+                                {hasTrackingSupport && (
+                                  <div style={{ marginTop: "4px" }}>
+                                    <button
+                                      onClick={() =>
+                                        openTrackingDetail(
+                                          order.trackingNumber,
+                                          order.shippingCarrier,
+                                        )
+                                      }
+                                      style={{
+                                        fontSize: "11px",
+                                        color: "#059669",
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        fontWeight: 600,
+                                        padding: 0,
+                                        textDecoration: "underline",
+                                      }}
+                                    >
+                                      Theo dõi {isGhn ? "GHN" : "vận đơn"}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span
+                                style={{ color: "#9ca3af", fontSize: "13px" }}
+                              >
+                                Chưa có
+                              </span>
+                            )}
+                          </td>
+
+                          <td>
+                            {order.estimatedDeliveryDate ? (
+                              <span
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#1e40af",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {new Date(
+                                  order.estimatedDeliveryDate,
+                                ).toLocaleDateString("vi-VN", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            ) : order.shippedAt ? (
+                              <span
+                                style={{ fontSize: "12px", color: "#6b7280" }}
+                              >
+                                ~
+                                {new Date(
+                                  new Date(order.shippedAt).getTime() +
+                                    (order.shippingMethod === "express"
+                                      ? 3
+                                      : 7) *
+                                      86400000,
+                                ).toLocaleDateString("vi-VN", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                })}
+                              </span>
+                            ) : (
+                              <span
+                                style={{ color: "#d1d5db", fontSize: "13px" }}
+                              >
+                                —
+                              </span>
+                            )}
+                          </td>
+
+                          <td>
+                            <div className="actions-group">
+                              {canManual && (
+                                <button
+                                  className="btn-confirm"
+                                  onClick={() => openGhnModal(order)}
+                                  title="Tạo vận đơn qua GHN"
+                                  style={{
+                                    padding: "8px 14px",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  Gửi GHN
+                                </button>
+                              )}
+                              {canManual && (
+                                <button
+                                  className="btn-manual"
+                                  onClick={() => openManualModal(order)}
+                                  title="Gán mã vận đơn thủ công → Shipped"
+                                >
+                                  Nhập mã
+                                </button>
+                              )}
+                              {canDeliver && (
+                                <button
+                                  className="btn-confirm"
+                                  onClick={() => handleMarkDelivered(order)}
+                                  style={{
+                                    padding: "8px 14px",
+                                    fontSize: "13px",
+                                  }}
+                                  title="Xác nhận khách đã nhận hàng → Delivered"
+                                >
+                                  Đã giao
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                )}
+              </tbody>
+            </table>
+            {/* Pagination */}
+            {(() => {
+              const totalPages = Math.ceil(filteredOrders.length / PAGE_SIZE);
+              return totalPages > 1 ? (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "16px",
+                    paddingBottom: "8px",
+                  }}
+                >
+                  <button
+                    disabled={currentPage <= 1}
+                    onClick={() => setCurrentPage((p) => p - 1)}
+                    style={{
+                      padding: "6px 14px",
+                      borderRadius: "4px",
+                      border: "1px solid #d1d5db",
+                      background: currentPage <= 1 ? "#f3f4f6" : "#fff",
+                      cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    ← Trước
+                  </button>
+                  <span style={{ fontWeight: "bold", color: "#374151" }}>
+                    Trang {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    style={{
+                      padding: "6px 14px",
+                      borderRadius: "4px",
+                      border: "1px solid #d1d5db",
+                      background:
+                        currentPage >= totalPages ? "#f3f4f6" : "#fff",
+                      cursor:
+                        currentPage >= totalPages ? "not-allowed" : "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Sau →
+                  </button>
+                </div>
+              ) : null;
+            })()}
+          </>
         )}
       </div>
 

@@ -63,39 +63,48 @@
 /* Table */
 .ac-table-wrapper {
   overflow-x: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: var(--border-thick);
 }
 
 .ac-table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
+  text-align: left;
   font-size: 14px;
-  border: var(--border-thick);
 }
 
-.ac-table th,
-.ac-table td {
-  padding: 13px 16px;
-  text-align: left;
-  border-bottom: var(--border-thin);
+.ac-table thead {
+  background: var(--color-brand-yellow);
+  border-bottom: var(--border-thick);
 }
 
 .ac-table th {
-  background: var(--color-brand-yellow);
+  padding: 15px 16px;
   font-weight: 800;
   color: var(--color-brand-charcoal);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
   white-space: nowrap;
-  border-bottom: var(--border-thick);
 }
 
-.ac-table tr:hover {
+.ac-table tbody tr {
+  border-bottom: var(--border-thin);
+  transition: background 0.15s;
+}
+
+.ac-table tbody tr:hover {
   background: var(--color-brand-cream);
+}
+
+.ac-table td {
+  padding: 15px 16px;
+  color: var(--color-text-secondary);
+  vertical-align: middle;
 }
 
 .ac-id {

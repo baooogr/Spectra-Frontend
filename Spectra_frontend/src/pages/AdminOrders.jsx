@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+﻿import React, { useState, useEffect, useContext, useCallback } from "react";
 import { UserContext } from "../context/UserContext";
 import { getAddressDisplayString } from "../utils/vietnamAddress";
 import "./AdminOrders.css";
@@ -45,21 +45,6 @@ function fmtRx(val) {
   const n = Number(val);
   if (n === 0) return "0.00";
   return n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2);
-}
-
-// =============================================================================
-// HELPER: Format phương thức thanh toán
-// =============================================================================
-function formatPaymentMethod(method) {
-  if (method && method.toLowerCase() === "vnpay") {
-    return { label: "VNPay", icon: "", color: "#1d4ed8", bg: "#eff6ff" };
-  }
-  return {
-    label: "Tiền mặt (COD)",
-    icon: "",
-    color: "#15803d",
-    bg: "#f0fdf4",
-  };
 }
 
 // =============================================================================
@@ -456,6 +441,8 @@ export default function AdminOrders() {
   const [paymentList, setPaymentList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
   const headers = {
@@ -958,13 +945,19 @@ export default function AdminOrders() {
       <div className="admin-tabs">
         <button
           className={`tab-btn ${activeTab === "orders" ? "active" : ""}`}
-          onClick={() => setActiveTab("orders")}
+          onClick={() => {
+            setActiveTab("orders");
+            setCurrentPage(1);
+          }}
         >
           Đơn Hàng Thường ({orders.length})
         </button>
         <button
           className={`tab-btn ${activeTab === "preorders" ? "active" : ""}`}
-          onClick={() => setActiveTab("preorders")}
+          onClick={() => {
+            setActiveTab("preorders");
+            setCurrentPage(1);
+          }}
         >
           Đơn Đặt Trước (Pre-order) ({preorders.length})
         </button>
@@ -996,122 +989,172 @@ export default function AdminOrders() {
                 </td>
               </tr>
             ) : (
-              displayList.map((order, index) => {
-                const id = order.id || order.orderId || order.preorderId;
-                const isPreorder = activeTab === "preorders";
-                const shippingInfo = parseShippingInfo(order.shippingAddress);
-                const customerName =
-                  order.user?.fullName ||
-                  order.receiverName ||
-                  order.customerName ||
-                  shippingInfo.name ||
-                  "Khách Vãng Lai";
-                const customerPhone =
-                  order.user?.phone ||
-                  order.phoneNumber ||
-                  order.phone ||
-                  shippingInfo.phone ||
-                  "—";
+              displayList
+                .slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+                .map((order, index) => {
+                  const id = order.id || order.orderId || order.preorderId;
+                  const isPreorder = activeTab === "preorders";
+                  const shippingInfo = parseShippingInfo(order.shippingAddress);
+                  const customerName =
+                    order.user?.fullName ||
+                    order.receiverName ||
+                    order.customerName ||
+                    shippingInfo.name ||
+                    "Khách Vãng Lai";
+                  const customerPhone =
+                    order.user?.phone ||
+                    order.phoneNumber ||
+                    order.phone ||
+                    shippingInfo.phone ||
+                    "—";
 
-                return (
-                  <tr key={index}>
-                    <td className="col-id">#{id}</td>
-                    <td>
-                      <strong>{customerName}</strong>
-                      <br />
-                      <span style={{ fontSize: "12px", color: "#666" }}>
-                        {customerPhone}
-                      </span>
-                    </td>
-                    <td className="col-date">
-                      {new Date(
-                        order.orderDate || order.createdAt,
-                      ).toLocaleString("vi-VN")}
-                    </td>
-                    <td className="col-price">
-                      {isPreorder ? (
-                        <PreorderAmountCell
-                          order={order}
-                          headers={headers}
-                          formatUSD={formatUSD}
-                        />
-                      ) : (
-                        formatUSD(order.totalAmount || order.totalPrice)
-                      )}
-                    </td>
-                    <td>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "5px",
-                        }}
-                      >
-                        {getStatusBadge(order.status)}
-                        <select
-                          className="status-select"
-                          value=""
-                          onChange={(e) =>
-                            handleUpdateStatus(id, isPreorder, e.target.value)
-                          }
+                  return (
+                    <tr key={index}>
+                      <td className="col-id">#{id}</td>
+                      <td>
+                        <strong>{customerName}</strong>
+                        <br />
+                        <span style={{ fontSize: "12px", color: "#666" }}>
+                          {customerPhone}
+                        </span>
+                      </td>
+                      <td className="col-date">
+                        {new Date(
+                          order.orderDate || order.createdAt,
+                        ).toLocaleString("vi-VN")}
+                      </td>
+                      <td className="col-price">
+                        {isPreorder ? (
+                          <PreorderAmountCell
+                            order={order}
+                            headers={headers}
+                            formatUSD={formatUSD}
+                          />
+                        ) : (
+                          formatUSD(order.totalAmount || order.totalPrice)
+                        )}
+                      </td>
+                      <td>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "5px",
+                          }}
                         >
-                          <option value="" disabled>
-                            Đổi trạng thái
-                          </option>
-                          {isPreorder
-                            ? (() => {
-                                const s = (order.status || "").toLowerCase();
-                                const preorderTransitions = {
-                                  pending: ["confirmed", "cancelled"],
-                                  confirmed: ["paid", "cancelled"],
-                                  paid: ["converted", "cancelled"],
-                                  converted: [],
-                                  cancelled: [],
-                                };
-                                const allowed = preorderTransitions[s] || [];
-                                return allowed.map((st) => (
-                                  <option key={st} value={st}>
-                                    {st === "converted"
-                                      ? "Processing"
-                                      : st.charAt(0).toUpperCase() +
-                                        st.slice(1)}
-                                  </option>
-                                ));
-                              })()
-                            : (() => {
-                                const s = (order.status || "").toLowerCase();
-                                const orderTransitions = {
-                                  pending: ["confirmed", "cancelled"],
-                                  confirmed: ["processing", "cancelled"],
-                                  processing: ["shipped", "cancelled"],
-                                  shipped: ["delivered"],
-                                  delivered: [],
-                                  cancelled: [],
-                                };
-                                const allowed = orderTransitions[s] || [];
-                                return allowed.map((st) => (
-                                  <option key={st} value={st}>
-                                    {st.charAt(0).toUpperCase() + st.slice(1)}
-                                  </option>
-                                ));
-                              })()}
-                        </select>
-                      </div>
-                    </td>
-                    <td className="col-action">
-                      <button
-                        onClick={() => handleViewDetails(id, isPreorder)}
-                        className="btn-view"
-                      >
-                        Xem chi tiết
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
+                          {getStatusBadge(order.status)}
+                          <select
+                            className="status-select"
+                            value=""
+                            onChange={(e) =>
+                              handleUpdateStatus(id, isPreorder, e.target.value)
+                            }
+                          >
+                            <option value="" disabled>
+                              Đổi trạng thái
+                            </option>
+                            {isPreorder
+                              ? (() => {
+                                  const s = (order.status || "").toLowerCase();
+                                  const preorderTransitions = {
+                                    pending: ["confirmed", "cancelled"],
+                                    confirmed: ["paid", "cancelled"],
+                                    paid: ["converted", "cancelled"],
+                                    converted: [],
+                                    cancelled: [],
+                                  };
+                                  const allowed = preorderTransitions[s] || [];
+                                  return allowed.map((st) => (
+                                    <option key={st} value={st}>
+                                      {st === "converted"
+                                        ? "Processing"
+                                        : st.charAt(0).toUpperCase() +
+                                          st.slice(1)}
+                                    </option>
+                                  ));
+                                })()
+                              : (() => {
+                                  const s = (order.status || "").toLowerCase();
+                                  const orderTransitions = {
+                                    pending: ["confirmed", "cancelled"],
+                                    confirmed: ["processing", "cancelled"],
+                                    processing: ["shipped", "cancelled"],
+                                    shipped: ["delivered"],
+                                    delivered: [],
+                                    cancelled: [],
+                                  };
+                                  const allowed = orderTransitions[s] || [];
+                                  return allowed.map((st) => (
+                                    <option key={st} value={st}>
+                                      {st.charAt(0).toUpperCase() + st.slice(1)}
+                                    </option>
+                                  ));
+                                })()}
+                          </select>
+                        </div>
+                      </td>
+                      <td className="col-action">
+                        <button
+                          onClick={() => handleViewDetails(id, isPreorder)}
+                          className="btn-view"
+                        >
+                          Xem chi tiết
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
             )}
           </tbody>
         </table>
+        {/* Pagination */}
+        {(() => {
+          const totalPages = Math.ceil(displayList.length / PAGE_SIZE);
+          return totalPages > 1 ? (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "8px",
+                marginTop: "16px",
+                paddingBottom: "8px",
+              }}
+            >
+              <button
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "4px",
+                  border: "1px solid #d1d5db",
+                  background: currentPage <= 1 ? "#f3f4f6" : "#fff",
+                  cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                ← Trước
+              </button>
+              <span style={{ fontWeight: "bold", color: "#374151" }}>
+                Trang {currentPage} / {totalPages}
+              </span>
+              <button
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "4px",
+                  border: "1px solid #d1d5db",
+                  background: currentPage >= totalPages ? "#f3f4f6" : "#fff",
+                  cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Sau →
+              </button>
+            </div>
+          ) : null;
+        })()}
       </div>
 
       {/* MODAL CHI TIẾT ĐƠN HÀNG */}

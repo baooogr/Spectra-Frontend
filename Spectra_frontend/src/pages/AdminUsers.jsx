@@ -6,6 +6,8 @@ export default function AdminUsers() {
   const { user } = useContext(UserContext);
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const myRole = user?.role || "";
   const myUserId = user?.userId;
@@ -198,126 +200,179 @@ export default function AdminUsers() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
-                <tr
-                  key={u.userId}
-                  style={{ borderBottom: "1px solid #f3f4f6" }}
-                >
-                  <td style={{ padding: "12px", fontWeight: "bold" }}>
-                    {u.fullName || "Chưa cập nhật"}
-                  </td>
-                  <td style={{ padding: "12px" }}>{u.email}</td>
-
-                  {/* ⚡ HIỂN THỊ SĐT VÀ ĐỊA CHỈ */}
-                  <td style={{ padding: "12px" }}>
-                    {u.phone || (
-                      <span style={{ color: "#9ca3af", fontStyle: "italic" }}>
-                        Chưa có
-                      </span>
-                    )}
-                  </td>
-                  <td
-                    style={{
-                      padding: "12px",
-                      maxWidth: "200px",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                    title={u.address}
+              {users
+                .slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+                .map((u) => (
+                  <tr
+                    key={u.userId}
+                    style={{ borderBottom: "1px solid #f3f4f6" }}
                   >
-                    {u.address || (
-                      <span style={{ color: "#9ca3af", fontStyle: "italic" }}>
-                        Chưa có
-                      </span>
-                    )}
-                  </td>
+                    <td style={{ padding: "12px", fontWeight: "bold" }}>
+                      {u.fullName || "Chưa cập nhật"}
+                    </td>
+                    <td style={{ padding: "12px" }}>{u.email}</td>
 
-                  <td style={{ padding: "12px" }}>
-                    {new Date(u.createdAt).toLocaleDateString("vi-VN")}
-                  </td>
-
-                  <td style={{ padding: "12px" }}>
-                    <select
-                      value={u.role || "customer"}
-                      onChange={(e) =>
-                        handleRoleChange(u.userId, e.target.value)
-                      }
-                      disabled={u.userId === myUserId}
+                    {/* ⚡ HIỂN THỊ SĐT VÀ ĐỊA CHỈ */}
+                    <td style={{ padding: "12px" }}>
+                      {u.phone || (
+                        <span style={{ color: "#9ca3af", fontStyle: "italic" }}>
+                          Chưa có
+                        </span>
+                      )}
+                    </td>
+                    <td
                       style={{
-                        padding: "6px 10px",
-                        borderRadius: "4px",
-                        border: "1px solid #d1d5db",
-                        outline: "none",
-                        cursor:
-                          u.userId === myUserId ? "not-allowed" : "pointer",
-                        backgroundColor:
-                          u.role === "admin"
-                            ? "#fee2e2"
-                            : u.role === "manager"
-                              ? "#fef3c7"
-                              : u.role === "staff"
-                                ? "#dbeafe"
-                                : "#f3f4f6",
-                        color:
-                          u.role === "admin"
-                            ? "#991b1b"
-                            : u.role === "manager"
-                              ? "#92400e"
-                              : u.role === "staff"
-                                ? "#1e40af"
-                                : "#374151",
-                        fontWeight: "bold",
+                        padding: "12px",
+                        maxWidth: "200px",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
+                      title={u.address}
                     >
-                      <option value="customer">Khách hàng (Customer)</option>
-                      <option value="staff">Nhân viên (Staff)</option>
-                      <option value="manager">Quản lý (Manager)</option>
-                      <option value="admin">Quản trị tối cao (Admin)</option>
-                    </select>
-                  </td>
+                      {u.address || (
+                        <span style={{ color: "#9ca3af", fontStyle: "italic" }}>
+                          Chưa có
+                        </span>
+                      )}
+                    </td>
 
-                  <td style={{ padding: "12px" }}>
-                    <select
-                      value={u.status || "active"}
-                      onChange={(e) =>
-                        handleStatusChange(u.userId, e.target.value)
-                      }
-                      disabled={u.userId === myUserId}
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: "4px",
-                        border: "1px solid #d1d5db",
-                        outline: "none",
-                        cursor:
-                          u.userId === myUserId ? "not-allowed" : "pointer",
-                        backgroundColor:
-                          u.status === "active"
-                            ? "#d1fae5"
-                            : u.status === "pending"
-                              ? "#fef3c7"
-                              : "#fee2e2",
-                        color:
-                          u.status === "active"
-                            ? "#065f46"
-                            : u.status === "pending"
-                              ? "#92400e"
-                              : "#991b1b",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      <option value="active">Hoạt động (Active)</option>
-                      <option value="pending">Chờ duyệt (Pending)</option>
-                      <option value="inactive">
-                        ⚪ Vô hiệu hóa (Inactive)
-                      </option>
-                      <option value="suspended">Bị đình chỉ (Suspended)</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
+                    <td style={{ padding: "12px" }}>
+                      {new Date(u.createdAt).toLocaleDateString("vi-VN")}
+                    </td>
+
+                    <td style={{ padding: "12px" }}>
+                      <select
+                        value={u.role || "customer"}
+                        onChange={(e) =>
+                          handleRoleChange(u.userId, e.target.value)
+                        }
+                        disabled={u.userId === myUserId}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: "4px",
+                          border: "1px solid #d1d5db",
+                          outline: "none",
+                          cursor:
+                            u.userId === myUserId ? "not-allowed" : "pointer",
+                          backgroundColor:
+                            u.role === "admin"
+                              ? "#fee2e2"
+                              : u.role === "manager"
+                                ? "#fef3c7"
+                                : u.role === "staff"
+                                  ? "#dbeafe"
+                                  : "#f3f4f6",
+                          color:
+                            u.role === "admin"
+                              ? "#991b1b"
+                              : u.role === "manager"
+                                ? "#92400e"
+                                : u.role === "staff"
+                                  ? "#1e40af"
+                                  : "#374151",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        <option value="customer">Khách hàng (Customer)</option>
+                        <option value="staff">Nhân viên (Staff)</option>
+                        <option value="manager">Quản lý (Manager)</option>
+                        <option value="admin">Quản trị tối cao (Admin)</option>
+                      </select>
+                    </td>
+
+                    <td style={{ padding: "12px" }}>
+                      <select
+                        value={u.status || "active"}
+                        onChange={(e) =>
+                          handleStatusChange(u.userId, e.target.value)
+                        }
+                        disabled={u.userId === myUserId}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: "4px",
+                          border: "1px solid #d1d5db",
+                          outline: "none",
+                          cursor:
+                            u.userId === myUserId ? "not-allowed" : "pointer",
+                          backgroundColor:
+                            u.status === "active"
+                              ? "#d1fae5"
+                              : u.status === "pending"
+                                ? "#fef3c7"
+                                : "#fee2e2",
+                          color:
+                            u.status === "active"
+                              ? "#065f46"
+                              : u.status === "pending"
+                                ? "#92400e"
+                                : "#991b1b",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        <option value="active">Hoạt động (Active)</option>
+                        <option value="pending">Chờ duyệt (Pending)</option>
+                        <option value="inactive">
+                          ⚪ Vô hiệu hóa (Inactive)
+                        </option>
+                        <option value="suspended">
+                          Bị đình chỉ (Suspended)
+                        </option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
+          {/* Pagination */}
+          {(() => {
+            const totalPages = Math.ceil(users.length / PAGE_SIZE);
+            return totalPages > 1 ? (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginTop: "16px",
+                  paddingBottom: "8px",
+                }}
+              >
+                <button
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "4px",
+                    border: "1px solid #d1d5db",
+                    background: currentPage <= 1 ? "#f3f4f6" : "#fff",
+                    cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  ← Trước
+                </button>
+                <span style={{ fontWeight: "bold", color: "#374151" }}>
+                  Trang {currentPage} / {totalPages}
+                </span>
+                <button
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "4px",
+                    border: "1px solid #d1d5db",
+                    background: currentPage >= totalPages ? "#f3f4f6" : "#fff",
+                    cursor:
+                      currentPage >= totalPages ? "not-allowed" : "pointer",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Sau →
+                </button>
+              </div>
+            ) : null;
+          })()}
         </div>
       )}
     </div>
