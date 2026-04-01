@@ -387,6 +387,7 @@ export default function CheckoutPage() {
         shippingAddress: composedAddress,
         shippingMethod: form.shippingMethod,
         notes: form.note || undefined,
+        shippingFee: shippingFee,
         items: formattedItems,
       };
 
