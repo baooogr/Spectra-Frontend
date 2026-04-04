@@ -108,37 +108,37 @@ export default function AdminLensIndices() {
         body: JSON.stringify(payload),
       });
       if (res.ok || res.status === 201 || res.status === 204) {
-        alert(isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!");
+        alert(isEditing ? "Updated successfully!" : "Added successfully!");
         setShowModal(false);
         fetchLensIndices();
       } else {
         const err = await res.json();
         alert(
-          "Lỗi: " +
-            (err.message || JSON.stringify(err.errors || "Lỗi không xác định")),
+          "Error: " +
+            (err.message || JSON.stringify(err.errors || "Unknown error")),
         );
       }
     } catch (err) {
-      alert("Lỗi kết nối server");
+      alert("Server connection error");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa chiết suất này?")) return;
+    if (!window.confirm("Are you sure you want to delete this lens index?")) return;
     try {
       const res = await fetch(
         `https://myspectra.runasp.net/api/LensIndices/${id}`,
         { method: "DELETE", headers },
       );
       if (res.ok || res.status === 204) {
-        alert("Xóa thành công!");
+        alert("Deleted successfully!");
         fetchLensIndices();
       } else {
         const errorData = await res.json();
-        alert("Xóa thất bại: " + (errorData.message || "Đang được sử dụng"));
+        alert("Delete failed: " + (errorData.message || "Currently in use"));
       }
     } catch (err) {
-      alert("Lỗi server");
+      alert("Server error");
     }
   };
 
@@ -146,10 +146,10 @@ export default function AdminLensIndices() {
     <div className="admin-lens-container">
       <div className="admin-lens-header">
         <h2 className="admin-lens-title">
-          Quản Lý Chiết Suất Tròng Kính (Lens Indices)
+          Lens Indices Management
         </h2>
         <button onClick={() => handleOpenModal()} className="btn-add">
-          + Thêm Chiết Suất
+          + Add Lens Index
         </button>
       </div>
 
@@ -157,27 +157,27 @@ export default function AdminLensIndices() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Chiết Suất</th>
-              <th>Tên</th>
-              <th>Mô tả</th>
-              <th>Phụ Phí ($)</th>
+              <th>Index Value</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Extra Price ($)</th>
               <th>Min Rx</th>
               <th>Max Rx</th>
-              <th>Trạng thái</th>
-              <th className="col-action">Hành Động</th>
+              <th>Status</th>
+              <th className="col-action">Actions</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: "center" }}>
-                  Đang tải dữ liệu...
+                  Loading data...
                 </td>
               </tr>
             ) : lensIndices.length === 0 ? (
               <tr>
                 <td colSpan="8" style={{ textAlign: "center" }}>
-                  Chưa có chiết suất nào.
+                  No lens indices found.
                 </td>
               </tr>
             ) : (
@@ -217,8 +217,8 @@ export default function AdminLensIndices() {
                       }}
                     >
                       {item.status === "active" || !item.status
-                        ? "Hoạt động"
-                        : "Ẩn"}
+                        ? "Active"
+                        : "Hidden"}
                     </span>
                   </td>
                   <td className="col-action">
@@ -226,13 +226,13 @@ export default function AdminLensIndices() {
                       onClick={() => handleOpenModal(item)}
                       className="btn-edit"
                     >
-                      Sửa
+                      Edit
                     </button>
                     <button
                       onClick={() => handleDelete(item.lensIndexId || item.id)}
                       className="btn-delete"
                     >
-                      Xóa
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -246,11 +246,11 @@ export default function AdminLensIndices() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3 className="modal-title">
-              {isEditing ? "Sửa Chiết Suất" : "Thêm Chiết Suất Mới"}
+              {isEditing ? "Edit Lens Index" : "Add New Lens Index"}
             </h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
-                <label>Giá trị chiết suất (Index Value):</label>
+                <label>Index Value:</label>
                 <select
                   name="indexValue"
                   value={formData.indexValue}
@@ -263,31 +263,31 @@ export default function AdminLensIndices() {
                     borderRadius: "6px",
                   }}
                 >
-                  <option value={1.5}>1.50 (Tiêu chuẩn)</option>
-                  <option value={1.56}>1.56 (Mỏng vừa)</option>
-                  <option value={1.6}>1.60 (Mỏng)</option>
-                  <option value={1.61}>1.61 (Mỏng)</option>
-                  <option value={1.67}>1.67 (Siêu mỏng)</option>
-                  <option value={1.74}>1.74 (Cực mỏng)</option>
+                  <option value={1.5}>1.50 (Standard)</option>
+                  <option value={1.56}>1.56 (Mid-thin)</option>
+                  <option value={1.6}>1.60 (Thin)</option>
+                  <option value={1.61}>1.61 (Thin)</option>
+                  <option value={1.67}>1.67 (Super thin)</option>
+                  <option value={1.74}>1.74 (Ultra thin)</option>
                 </select>
               </div>
               <div className="form-group">
-                <label>Tên hiển thị:</label>
+                <label>Display Name:</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="VD: Chiết suất 1.67 siêu mỏng"
+                  placeholder="e.g. 1.67 Super Thin Index"
                 />
               </div>
               <div className="form-group">
-                <label>Mô tả:</label>
+                <label>Description:</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="Mô tả chi tiết..."
+                  placeholder="Detailed description..."
                   rows={3}
                   style={{
                     width: "100%",
@@ -299,7 +299,7 @@ export default function AdminLensIndices() {
                 />
               </div>
               <div className="form-group">
-                <label>Phụ phí ($):</label>
+                <label>Extra Price ($):</label>
                 <input
                   type="number"
                   name="additionalPrice"
@@ -325,7 +325,7 @@ export default function AdminLensIndices() {
                     value={formData.minPrescription}
                     onChange={handleChange}
                     step="0.25"
-                    placeholder="VD: -8.00"
+                    placeholder="e.g. -8.00"
                   />
                 </div>
                 <div className="form-group">
@@ -336,7 +336,7 @@ export default function AdminLensIndices() {
                     value={formData.maxPrescription}
                     onChange={handleChange}
                     step="0.25"
-                    placeholder="VD: +4.00"
+                    placeholder="e.g. +4.00"
                   />
                 </div>
               </div>
@@ -347,10 +347,10 @@ export default function AdminLensIndices() {
                   onClick={() => setShowModal(false)}
                   className="btn-cancel"
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button type="submit" className="btn-save">
-                  Lưu Dữ Liệu
+                  Save
                 </button>
               </div>
             </form>
