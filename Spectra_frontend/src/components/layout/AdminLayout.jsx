@@ -50,7 +50,7 @@ export default function AdminLayout() {
             Orders
           </Link>
           <Link to="/admin/campaigns" className="admin-link">
-            Pre-order Campaigns
+            Pre-order Management
           </Link>
           <Link to="/admin/complaints" className="admin-link">
             Complaints
