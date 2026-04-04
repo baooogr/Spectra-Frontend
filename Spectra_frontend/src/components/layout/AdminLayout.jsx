@@ -29,51 +29,50 @@ export default function AdminLayout() {
               marginBottom: "10px",
             }}
           >
-            Về Trang Chủ
+            Back to Home
           </Link>
           <Link to="/admin" className="admin-link">
-            Tổng quan
+            Dashboard
           </Link>
           <Link to="/admin/products" className="admin-link">
-            Quản lý Kính
+            Glasses Management
           </Link>
           <Link to="/admin/lenstypes" className="admin-link">
-            Quản lý Tròng Kính
+            Lens Types Management
           </Link>
           <Link to="/admin/lensfeatures" className="admin-link">
-            Quản lý Tính Năng Tròng
+            Lens Features Management
           </Link>
           <Link to="/admin/lensindices" className="admin-link">
-            Quản lý Chiết Suất Tròng
+            Lens Indices Management
           </Link>
           <Link to="/admin/orders" className="admin-link">
-            Đơn hàng
+            Orders
           </Link>
           <Link to="/admin/campaigns" className="admin-link">
-            Chiến Dịch Pre-order
+            Pre-order Campaigns
           </Link>
           <Link to="/admin/complaints" className="admin-link">
-            Khiếu nại
+            Complaints
           </Link>
           <Link to="/admin/shipping" className="admin-link">
-            Vận Chuyển
+            Shipping
           </Link>
 
-          {/*  DEMO: Mở nút này cho cả admin và manager */}
           {(role === "admin" || role === "manager") && (
             <Link to="/admin/users" className="admin-link">
-              Quản lý Người Dùng
+              User Management
             </Link>
           )}
           {(role === "admin" || role === "manager") && (
             <Link to="/admin/business-rules" className="admin-link">
-              Quy Tắc Kinh Doanh
+              Business Rules
             </Link>
           )}
         </nav>
 
         <button onClick={handleLogout} className="admin-logout-btn">
-          Thoat Admin
+          Logout
         </button>
       </aside>
 
