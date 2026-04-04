@@ -82,21 +82,21 @@ export default function AdminLensFeatures() {
         body: JSON.stringify(formData),
       });
       if (res.ok || res.status === 201 || res.status === 204) {
-        alert(isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!");
+        alert(isEditing ? "Updated successfully!" : "Added successfully!");
         setShowModal(false);
         fetchLensFeatures();
       } else {
-        alert("Lỗi khi lưu dữ liệu.");
+        alert("Failed to save data.");
       }
     } catch (err) {
-      alert("Lỗi kết nối server");
+      alert("Server connection error");
     }
   };
 
   const handleDelete = async (id) => {
     if (
       !window.confirm(
-        "Bạn có chắc chắn muốn xóa tính năng tròng này vĩnh viễn?",
+        "Are you sure you want to permanently delete this lens feature?",
       )
     )
       return;
@@ -106,15 +106,15 @@ export default function AdminLensFeatures() {
         { method: "DELETE", headers },
       );
       if (res.ok || res.status === 204) {
-        alert("Xóa thành công!");
+        alert("Deleted successfully!");
         fetchLensFeatures();
       } else {
         // ⚡ Nâng cấp: Hiển thị lỗi từ Backend nếu đang dính Order
         const errorData = await res.json();
-        alert("Xóa thất bại: " + (errorData.message || "Đang được sử dụng"));
+        alert("Delete failed: " + (errorData.message || "Currently in use"));
       }
     } catch (err) {
-      alert("Lỗi server");
+      alert("Server error");
     }
   };
 
@@ -122,10 +122,10 @@ export default function AdminLensFeatures() {
     <div className="admin-lens-container">
       <div className="admin-lens-header">
         <h2 className="admin-lens-title">
-          Quản Lý Tính Năng Tròng (Lens Features)
+          Lens Features Management
         </h2>
         <button onClick={() => handleOpenModal()} className="btn-add">
-          + Thêm Tính Năng
+          + Add Feature
         </button>
       </div>
 
@@ -133,22 +133,22 @@ export default function AdminLensFeatures() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Tính Năng / Công Nghệ</th>
-              <th>Phụ Phí ($)</th>
-              <th className="col-action">Hành Động</th>
+              <th>Feature / Technology</th>
+              <th>Extra Price ($)</th>
+              <th className="col-action">Actions</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
                 <td colSpan="3" style={{ textAlign: "center" }}>
-                  Đang tải dữ liệu...
+                  Loading data...
                 </td>
               </tr>
             ) : lensFeatures.length === 0 ? (
               <tr>
                 <td colSpan="3" style={{ textAlign: "center" }}>
-                  Chưa có tính năng nào.
+                  No features found.
                 </td>
               </tr>
             ) : (
@@ -161,13 +161,13 @@ export default function AdminLensFeatures() {
                       onClick={() => handleOpenModal(feature)}
                       className="btn-edit"
                     >
-                      Sửa
+                      Edit
                     </button>
                     <button
                       onClick={() => handleDelete(feature.featureId)}
                       className="btn-delete"
                     >
-                      Xóa
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -181,22 +181,22 @@ export default function AdminLensFeatures() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h3 className="modal-title">
-              {isEditing ? "Sửa Tính Năng" : "Thêm Tính Năng Mới"}
+              {isEditing ? "Edit Feature" : "Add New Feature"}
             </h3>
             <form onSubmit={handleSave}>
               <div className="form-group">
-                <label>Mô tả tính năng / Lớp phủ (Specification):</label>
+                <label>Feature Description / Coating (Specification):</label>
                 <input
                   type="text"
                   name="featureSpecification"
                   value={formData.featureSpecification}
                   onChange={handleChange}
                   required
-                  placeholder="VD: Lọc ánh sáng xanh, Đổi màu trà..."
+                  placeholder="e.g. Blue light filter, Photochromic..."
                 />
               </div>
               <div className="form-group">
-                <label>Phụ phí phát sinh ($):</label>
+                <label>Extra Price ($):</label>
                 <input
                   type="number"
                   name="extraPrice"
@@ -214,10 +214,10 @@ export default function AdminLensFeatures() {
                   onClick={() => setShowModal(false)}
                   className="btn-cancel"
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button type="submit" className="btn-save">
-                  Lưu Dữ Liệu
+                  Save
                 </button>
               </div>
             </form>
