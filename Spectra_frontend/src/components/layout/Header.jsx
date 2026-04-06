@@ -61,7 +61,8 @@ export default function Header() {
             <span className="search-icon"></span>
             <input
               type="text"
-              placeholder="Search frames, sunglasses, lenses..."
+              // placeholder="Search frames, sunglasses, lenses..."
+              placeholder="Search frames, lenses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleSearch}
@@ -123,9 +124,9 @@ export default function Header() {
         <Link to="/shop?category=eyeglasses" className="header-nav-link">
           Eyeglasses
         </Link>
-        <Link to="/shop?category=sunglasses" className="header-nav-link">
+        {/* <Link to="/shop?category=sunglasses" className="header-nav-link">
           Sunglasses
-        </Link>
+        </Link> */}
         <Link to="/orders" className="header-nav-link">
           My Orders
         </Link>

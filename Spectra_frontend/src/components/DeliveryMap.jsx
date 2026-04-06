@@ -75,9 +75,46 @@ const CITY_COORDS = {
 
 /**
  * Parse a Vietnamese address string and return approximate coordinates.
- * Tries to match city/district names from the address text.
+ * Uses Nominatim (OpenStreetMap) for real geocoding, falls back to dictionary.
  */
-function geocodeAddress(address) {
+async function geocodeAddressAsync(address) {
+  if (!address) return null;
+
+  // Build progressively simpler queries from the address.
+  // Vietnamese addresses: "detail, Phường X, Quận/TP Y, Tỉnh/TP Z"
+  // Nominatim often fails on very specific local details but works at ward/district level.
+  const parts = address
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const queries = [];
+  for (let i = 0; i < parts.length; i++) {
+    queries.push(parts.slice(i).join(", "));
+  }
+
+  for (const q of queries) {
+    try {
+      const encoded = encodeURIComponent(q);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1&countrycodes=vn`,
+        { headers: { "Accept-Language": "vi" } },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.length > 0) {
+          return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        }
+      }
+    } catch {
+      // Try next query
+    }
+  }
+
+  // Last resort: dictionary lookup
+  return geocodeAddressFallback(address);
+}
+
+function geocodeAddressFallback(address) {
   if (!address) return null;
   const lower = address.toLowerCase();
 
@@ -154,9 +191,29 @@ export default function DeliveryMap({
   const animFrameRef = useRef(null);
   const [routeCoords, setRouteCoords] = useState(null);
   const [error, setError] = useState(null);
+  const [customerCoords, setCustomerCoords] = useState(null);
 
-  const customerCoords = geocodeAddress(customerAddress);
   const isDelivered = status?.toLowerCase() === "delivered";
+
+  // ── Geocode customer address (async with Nominatim, fallback to dictionary) ──
+  useEffect(() => {
+    let cancelled = false;
+    setCustomerCoords(null);
+    setError(null);
+
+    geocodeAddressAsync(customerAddress).then((coords) => {
+      if (cancelled) return;
+      if (coords) {
+        setCustomerCoords(coords);
+      } else {
+        setError("no-coords");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [customerAddress]);
 
   // ── Calculate delivery progress (0..1) ──
   const getProgress = () => {
@@ -176,9 +233,15 @@ export default function DeliveryMap({
   // ── Fetch road route from OSRM (free, no API key) ──
   useEffect(() => {
     if (!customerCoords) {
-      setError("no-coords");
       return;
     }
+
+    // Reset map when coords change so it re-initializes
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
+    setRouteCoords(null);
 
     const fetchRoute = async () => {
       try {
@@ -220,7 +283,7 @@ export default function DeliveryMap({
     };
 
     fetchRoute();
-  }, [customerAddress]);
+  }, [customerCoords]);
 
   // ── Initialize map ──
   useEffect(() => {

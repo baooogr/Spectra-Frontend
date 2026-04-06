@@ -138,9 +138,10 @@ export default function ProductDetail() {
   const maxAllowedQuantity = isPreorder
     ? preorderInfo.maxQuantityPerOrder
     : currentStock;
+  const colorExtraCost = selectedColor?.colorExtraCost || 0;
   const displayPrice = isPreorder
     ? preorderInfo.campaignPrice
-    : product.basePrice;
+    : product.basePrice + colorExtraCost;
   const productForModal = { ...product, basePrice: displayPrice };
 
   const handleConfirmAddToCart = (cartDataOptions) => {
@@ -153,6 +154,7 @@ export default function ProductDetail() {
       color: colorObj.colorName || "Mặc định",
       colorId: colorObj.id || colorObj.colorId || null,
       quantity: quantity,
+      maxStock: maxAllowedQuantity,
       isPreorder: isPreorder,
       campaignId: isPreorder ? preorderInfo.campaignId : null,
       estimatedDeliveryDate: isPreorder
@@ -161,14 +163,19 @@ export default function ProductDetail() {
       lensInfo: cartDataOptions.lensIncluded
         ? {
             typeId: cartDataOptions.lensDetails.typeId,
+            lensIndexId: cartDataOptions.lensDetails.lensIndexId || null,
             featureId: cartDataOptions.lensDetails.featureId,
             prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
             type:
               cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
+            lensIndex:
+              cartDataOptions.lensDetails.lensIndex?.indexValue || null,
             feature:
               cartDataOptions.lensDetails.lensFeature?.featureSpecification ||
               "Không có",
             typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0,
+            indexPrice:
+              cartDataOptions.lensDetails.lensIndex?.additionalPrice || 0,
             featurePrice:
               cartDataOptions.lensDetails.lensFeature?.extraPrice || 0,
           }
@@ -216,6 +223,18 @@ export default function ProductDetail() {
             >
               ${displayPrice}
             </p>
+
+            {colorExtraCost > 0 && (
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#6b7280",
+                  margin: "-8px 0 10px",
+                }}
+              >
+                (Giá gốc: ${product.basePrice} + Phụ phí màu: ${colorExtraCost})
+              </p>
+            )}
 
             {isPreorder && (
               <div
@@ -497,7 +516,7 @@ export default function ProductDetail() {
                           fontWeight: "700",
                         }}
                       >
-                        YÊU CẦU ĐƠN THUỐC:
+                        ĐƠN THUỐC HỖ TRỢ:
                       </h4>
 
                       {(product.minRx != null || product.maxRx != null) && (

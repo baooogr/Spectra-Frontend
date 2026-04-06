@@ -22,11 +22,11 @@ export default function Footer() {
                 Eyeglasses
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link to="/" className="footer-link">
                 Sunglasses
               </Link>
-            </li>
+            </li> */}
             <li>
               <Link to="/" className="footer-link">
                 Lenses

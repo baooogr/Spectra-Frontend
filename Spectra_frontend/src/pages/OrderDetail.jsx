@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import { useExchangeRate } from "../api";
+import { formatPrice } from "../utils/validation";
+import { getAddressDisplayString } from "../utils/vietnamAddress";
 import DeliveryMap from "../components/DeliveryMap";
 import "./OrderDetail.css";
 
@@ -15,6 +18,7 @@ export default function OrderDetail() {
   const [showNotReceivedInfo, setShowNotReceivedInfo] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const { rate: exchangeRate } = useExchangeRate();
 
   useEffect(() => {
 
@@ -28,7 +32,7 @@ export default function OrderDetail() {
     const fetchOrderDetail = async () => {
       try {
         const res = await fetch(
-          `https://myspectra.runasp.net/api/Orders/${id}`,
+          `https://myspectra.runasp.net/api/OrdersV2/${id}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -82,18 +86,6 @@ export default function OrderDetail() {
         </Link>
       </div>
     );
-
-  const EXCHANGE_RATE = 25400;
-  const formatPrice = (n) => {
-    const usd = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(n || 0);
-    const vnd = new Intl.NumberFormat("vi-VN").format((n || 0) * EXCHANGE_RATE);
-    return `${usd}(${vnd} VND)`;
-  };
 
   const getStatusBadge = (status) => {
     const s = status?.toLowerCase() || "";
@@ -155,9 +147,12 @@ export default function OrderDetail() {
     shippingAddress = matchOld[3];
   }
 
+  // Strip |||structured data from address for clean display
+  shippingAddress = getAddressDisplayString(shippingAddress);
+
   const itemsList = order.items || order.orderItems || [];
 
-  // Thông tin vận chuyển — được gán sau khi staff nhập mã hoặc dùng GoShip
+  // Thông tin vận chuyển — được gán sau khi staff nhập mã hoặc dùng Ahamove
   const trackingNumber = order.trackingNumber || null;
   const shippingCarrier = order.shippingCarrier || null;
   const shippedAt = order.shippedAt || null;
@@ -171,7 +166,7 @@ export default function OrderDetail() {
     if (!token) return;
     try {
       const res = await fetch(
-        `https://myspectra.runasp.net/api/Orders/${id}/confirm-delivery`,
+        `https://myspectra.runasp.net/api/OrdersV2/${id}/confirm-delivery`,
         {
           method: "PUT",
           headers: {
@@ -200,7 +195,7 @@ export default function OrderDetail() {
     setIsCancelling(true);
     try {
       const res = await fetch(
-        `https://myspectra.runasp.net/api/Orders/${id}/cancel`,
+        `https://myspectra.runasp.net/api/OrdersV2/${id}/cancel`,
         {
           method: "PUT",
           headers: {
@@ -276,6 +271,30 @@ export default function OrderDetail() {
             >
               Mã đơn: <b style={{ color: "#111827" }}>#{order.orderId}</b>
             </p>
+            {order.convertedFromPreorderId && (
+              <p
+                style={{
+                  margin: "4px 0 0",
+                  color: "#1d4ed8",
+                  fontSize: "13px",
+                }}
+              >
+                <span
+                  style={{
+                    backgroundColor: "#dbeafe",
+                    color: "#1e3a8a",
+                    borderRadius: "12px",
+                    padding: "2px 8px",
+                    fontWeight: "600",
+                    fontSize: "11px",
+                    marginRight: "6px",
+                  }}
+                >
+                  Từ Pre-order
+                </span>
+                #{String(order.convertedFromPreorderId).slice(0, 8)}
+              </p>
+            )}
           </div>
           <div
             style={{
@@ -1032,6 +1051,7 @@ export default function OrderDetail() {
 
               const qty = item.quantity || 1;
               const prescriptionUrl = item.prescription?.imageUrl || null;
+              const prescription = item.prescription || null;
               const lensType = item.lensType?.lensSpecification || null;
               const lensFeatureObj = item.lensFeature || item.feature;
               const lensFeature = lensFeatureObj?.featureSpecification || null;
@@ -1110,7 +1130,7 @@ export default function OrderDetail() {
                     </div>
                   </div>
 
-                  {(lensType || lensFeature) && (
+                  {lensType || lensFeature ? (
                     <div
                       style={{
                         display: "flex",
@@ -1170,7 +1190,131 @@ export default function OrderDetail() {
 
                       </div>
                     </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        backgroundColor: "#fefce8",
+                        padding: "10px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid #fde68a",
+                      }}
+                    >
+                      <span style={{ fontSize: "16px" }}>🔧</span>
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          color: "#92400e",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Chỉ mua gọng (Không kèm tròng kính)
+                      </span>
+                    </div>
                   )}
+
+                  {/* Prescription details */}
+                  {prescription &&
+                    (prescription.sphereLeft != null ||
+                      prescription.sphereRight != null ||
+                      prescription.pupillaryDistance != null) && (
+                      <div
+                        style={{
+                          backgroundColor: "#faf5ff",
+                          padding: "12px 14px",
+                          borderRadius: "6px",
+                          border: "1px solid #e9d5ff",
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: "0 0 8px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "#7c3aed",
+                          }}
+                        >
+                          Đơn kính (Prescription)
+                        </p>
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: "4px 16px",
+                            fontSize: "13px",
+                            color: "#374151",
+                          }}
+                        >
+                          <div>
+                            <b>Mắt phải (OD):</b>
+                          </div>
+                          <div>
+                            <b>Mắt trái (OS):</b>
+                          </div>
+                          <div>
+                            SPH: {prescription.sphereRight ?? "—"} | CYL:{" "}
+                            {prescription.cylinderRight ?? "—"} | Axis:{" "}
+                            {prescription.axisRight ?? "—"}
+                          </div>
+                          <div>
+                            SPH: {prescription.sphereLeft ?? "—"} | CYL:{" "}
+                            {prescription.cylinderLeft ?? "—"} | Axis:{" "}
+                            {prescription.axisLeft ?? "—"}
+                          </div>
+                        </div>
+                        {prescription.pupillaryDistance != null && (
+                          <p
+                            style={{
+                              margin: "6px 0 0",
+                              fontSize: "13px",
+                              color: "#374151",
+                            }}
+                          >
+                            <b>PD (Khoảng cách đồng tử):</b>{" "}
+                            {prescription.pupillaryDistance} mm
+                          </p>
+                        )}
+                        {(prescription.doctorName ||
+                          prescription.clinicName) && (
+                          <p
+                            style={{
+                              margin: "4px 0 0",
+                              fontSize: "12px",
+                              color: "#6b7280",
+                            }}
+                          >
+                            {prescription.doctorName &&
+                              `BS. ${prescription.doctorName}`}
+                            {prescription.doctorName &&
+                              prescription.clinicName &&
+                              " — "}
+                            {prescription.clinicName}
+                          </p>
+                        )}
+                        {prescription.expirationDate && (
+                          <p
+                            style={{
+                              margin: "4px 0 0",
+                              fontSize: "12px",
+                              color:
+                                new Date(prescription.expirationDate) <
+                                new Date()
+                                  ? "#dc2626"
+                                  : "#6b7280",
+                            }}
+                          >
+                            Hạn sử dụng:{" "}
+                            {new Date(
+                              prescription.expirationDate,
+                            ).toLocaleDateString("vi-VN")}
+                            {new Date(prescription.expirationDate) <
+                              new Date() && " (Đã hết hạn)"}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                   <div
                     style={{
@@ -1227,59 +1371,103 @@ export default function OrderDetail() {
           </strong>
         </div>
 
-        {/* Complaint button for delivered orders */}
-        {(order.status || "").toLowerCase() === "delivered" && (
-          <div
-            style={{
-              marginTop: "20px",
-              padding: "16px",
-              backgroundColor: "#fff7ed",
-              borderRadius: "10px",
-              border: "1px solid #fed7aa",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "12px",
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  margin: 0,
-                  fontWeight: "600",
-                  fontSize: "15px",
-                  color: "#9a3412",
-                }}
-              >
-                Có vấn đề với đơn hàng?
-              </p>
-              <p
-                style={{
-                  margin: "4px 0 0",
-                  fontSize: "13px",
-                  color: "#78716c",
-                }}
-              >
-                Bạn có thể gửi khiếu nại, trả/đổi hàng hoặc yêu cầu bảo hành.
-              </p>
-            </div>
-            <Link
-              to="/complaints/new"
+        {/* Complaint button for delivered orders - only within 7 days of delivery */}
+        {(() => {
+          const isOrderDelivered =
+            (order.status || "").toLowerCase() === "delivered";
+          if (!isOrderDelivered || !deliveryConfirmed) return null;
+
+          const deliveredDate =
+            order.deliveredAt || order.deliveryConfirmedAt || order.arrivalDate;
+          if (deliveredDate) {
+            const deliveredTime = new Date(deliveredDate).getTime();
+            const now = Date.now();
+            const daysSinceDelivery =
+              (now - deliveredTime) / (1000 * 60 * 60 * 24);
+            if (daysSinceDelivery > 7) {
+              return (
+                <div
+                  style={{
+                    marginTop: "20px",
+                    padding: "16px",
+                    backgroundColor: "#f3f4f6",
+                    borderRadius: "10px",
+                    border: "1px solid #e5e7eb",
+                    textAlign: "center",
+                  }}
+                >
+                  <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
+                    Thời hạn khiếu nại (7 ngày kể từ khi giao hàng) đã hết.
+                  </p>
+                </div>
+              );
+            }
+          }
+
+          const firstItemId =
+            itemsList.length > 0
+              ? itemsList[0].orderItemId || itemsList[0].OrderItemId
+              : "";
+
+          return (
+            <div
               style={{
-                padding: "10px 20px",
-                backgroundColor: "#f97316",
-                color: "#fff",
-                borderRadius: "8px",
-                textDecoration: "none",
-                fontWeight: "600",
-                fontSize: "14px",
+                marginTop: "20px",
+                padding: "16px",
+                backgroundColor: "#fff7ed",
+                borderRadius: "10px",
+                border: "1px solid #fed7aa",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
               }}
             >
-              Gửi khiếu nại
-            </Link>
-          </div>
-        )}
+
+              <div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontWeight: "600",
+                    fontSize: "15px",
+                    color: "#9a3412",
+                  }}
+                >
+                  Có vấn đề với đơn hàng?
+                </p>
+                <p
+                  style={{
+                    margin: "4px 0 0",
+                    fontSize: "13px",
+                    color: "#78716c",
+                  }}
+                >
+                  Bạn có thể yêu cầu đổi hàng (trong 7 ngày kể từ khi nhận
+                  hàng).
+                </p>
+              </div>
+              <Link
+                to={
+                  firstItemId
+                    ? `/complaints/new?orderItemId=${firstItemId}`
+                    : "/complaints/new"
+                }
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#f97316",
+                  color: "#fff",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Yêu cầu đổi hàng
+              </Link>
+            </div>
+          );
+        })()}
 
       </div>
     </div>

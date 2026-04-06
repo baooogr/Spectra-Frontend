@@ -3,7 +3,8 @@ import { UserContext } from "../context/UserContext";
 import "./AdminComplaints.css";
 
 const API = "https://myspectra.runasp.net/api/Complaints";
-const API_ORDERS = "https://myspectra.runasp.net/api/Orders";
+const API_ORDERS = "https://myspectra.runasp.net/api/OrdersV2";
+const API_SHIPPING = "https://myspectra.runasp.net/api/Shipping";
 
 const statusMap = {
   pending: { text: "Chờ xử lý", color: "#d97706", bg: "#fef3c7" },
@@ -65,6 +66,20 @@ export default function AdminComplaints() {
   // Exchange order detail
   const [exchangeOrderDetail, setExchangeOrderDetail] = useState(null);
 
+  // Ahamove wizard state for complaint shipments
+  const [gsMode, setGsMode] = useState("ahamove"); // "ahamove" or "manual"
+  const [ahamoveStep, setAhamoveStep] = useState(1); // 1=address, 2=services, 3=creating
+  const [ahamoveLoading, setAhamoveLoading] = useState(false);
+  const [ahamoveError, setAhamoveError] = useState("");
+  const [ahamoveServices, setAhamoveServices] = useState([]);
+  const [ahamoveSelectedService, setAhamoveSelectedService] = useState(null);
+  const [destAddress, setDestAddress] = useState("");
+  const [destLat, setDestLat] = useState("");
+  const [destLng, setDestLng] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [packageWeight, setPackageWeight] = useState(500);
+
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
@@ -75,8 +90,8 @@ export default function AdminComplaints() {
     try {
       const url =
         statusFilter === "all"
-          ? `${API}?page=${p}&pageSize=15`
-          : `${API}/status/${statusFilter}?page=${p}&pageSize=15`;
+          ? `${API}?page=${p}&pageSize=10`
+          : `${API}/status/${statusFilter}?page=${p}&pageSize=10`;
       const res = await fetch(url, { headers });
       if (res.ok) {
         const data = await res.json();
@@ -118,6 +133,9 @@ export default function AdminComplaints() {
     const hasRefund = !!(complaint.refundAmount || complaint.RefundAmount);
     setTrackingConfirmed(hasTracking);
     setRefundConfirmed(hasRefund);
+
+    // Reset Ahamove state for complaint tracking
+    resetAhamoveState();
 
     // Fetch full complaint detail for exchange order info
     const cId = complaint.requestId || complaint.RequestId;
@@ -242,6 +260,98 @@ export default function AdminComplaints() {
     setUpdating(false);
   };
 
+  // ─── Ahamove helper functions for complaint shipments ───
+
+  const resetAhamoveState = () => {
+    setGsMode("ahamove");
+    setAhamoveStep(1);
+    setAhamoveServices([]);
+    setAhamoveSelectedService(null);
+    setAhamoveError("");
+    setDestAddress("");
+    setDestLat("");
+    setDestLng("");
+    setRecipientName("");
+    setRecipientPhone("");
+    setPackageWeight(500);
+  };
+
+  const handleAhamoveEstimate = async () => {
+    if (!destAddress.trim() || !destLat || !destLng) {
+      setAhamoveError("Vui lòng nhập đầy đủ địa chỉ và tọa độ người nhận.");
+      return;
+    }
+    setAhamoveLoading(true);
+    setAhamoveError("");
+    try {
+      const res = await fetch(`${API_SHIPPING}/ahamove/estimate`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          destinationAddress: destAddress.trim(),
+          destinationLat: destLat,
+          destinationLng: destLng,
+          recipientName: recipientName || "Khách hàng",
+          recipientPhone: recipientPhone || "0900000000",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.length === 0) {
+          setAhamoveError("Không tìm thấy dịch vụ vận chuyển cho địa chỉ này.");
+        } else {
+          setAhamoveServices(data);
+          setAhamoveStep(2);
+        }
+      } else {
+        const err = await res.json().catch(() => null);
+        setAhamoveError(err?.message || "Không thể lấy giá cước từ Ahamove.");
+      }
+    } catch {
+      setAhamoveError("Lỗi kết nối Ahamove.");
+    } finally {
+      setAhamoveLoading(false);
+    }
+  };
+
+  const handleAhamoveCreateOrder = async () => {
+    if (!ahamoveSelectedService) return;
+    setAhamoveLoading(true);
+    setAhamoveError("");
+    setAhamoveStep(3);
+    try {
+      const cId = selectedComplaint.requestId || selectedComplaint.RequestId;
+      const res = await fetch(`${API_SHIPPING}/ahamove/orders`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          complaintId: cId,
+          destinationAddress: destAddress.trim(),
+          destinationLat: destLat,
+          destinationLng: destLng,
+          recipientName: recipientName || "Khách hàng",
+          recipientPhone: recipientPhone || "0900000000",
+          serviceId: ahamoveSelectedService,
+        }),
+      });
+      if (res.ok) {
+        setActionMsg("Đã tạo vận đơn Ahamove thành công!");
+        setTrackingConfirmed(true);
+        setAhamoveStep(1);
+        fetchComplaints(activeFilter, page);
+      } else {
+        const err = await res.json().catch(() => null);
+        setAhamoveError(err?.message || "Không thể tạo vận đơn Ahamove.");
+        setAhamoveStep(2);
+      }
+    } catch {
+      setAhamoveError("Lỗi kết nối khi tạo vận đơn.");
+      setAhamoveStep(2);
+    } finally {
+      setAhamoveLoading(false);
+    }
+  };
+
   const getStatusBadge = (status, cancelledByCustomer) => {
     let s = (status || "").toLowerCase();
     if (s === "cancelled" && cancelledByCustomer) s = "customer_cancelled";
@@ -302,6 +412,7 @@ export default function AdminComplaints() {
                 <tr>
                   <th>Mã</th>
                   <th>Khách hàng</th>
+                  <th>Sản phẩm</th>
                   <th>Loại</th>
                   <th>Lý do</th>
                   <th>Trạng thái</th>
@@ -331,6 +442,31 @@ export default function AdminComplaints() {
                   const mediaUrl = c.mediaUrl || c.MediaUrl || "";
                   const status = (c.status || c.Status || "").toLowerCase();
                   const date = c.createdAt || c.CreatedAt;
+                  const originalItem = c.originalItem || c.OriginalItem || null;
+                  const orderItem = c.orderItem || c.OrderItem || null;
+                  const productName =
+                    originalItem?.frameName ||
+                    originalItem?.productName ||
+                    originalItem?.name ||
+                    orderItem?.frame?.frameName ||
+                    orderItem?.frameName ||
+                    orderItem?.productName ||
+                    orderItem?.name ||
+                    (c.orderItemId || c.OrderItemId
+                      ? `#${String(c.orderItemId || c.OrderItemId).slice(0, 8)}`
+                      : "—");
+                  const productQuantity =
+                    originalItem?.quantity ||
+                    originalItem?.Quantity ||
+                    orderItem?.quantity ||
+                    orderItem?.Quantity ||
+                    "—";
+                  const productSize =
+                    originalItem?.selectedSize ||
+                    originalItem?.SelectedSize ||
+                    orderItem?.selectedSize ||
+                    orderItem?.SelectedSize ||
+                    "";
                   const transitions = validTransitions[status] || [];
 
                   return (
@@ -340,6 +476,13 @@ export default function AdminComplaints() {
                         <div style={{ fontWeight: "600" }}>{userName}</div>
                         <div style={{ fontSize: "12px", color: "#6b7280" }}>
                           {userPhone}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: "600" }}>{productName}</div>
+                        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                          SL: {productQuantity}
+                          {productSize ? ` • Size: ${productSize}` : ""}
                         </div>
                       </td>
                       <td>
@@ -531,7 +674,7 @@ export default function AdminComplaints() {
             if (needsTracking && !trackingConfirmed) {
               canShowStatusUpdate = false;
               statusBlockReason =
-                "Vui lòng nhập mã vận đơn trả hàng trước khi cập nhật trạng thái.";
+                "Vui lòng tạo vận đơn trả hàng (J&T hoặc thủ công) trước khi cập nhật trạng thái.";
             } else if (needsRefund && !refundConfirmed) {
               canShowStatusUpdate = false;
               statusBlockReason =
@@ -580,7 +723,7 @@ export default function AdminComplaints() {
             if (needsTracking && !trackingConfirmed) {
               canShowStatusUpdate = false;
               statusBlockReason =
-                "Vui lòng nhập mã vận đơn gửi bảo hành trước khi cập nhật trạng thái.";
+                "Vui lòng tạo vận đơn bảo hành (J&T hoặc thủ công) trước khi cập nhật trạng thái.";
             }
           }
 
@@ -712,6 +855,62 @@ export default function AdminComplaints() {
                       </div>
                     );
                   })()}
+
+                {/* Product being complained about */}
+                {complaintDetail?.originalItem && (
+                  <div
+                    style={{
+                      marginBottom: "16px",
+                      padding: "14px",
+                      backgroundColor: "#f8fafc",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
+                    <label
+                      style={{
+                        display: "block",
+                        fontWeight: "600",
+                        marginBottom: "8px",
+                        fontSize: "14px",
+                        color: "#0f172a",
+                      }}
+                    >
+                      Sản phẩm bị khiếu nại
+                    </label>
+                    <p style={{ margin: "2px 0", fontSize: "13px" }}>
+                      <b>OrderItem ID:</b>{" "}
+                      {complaintDetail.orderItemId ||
+                        complaintDetail.OrderItemId ||
+                        "—"}
+                    </p>
+                    <p style={{ margin: "2px 0", fontSize: "13px" }}>
+                      <b>Tên:</b>{" "}
+                      {complaintDetail.originalItem.frameName ||
+                        complaintDetail.originalItem.productName ||
+                        "—"}
+                    </p>
+                    <p style={{ margin: "2px 0", fontSize: "13px" }}>
+                      <b>Giá:</b>{" "}
+                      {(
+                        complaintDetail.originalItem.unitPrice || 0
+                      ).toLocaleString("vi-VN")}{" "}
+                      $
+                    </p>
+                    <p style={{ margin: "2px 0", fontSize: "13px" }}>
+                      <b>Số lượng:</b>{" "}
+                      {complaintDetail.originalItem.quantity ||
+                        complaintDetail.originalItem.Quantity ||
+                        1}
+                    </p>
+                    {complaintDetail.originalItem.selectedSize && (
+                      <p style={{ margin: "2px 0", fontSize: "13px" }}>
+                        <b>Kích thước:</b>{" "}
+                        {complaintDetail.originalItem.selectedSize}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Exchange: show exchange order detail if exists */}
                 {isExchange && (
@@ -898,7 +1097,7 @@ export default function AdminComplaints() {
                   </div>
                 )}
 
-                {/* Step 1: Return tracking section (shown first for return/exchange/warranty) */}
+                {/* Step 1: Return tracking section (Ahamove wizard or manual) */}
                 {needsTracking && (
                   <div
                     style={{
@@ -921,56 +1120,506 @@ export default function AdminComplaints() {
                       }}
                     >
                       {trackingConfirmed ? "" : "① "}
-                      Mã vận đơn trả hàng / gửi bảo hành
+                      Vận đơn trả hàng / gửi bảo hành
                     </label>
                     {trackingConfirmed ? (
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: "13px",
-                          color: "#065f46",
-                        }}
-                      >
-                        Đã cập nhật mã vận đơn thành công.
-                      </p>
+                      <div style={{ fontSize: "13px", color: "#065f46" }}>
+                        <p style={{ margin: 0 }}>Đã tạo vận đơn thành công.</p>
+                        {(complaintDetail?.returnShippingCarrier ||
+                          complaintDetail?.ReturnShippingCarrier) && (
+                          <p style={{ margin: "4px 0 0", fontSize: "12px" }}>
+                            Hãng vận chuyển:{" "}
+                            <b>
+                              {complaintDetail.returnShippingCarrier ||
+                                complaintDetail.ReturnShippingCarrier}
+                            </b>
+                            {" — "}Mã:{" "}
+                            <b>
+                              {complaintDetail.returnTrackingNumber ||
+                                complaintDetail.ReturnTrackingNumber}
+                            </b>
+                          </p>
+                        )}
+                      </div>
                     ) : (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          alignItems: "center",
-                        }}
-                      >
-                        <input
-                          type="text"
-                          value={trackingNumber}
-                          onChange={(e) => setTrackingNumber(e.target.value)}
-                          placeholder="VD: GHTK123456789"
+                      <div>
+                        {/* Toggle between Ahamove and Manual */}
+                        <div
                           style={{
-                            flex: 1,
-                            padding: "8px 12px",
-                            border: "1px solid #fde68a",
-                            borderRadius: "8px",
-                            fontSize: "14px",
-                          }}
-                        />
-                        <button
-                          onClick={handleSetTracking}
-                          disabled={updating}
-                          style={{
-                            padding: "8px 16px",
-                            backgroundColor: "#d97706",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "8px",
-                            cursor: updating ? "not-allowed" : "pointer",
-                            fontWeight: "600",
-                            fontSize: "13px",
-                            whiteSpace: "nowrap",
+                            display: "flex",
+                            gap: "8px",
+                            marginBottom: "12px",
                           }}
                         >
-                          Cập nhật
-                        </button>
+                          <button
+                            onClick={() => {
+                              setGsMode("ahamove");
+                              setAhamoveError("");
+                            }}
+                            style={{
+                              padding: "6px 14px",
+                              borderRadius: "6px",
+                              fontSize: "13px",
+                              fontWeight: 600,
+                              border:
+                                gsMode === "ahamove"
+                                  ? "2px solid #d97706"
+                                  : "1px solid #d1d5db",
+                              backgroundColor:
+                                gsMode === "ahamove" ? "#fef3c7" : "#fff",
+                              color:
+                                gsMode === "ahamove" ? "#92400e" : "#6b7280",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Ahamove
+                          </button>
+                          <button
+                            onClick={() => {
+                              setGsMode("manual");
+                              setAhamoveError("");
+                            }}
+                            style={{
+                              padding: "6px 14px",
+                              borderRadius: "6px",
+                              fontSize: "13px",
+                              fontWeight: 600,
+                              border:
+                                gsMode === "manual"
+                                  ? "2px solid #d97706"
+                                  : "1px solid #d1d5db",
+                              backgroundColor:
+                                gsMode === "manual" ? "#fef3c7" : "#fff",
+                              color:
+                                gsMode === "manual" ? "#92400e" : "#6b7280",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Nhập thủ công
+                          </button>
+                        </div>
+
+                        {ahamoveError && (
+                          <div
+                            style={{
+                              backgroundColor: "#fee2e2",
+                              color: "#dc2626",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              fontSize: "13px",
+                              marginBottom: "10px",
+                            }}
+                          >
+                            {ahamoveError}
+                          </div>
+                        )}
+
+                        {gsMode === "manual" ? (
+                          /* Manual tracking input */
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              alignItems: "center",
+                            }}
+                          >
+                            <input
+                              type="text"
+                              value={trackingNumber}
+                              onChange={(e) =>
+                                setTrackingNumber(e.target.value)
+                              }
+                              placeholder="VD: GHTK123456789"
+                              style={{
+                                flex: 1,
+                                padding: "8px 12px",
+                                border: "1px solid #fde68a",
+                                borderRadius: "8px",
+                                fontSize: "14px",
+                              }}
+                            />
+                            <button
+                              onClick={handleSetTracking}
+                              disabled={updating}
+                              style={{
+                                padding: "8px 16px",
+                                backgroundColor: "#d97706",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "8px",
+                                cursor: updating ? "not-allowed" : "pointer",
+                                fontWeight: "600",
+                                fontSize: "13px",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              Cập nhật
+                            </button>
+                          </div>
+                        ) : (
+                          /* Ahamove 3-step wizard */
+                          <div>
+                            {ahamoveStep === 1 && (
+                              <div>
+                                <p
+                                  style={{
+                                    fontWeight: 600,
+                                    marginBottom: "8px",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  Địa chỉ người nhận
+                                </p>
+                                <div
+                                  style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "1fr 1fr",
+                                    gap: "8px",
+                                    marginBottom: "10px",
+                                  }}
+                                >
+                                  <div>
+                                    <label
+                                      style={{
+                                        fontSize: "12px",
+                                        fontWeight: 500,
+                                        color: "#374151",
+                                      }}
+                                    >
+                                      Tên:
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={recipientName}
+                                      onChange={(e) =>
+                                        setRecipientName(e.target.value)
+                                      }
+                                      style={{
+                                        width: "100%",
+                                        padding: "6px 10px",
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        boxSizing: "border-box",
+                                      }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label
+                                      style={{
+                                        fontSize: "12px",
+                                        fontWeight: 500,
+                                        color: "#374151",
+                                      }}
+                                    >
+                                      SĐT:
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={recipientPhone}
+                                      onChange={(e) =>
+                                        setRecipientPhone(e.target.value)
+                                      }
+                                      style={{
+                                        width: "100%",
+                                        padding: "6px 10px",
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        boxSizing: "border-box",
+                                      }}
+                                    />
+                                  </div>
+                                  <div style={{ gridColumn: "1 / -1" }}>
+                                    <label
+                                      style={{
+                                        fontSize: "12px",
+                                        fontWeight: 500,
+                                        color: "#374151",
+                                      }}
+                                    >
+                                      Địa chỉ đầy đủ:{" "}
+                                      <span style={{ color: "red" }}>*</span>
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={destAddress}
+                                      onChange={(e) =>
+                                        setDestAddress(e.target.value)
+                                      }
+                                      placeholder="VD: 123 Nguyễn Huệ, Quận 1, TP.HCM"
+                                      style={{
+                                        width: "100%",
+                                        padding: "6px 10px",
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        boxSizing: "border-box",
+                                      }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label
+                                      style={{
+                                        fontSize: "12px",
+                                        fontWeight: 500,
+                                        color: "#374151",
+                                      }}
+                                    >
+                                      Vĩ độ (Lat):{" "}
+                                      <span style={{ color: "red" }}>*</span>
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={destLat}
+                                      onChange={(e) =>
+                                        setDestLat(e.target.value)
+                                      }
+                                      placeholder="VD: 10.7769"
+                                      style={{
+                                        width: "100%",
+                                        padding: "6px 10px",
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        boxSizing: "border-box",
+                                      }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label
+                                      style={{
+                                        fontSize: "12px",
+                                        fontWeight: 500,
+                                        color: "#374151",
+                                      }}
+                                    >
+                                      Kinh độ (Lng):{" "}
+                                      <span style={{ color: "red" }}>*</span>
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={destLng}
+                                      onChange={(e) =>
+                                        setDestLng(e.target.value)
+                                      }
+                                      placeholder="VD: 106.7009"
+                                      style={{
+                                        width: "100%",
+                                        padding: "6px 10px",
+                                        border: "1px solid #d1d5db",
+                                        borderRadius: "6px",
+                                        fontSize: "13px",
+                                        boxSizing: "border-box",
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                                <p
+                                  style={{
+                                    fontWeight: 600,
+                                    marginBottom: "8px",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  Thông tin kiện hàng
+                                </p>
+                                <div style={{ marginBottom: "10px" }}>
+                                  <label
+                                    style={{
+                                      fontSize: "12px",
+                                      fontWeight: 500,
+                                      color: "#374151",
+                                    }}
+                                  >
+                                    Cân nặng (g):
+                                  </label>
+                                  <input
+                                    type="number"
+                                    value={packageWeight}
+                                    min={1}
+                                    onChange={(e) =>
+                                      setPackageWeight(Number(e.target.value))
+                                    }
+                                    style={{
+                                      width: "120px",
+                                      padding: "6px 10px",
+                                      border: "1px solid #d1d5db",
+                                      borderRadius: "6px",
+                                      fontSize: "13px",
+                                      marginLeft: "8px",
+                                    }}
+                                  />
+                                </div>
+                                <button
+                                  onClick={handleAhamoveEstimate}
+                                  disabled={ahamoveLoading}
+                                  style={{
+                                    padding: "8px 20px",
+                                    backgroundColor: "#d97706",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    cursor: ahamoveLoading
+                                      ? "not-allowed"
+                                      : "pointer",
+                                    fontWeight: "600",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  {ahamoveLoading
+                                    ? "Đang tải..."
+                                    : "Lấy giá cước →"}
+                                </button>
+                              </div>
+                            )}
+
+                            {ahamoveStep === 2 && (
+                              <div>
+                                <p
+                                  style={{
+                                    fontWeight: 600,
+                                    marginBottom: "8px",
+                                    fontSize: "13px",
+                                  }}
+                                >
+                                  Chọn dịch vụ ({ahamoveServices.length} dịch
+                                  vụ)
+                                </p>
+                                <div
+                                  style={{
+                                    maxHeight: "200px",
+                                    overflowY: "auto",
+                                    marginBottom: "10px",
+                                  }}
+                                >
+                                  {ahamoveServices.map((svc) => (
+                                    <div
+                                      key={svc.id || svc._id}
+                                      onClick={() =>
+                                        setAhamoveSelectedService(
+                                          svc.id || svc._id,
+                                        )
+                                      }
+                                      style={{
+                                        padding: "10px 12px",
+                                        marginBottom: "6px",
+                                        borderRadius: "8px",
+                                        border:
+                                          ahamoveSelectedService ===
+                                          (svc.id || svc._id)
+                                            ? "2px solid #d97706"
+                                            : "1px solid #e5e7eb",
+                                        backgroundColor:
+                                          ahamoveSelectedService ===
+                                          (svc.id || svc._id)
+                                            ? "#fef3c7"
+                                            : "#fff",
+                                        cursor: "pointer",
+                                        fontSize: "13px",
+                                      }}
+                                    >
+                                      <div style={{ fontWeight: 600 }}>
+                                        {svc.name ||
+                                          svc.serviceName ||
+                                          svc.id ||
+                                          "Dịch vụ"}
+                                      </div>
+                                      <div
+                                        style={{
+                                          color: "#6b7280",
+                                          fontSize: "12px",
+                                        }}
+                                      >
+                                        {svc.description || ""}
+                                      </div>
+                                      <div
+                                        style={{
+                                          fontWeight: 700,
+                                          color: "#d97706",
+                                          marginTop: "4px",
+                                        }}
+                                      >
+                                        {(
+                                          svc.totalPrice ||
+                                          svc.total_price ||
+                                          svc.total_fee ||
+                                          0
+                                        ).toLocaleString("vi-VN")}{" "}
+                                        VND
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                  <button
+                                    onClick={() => {
+                                      setAhamoveStep(1);
+                                      setAhamoveServices([]);
+                                      setAhamoveSelectedService(null);
+                                    }}
+                                    style={{
+                                      padding: "8px 16px",
+                                      backgroundColor: "#f3f4f6",
+                                      border: "none",
+                                      borderRadius: "8px",
+                                      cursor: "pointer",
+                                      fontWeight: "600",
+                                      fontSize: "13px",
+                                    }}
+                                  >
+                                    ← Quay lại
+                                  </button>
+                                  <button
+                                    onClick={handleAhamoveCreateOrder}
+                                    disabled={
+                                      !ahamoveSelectedService || ahamoveLoading
+                                    }
+                                    style={{
+                                      padding: "8px 20px",
+                                      backgroundColor: ahamoveSelectedService
+                                        ? "#059669"
+                                        : "#d1d5db",
+                                      color: "#fff",
+                                      border: "none",
+                                      borderRadius: "8px",
+                                      cursor:
+                                        ahamoveSelectedService &&
+                                        !ahamoveLoading
+                                          ? "pointer"
+                                          : "not-allowed",
+                                      fontWeight: "600",
+                                      fontSize: "13px",
+                                    }}
+                                  >
+                                    {ahamoveLoading
+                                      ? "Đang tạo..."
+                                      : "Tạo vận đơn ✓"}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {ahamoveStep === 3 && (
+                              <div
+                                style={{
+                                  textAlign: "center",
+                                  padding: "20px 0",
+                                }}
+                              >
+                                <p
+                                  style={{
+                                    fontSize: "14px",
+                                    color: "#d97706",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  Đang tạo vận đơn...
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -996,10 +1645,6 @@ export default function AdminComplaints() {
                         color: "#065f46",
                       }}
                     >
-                        ? "" 
-                        : cType === "return"
-                          ? "② "
-                          : "① "}
                       Xử lý hoàn tiền
                     </label>
                     {refundConfirmed ? (

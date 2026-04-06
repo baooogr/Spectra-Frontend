@@ -1,10 +1,13 @@
 import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./CheckoutSuccess.css";
+import { useExchangeRate } from "../api";
+import { formatPrice } from "../utils/validation";
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { rate: exchangeRate } = useExchangeRate();
 
   const complaint = location.state?.complaint;
 
@@ -19,22 +22,11 @@ export default function CheckoutSuccess() {
   const customer = location.state?.customer;
   const total = location.state?.total; // Giả sử total này đang là USD
 
+  // Use centralized formatter to apply VND rounding policy
   const formatCurrency = (amountInUSD) => {
     if (typeof amountInUSD !== "number") return null;
+    return formatPrice(amountInUSD, exchangeRate);
 
-    const EXCHANGE_RATE = 26250;
-
-    const formattedUSD = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amountInUSD);
-
-    const amountInVND = amountInUSD * EXCHANGE_RATE;
-    const formattedVND = new Intl.NumberFormat("vi-VN").format(amountInVND);
-
-    return `${formattedUSD}(${formattedVND} VND)`;
   };
 
   return (

@@ -11,6 +11,9 @@ export default function AdminPreorderCampaigns() {
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   // --- STATE CHO CREATE ---
   const initialForm = {
@@ -84,6 +87,13 @@ export default function AdminPreorderCampaigns() {
   };
 
   const handleToggleFrame = (frame) => {
+    const frameStatus = frame.status?.toLowerCase();
+    if (frameStatus === "inactive") {
+      alert(
+        '⚠️ Kính này đang bị vô hiệu hóa. Vui lòng kích hoạt lại kính trong tab "Quản Lý Kính" trước khi thêm vào chiến dịch Pre-order.',
+      );
+      return;
+    }
     const isSelected = formData.frames.some(
       (f) => f.frameId === (frame.id || frame.frameId),
     );
@@ -129,6 +139,12 @@ export default function AdminPreorderCampaigns() {
     }
     if (new Date(formData.startDate) >= new Date(formData.endDate)) {
       alert("Lỗi: Ngày bắt đầu phải TRƯỚC ngày kết thúc!");
+      return;
+    }
+    if (
+      new Date(formData.endDate) >= new Date(formData.estimatedDeliveryDate)
+    ) {
+      alert("Lỗi: Ngày kết thúc chiến dịch phải TRƯỚC ngày giao hàng dự kiến!");
       return;
     }
 
@@ -239,6 +255,32 @@ export default function AdminPreorderCampaigns() {
     }
   };
 
+  // Compute effective status for each campaign
+  const getCampStatus = (camp) => {
+    const now = new Date();
+    const startDt = new Date(camp.startDate);
+    const endDt = new Date(camp.endDate);
+    let s = (camp.status || "").toLowerCase();
+    if (now >= startDt && now <= endDt && s === "upcoming") s = "active";
+    else if (now > endDt && s !== "ended") s = "ended";
+    const isEnded =
+      s === "ended" || s === "closed" || camp.currentSlots >= camp.maxSlots;
+    return isEnded ? "ended" : s;
+  };
+
+  const filteredCampaigns = campaigns.filter((camp) => {
+    if (statusFilter === "all") return true;
+    const s = getCampStatus(camp);
+    if (statusFilter === "running") return s === "active" || s === "upcoming";
+    if (statusFilter === "ended") return s === "ended";
+    return true;
+  });
+  const totalPages = Math.ceil(filteredCampaigns.length / PAGE_SIZE);
+  const pagedCampaigns = filteredCampaigns.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
   return (
     <div className="admin-products-container">
       <div className="admin-products-header">
@@ -248,6 +290,38 @@ export default function AdminPreorderCampaigns() {
         <button onClick={handleOpenModal} className="btn-add">
           + Tạo Chiến Dịch Mới
         </button>
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+        {[
+          { key: "all", label: "Tất cả" },
+          { key: "running", label: "Đang chạy" },
+          { key: "ended", label: "Đã kết thúc" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => {
+              setStatusFilter(tab.key);
+              setCurrentPage(1);
+            }}
+            style={{
+              padding: "6px 16px",
+              border:
+                statusFilter === tab.key
+                  ? "2px solid #2563eb"
+                  : "1px solid #d1d5db",
+              borderRadius: "6px",
+              background: statusFilter === tab.key ? "#eff6ff" : "#fff",
+              color: statusFilter === tab.key ? "#2563eb" : "#374151",
+              fontWeight: statusFilter === tab.key ? "bold" : "normal",
+              cursor: "pointer",
+              fontSize: "13px",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="table-container">
@@ -271,34 +345,18 @@ export default function AdminPreorderCampaigns() {
                   Đang tải dữ liệu...
                 </td>
               </tr>
-            ) : campaigns.length === 0 ? (
+            ) : pagedCampaigns.length === 0 ? (
               <tr>
                 <td colSpan="6" className="col-action">
                   Chưa có chiến dịch nào được tìm thấy.
                 </td>
               </tr>
             ) : (
-              campaigns.map((camp) => {
-                // FRONTEND ÉP LẠI TRẠNG THÁI GÁNH LỖI CHO BACKEND
-                const now = new Date();
+              pagedCampaigns.map((camp) => {
                 const startDt = new Date(camp.startDate);
                 const endDt = new Date(camp.endDate);
-                let currentStatus = (camp.status || "").toLowerCase();
-
-                if (
-                  now >= startDt &&
-                  now <= endDt &&
-                  currentStatus === "upcoming"
-                ) {
-                  currentStatus = "active";
-                } else if (now > endDt && currentStatus !== "ended") {
-                  currentStatus = "ended";
-                }
-
-                const isEnded =
-                  currentStatus === "ended" ||
-                  currentStatus === "closed" ||
-                  camp.currentSlots >= camp.maxSlots;
+                const currentStatus = getCampStatus(camp);
+                const isEnded = currentStatus === "ended";
                 const canEndEarly = !isEnded;
 
                 return (
@@ -407,8 +465,9 @@ export default function AdminPreorderCampaigns() {
                       style={{
                         display: "flex",
                         gap: "8px",
-                        flexWrap: "wrap",
+                        flexWrap: "nowrap",
                         justifyContent: "center",
+                        alignItems: "center",
                       }}
                     >
                       <button
@@ -440,7 +499,6 @@ export default function AdminPreorderCampaigns() {
                             cursor: "pointer",
                             fontWeight: "bold",
                             fontSize: "12px",
-                            width: "100%",
                           }}
                         >
                           Dừng Khẩn Cấp
@@ -453,6 +511,49 @@ export default function AdminPreorderCampaigns() {
             )}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px",
+              padding: "16px 0",
+            }}
+          >
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "4px",
+                border: "1px solid #d1d5db",
+                background: currentPage <= 1 ? "#f3f4f6" : "#fff",
+                cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              ← Trước
+            </button>
+            <span style={{ fontWeight: "bold", color: "#374151" }}>
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "4px",
+                border: "1px solid #d1d5db",
+                background: currentPage >= totalPages ? "#f3f4f6" : "#fff",
+                cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              Sau →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* --- MODAL TẠO MỚI CHIẾN DỊCH --- */}

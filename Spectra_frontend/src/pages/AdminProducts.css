@@ -87,6 +87,7 @@
 }
 .col-action {
   text-align: center;
+  white-space: nowrap;
 }
 
 .btn-edit {

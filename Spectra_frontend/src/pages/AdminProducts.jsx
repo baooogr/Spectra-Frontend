@@ -21,6 +21,9 @@ export default function AdminProducts() {
   const [frameImages, setFrameImages] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [expandedRows, setExpandedRows] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const PAGE_SIZE = 10;
 
   // FIX: state chọn màu khi upload ảnh
   const [uploadColorId, setUploadColorId] = useState("");
@@ -102,11 +105,27 @@ export default function AdminProducts() {
   /* ================= FETCH DATA ================= */
   const fetchFrames = async () => {
     try {
-      const res = await fetch("https://myspectra.runasp.net/api/Frames");
-      if (res.ok) {
-        const data = await res.json();
+
+      const token = getToken();
+      const response = await fetch(
+        "https://myspectra.runasp.net/api/Frames/all?page=1&pageSize=100",
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
 
         setAllFrames(data.items || data || []);
+      } else if (response.status === 401 || response.status === 403) {
+        const fallback = await fetch(
+          "https://myspectra.runasp.net/api/Frames?page=1&pageSize=100",
+        );
+        if (fallback.ok) {
+          const fallbackData = await fallback.json();
+          setAllFrames(fallbackData.items || fallbackData || []);
+        }
       }
     } catch (error) {
       console.error("Lỗi fetch Kính", error);
@@ -156,22 +175,22 @@ export default function AdminProducts() {
       if (res.ok) {
         fetchBrands();
         setBrandForm({ brandId: "", brandName: "" });
-      } else alert("Lỗi khi thêm thương hiệu!");
+      } else alert("Failed to add brand!");
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     }
   };
   const handleDeleteBrand = async (id) => {
-    if (!window.confirm("Xóa thương hiệu này?")) return;
+    if (!window.confirm("Delete this brand?")) return;
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Brands/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (res.ok) fetchBrands();
-      else alert("Không thể xóa do đang có Kính thuộc Thương hiệu này.");
+      else alert("Cannot delete: glasses are using this brand.");
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     }
   };
 
@@ -190,13 +209,13 @@ export default function AdminProducts() {
       if (res.ok) {
         fetchMaterials();
         setMaterialForm({ materialId: "", materialName: "" });
-      } else alert("Lỗi khi thêm chất liệu!");
+      } else alert("Failed to add material!");
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     }
   };
   const handleDeleteMaterial = async (id) => {
-    if (!window.confirm("Xóa chất liệu này?")) return;
+    if (!window.confirm("Delete this material?")) return;
     try {
       const res = await fetch(
         `https://myspectra.runasp.net/api/Materials/${id}`,
@@ -206,9 +225,9 @@ export default function AdminProducts() {
         },
       );
       if (res.ok) fetchMaterials();
-      else alert("Không thể xóa do đang có Kính sử dụng chất liệu này.");
+      else alert("Cannot delete: glasses are using this material.");
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     }
   };
 
@@ -230,22 +249,22 @@ export default function AdminProducts() {
       if (res.ok) {
         fetchColors();
         setColorForm({ colorId: "", colorName: "", hexCode: "#000000" });
-      } else alert("Lỗi khi thêm màu sắc!");
+      } else alert("Failed to add color!");
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     }
   };
   const handleDeleteColor = async (id) => {
-    if (!window.confirm("Xóa màu sắc này?")) return;
+    if (!window.confirm("Delete this color?")) return;
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Colors/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (res.ok) fetchColors();
-      else alert("Không thể xóa do đang có Kính sử dụng màu này.");
+      else alert("Cannot delete: glasses are using this color.");
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     }
   };
 
@@ -264,22 +283,22 @@ export default function AdminProducts() {
       if (res.ok) {
         fetchShapes();
         setShapeForm({ shapeId: "", shapeName: "" });
-      } else alert("Lỗi khi thêm kiểu dáng!");
+      } else alert("Failed to add shape!");
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     }
   };
   const handleDeleteShape = async (id) => {
-    if (!window.confirm("Xóa kiểu dáng này?")) return;
+    if (!window.confirm("Delete this shape?")) return;
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Shapes/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       if (res.ok) fetchShapes();
-      else alert("Không thể xóa do đang có Kính sử dụng kiểu dáng này.");
+      else alert("Cannot delete: glasses are using this shape.");
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     }
   };
 
@@ -299,7 +318,10 @@ export default function AdminProducts() {
       if (isChecked) {
         return {
           ...prev,
-          colorVariants: [...prev.colorVariants, { colorId, stockQuantity: 0 }],
+          colorVariants: [
+            ...prev.colorVariants,
+            { colorId, stockQuantity: 0, colorExtraCost: 0 },
+          ],
         };
       } else {
         return {
@@ -317,6 +339,15 @@ export default function AdminProducts() {
       ...prev,
       colorVariants: prev.colorVariants.map((v) =>
         v.colorId === colorId ? { ...v, stockQuantity: Number(quantity) } : v,
+      ),
+    }));
+  };
+
+  const handleColorExtraCostChange = (colorId, cost) => {
+    setFormData((prev) => ({
+      ...prev,
+      colorVariants: prev.colorVariants.map((v) =>
+        v.colorId === colorId ? { ...v, colorExtraCost: Number(cost) } : v,
       ),
     }));
   };
@@ -364,6 +395,7 @@ export default function AdminProducts() {
         frame.frameColors?.map((fc) => ({
           colorId: fc.colorId || fc.color?.colorId,
           stockQuantity: fc.stockQuantity || 0,
+          colorExtraCost: fc.colorExtraCost || 0,
         })) || [],
       minRx:
         frame.minRx !== null && frame.minRx !== undefined ? frame.minRx : "",
@@ -435,14 +467,14 @@ export default function AdminProducts() {
         setFrameImages((prev) => [...prev, newMedia]);
         fetchFrames();
         alert(
-          "Tải ảnh lên thành công!" +
-            (uploadColorId ? ` (Gắn với màu đã chọn)` : " (Ảnh chung)"),
+          "Image uploaded successfully!" +
+            (uploadColorId ? " (Linked to selected color)" : " (General image)"),
         );
       } else {
-        alert("Lỗi upload, kiểm tra backend");
+        alert("Upload failed, please check backend");
       }
     } catch (error) {
-      alert("Lỗi kết nối");
+      alert("Connection error");
     } finally {
       setIsUploading(false);
       e.target.value = null;
@@ -450,7 +482,7 @@ export default function AdminProducts() {
   };
 
   const handleDeleteImage = async (mediaId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa ảnh này?")) return;
+    if (!window.confirm("Are you sure you want to delete this image?")) return;
     try {
       const res = await fetch(
         `https://myspectra.runasp.net/api/FrameMedia/${mediaId}`,
@@ -465,10 +497,10 @@ export default function AdminProducts() {
         );
         fetchFrames();
       } else {
-        alert("Không thể xóa ảnh!");
+        alert("Cannot delete image!");
       }
     } catch (error) {
-      alert("Lỗi kết nối.");
+      alert("Connection error.");
     }
   };
 
@@ -488,26 +520,30 @@ export default function AdminProducts() {
     e.preventDefault();
 
     let errors = {};
-    if (!formData.frameName) errors.frameName = "Vui lòng nhập tên kính";
-    if (!formData.brandId) errors.brandId = "Vui lòng chọn thương hiệu";
-    if (!formData.materialId) errors.materialId = "Vui lòng chọn chất liệu";
-    if (!formData.shapeId) errors.shapeId = "Vui lòng chọn kiểu dáng";
-    if (!formData.size) errors.size = "Vui lòng chọn kích cỡ";
+    if (!formData.frameName) errors.frameName = "Please enter frame name";
+    if (!formData.brandId) errors.brandId = "Please select a brand";
+    if (!formData.materialId) errors.materialId = "Please select a material";
+    if (!formData.shapeId) errors.shapeId = "Please select a shape";
+    if (!formData.size) errors.size = "Please select a size";
 
     const lw = Number(formData.lensWidth || 0);
     const bw = Number(formData.bridgeWidth || 0);
     const tl = Number(formData.templeLength || 0);
     const fw = Number(formData.frameWidth || 0);
-    if (lw <= 0) errors.lensWidth = "Rộng tròng phải > 0";
-    if (bw <= 0) errors.bridgeWidth = "Cầu kính phải > 0";
-    if (tl <= 0) errors.templeLength = "Càng kính phải > 0";
-    if (fw <= 0) errors.frameWidth = "Rộng khung phải > 0";
+    if (lw <= 0) errors.lensWidth = "Lens width must be > 0";
+    if (bw <= 0) errors.bridgeWidth = "Bridge width must be > 0";
+    else if (lw > 0 && bw >= lw)
+      errors.bridgeWidth = "Bridge width must be less than lens width";
+    if (tl <= 0) errors.templeLength = "Temple length must be > 0";
+    if (fw <= 0) errors.frameWidth = "Frame width must be > 0";
+    else if (lw > 0 && fw <= lw)
+      errors.frameWidth = "Total frame width must be greater than lens width";
 
     const minR = parseFloat(formData.minRx);
     const maxR = parseFloat(formData.maxRx);
     if (!isNaN(minR) && !isNaN(maxR) && minR > maxR) {
 
-      errors.rxRange = "Độ Rx tối thiểu không được lớn hơn độ Rx tối đa";
+      errors.rxRange = "Min Rx cannot be greater than Max Rx";
 
     }
 
@@ -515,7 +551,8 @@ export default function AdminProducts() {
     const maxP = parseInt(formData.maxPd);
     if (!isNaN(minP) && !isNaN(maxP) && minP > maxP) {
 
-      errors.pdRange = "Khoảng cách PD tối thiểu không được lớn hơn PD tối đa";
+      errors.pdRange = "Min PD cannot be greater than Max PD";
+
     }
 
     if (Object.keys(errors).length > 0) {
@@ -545,7 +582,6 @@ export default function AdminProducts() {
         const savedFrame = await response.json();
         fetchFrames();
         if (!isEditing && savedFrame?.frameId) {
-          // Switch to edit mode so user can upload images immediately
           setCurrentId(savedFrame.frameId);
           setIsEditing(true);
           setFrameImages(savedFrame.frameMedia || []);
@@ -554,26 +590,29 @@ export default function AdminProducts() {
             savedFrame.frameColors?.[0]?.color?.colorId ||
             "";
           setUploadColorId(firstColorId);
-          alert(
-            "Thêm kính thành công! Bạn có thể upload hình ảnh ngay bây giờ.",
-          );
+          alert("Frame added successfully! You can upload images now.");
         } else {
           setShowModal(false);
-          alert("Cập nhật kính thành công!");
+          alert("Frame updated successfully!");
         }
       } else {
         const errData = await response.json().catch(() => ({}));
-        alert(`Lỗi Backend: ${errData.message || "Kiểm tra lại dữ liệu"}`);
+        alert(`Backend error: ${errData.message || "Please check your data"}`);
       }
 
     } catch (error) {
-      alert(`Lỗi kết nối: ${error.message}`);
+      alert(`Connection error: ${error.message}`);
     }
 
   };
 
   const handleDeleteFrame = async (id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa kính này?")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to hide/disable this frame? It will no longer appear on the homepage but can be restored.",
+      )
+    )
+      return;
     try {
       const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`, {
         method: "DELETE",
@@ -581,10 +620,37 @@ export default function AdminProducts() {
       });
       if (res.ok) {
         fetchFrames();
-        alert("Đã xóa kính thành công!");
+        alert("Frame disabled successfully!");
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data?.message || "Cannot disable this frame");
       }
     } catch (error) {
-      alert(`Lỗi kết nối: ${error.message}`);
+      alert(`Connection error: ${error.message}`);
+    }
+  };
+
+  const handleReactivateFrame = async (id) => {
+    if (!window.confirm("Are you sure you want to reactivate this frame?"))
+      return;
+    try {
+      const res = await fetch(`https://myspectra.runasp.net/api/Frames/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ status: "available" }),
+      });
+      if (res.ok) {
+        fetchFrames();
+        alert("Frame reactivated successfully!");
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data?.message || "Cannot reactivate this frame");
+      }
+    } catch (error) {
+      alert(`Connection error: ${error.message}`);
     }
   };
 
@@ -603,6 +669,21 @@ export default function AdminProducts() {
     .map((v) => colors.find((c) => c.colorId === v.colorId))
     .filter(Boolean);
 
+  const filteredFrames = allFrames
+    .slice()
+    .reverse()
+    .filter((f) => {
+      if (statusFilter === "inactive")
+        return f.status?.toLowerCase() === "inactive";
+      if (statusFilter === "active")
+        return f.status?.toLowerCase() !== "inactive";
+      return true;
+    });
+  const totalPages = Math.ceil(filteredFrames.length / PAGE_SIZE);
+  const pagedFrames = filteredFrames.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   /* ================= RENDER GIAO DIỆN ================= */
   return (
@@ -612,56 +693,96 @@ export default function AdminProducts() {
         style={{ display: "flex", gap: "10px", alignItems: "center" }}
       >
         <h2 className="admin-products-title" style={{ marginRight: "auto" }}>
-          Quản Lý Kính
+          Frames Management
         </h2>
         <button
           className="btn-edit"
           style={{ padding: "8px" }}
           onClick={() => setShowBrandModal(true)}
         >
-          Thương hiệu
+          Brands
         </button>
         <button
           className="btn-edit"
           style={{ padding: "8px" }}
           onClick={() => setShowMaterialModal(true)}
         >
-          Chất liệu
+          Materials
         </button>
         <button
           className="btn-edit"
           style={{ padding: "8px" }}
           onClick={() => setShowColorModal(true)}
         >
-          Màu sắc
+          Colors
         </button>
         <button
           className="btn-edit"
           style={{ padding: "8px" }}
           onClick={() => setShowShapeModal(true)}
         >
-          Kiểu dáng
+          Shapes
         </button>
         <button className="btn-add" onClick={openAddModal}>
-          + Thêm Kính Mới
+          + Add New Frame
         </button>
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+        {[
+          { key: "all", label: "All" },
+          { key: "active", label: "Active" },
+          { key: "inactive", label: "Hidden" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => {
+              setStatusFilter(tab.key);
+              setCurrentPage(1);
+            }}
+            style={{
+              padding: "6px 16px",
+              border:
+                statusFilter === tab.key
+                  ? "2px solid #2563eb"
+                  : "1px solid #d1d5db",
+              borderRadius: "6px",
+              backgroundColor: statusFilter === tab.key ? "#eff6ff" : "#fff",
+              color: statusFilter === tab.key ? "#1d4ed8" : "#6b7280",
+              fontWeight: statusFilter === tab.key ? "bold" : "normal",
+              cursor: "pointer",
+              fontSize: "13px",
+            }}
+          >
+            {tab.label} (
+            {tab.key === "all"
+              ? allFrames.length
+              : allFrames.filter((f) =>
+                  tab.key === "inactive"
+                    ? f.status?.toLowerCase() === "inactive"
+                    : f.status?.toLowerCase() !== "inactive",
+                ).length}
+            )
+          </button>
+        ))}
       </div>
 
       <div className="table-container">
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Tên Kính</th>
-              <th>Thương Hiệu</th>
-              <th>Chất Liệu</th>
-              <th>Giá Base ($)</th>
-              <th>Số lượng Tồn (Tổng)</th>
-              <th>Hành động</th>
+              <th>Frame Name</th>
+              <th>Brand</th>
+              <th>Material</th>
+              <th>Base Price ($)</th>
+              <th>Total Stock</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {allFrames.length > 0 ? (
-              allFrames.map((frame) => {
+            {pagedFrames.length > 0 ? (
+              pagedFrames.map((frame) => {
                 const isExpanded = expandedRows[frame.frameId || frame.id];
                 const totalStock = frame.stockQuantity || 0;
 
@@ -691,6 +812,21 @@ export default function AdminProducts() {
                           ▶
                         </button>
                         {frame.frameName}
+                        {frame.status?.toLowerCase() === "inactive" && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              color: "#fff",
+                              backgroundColor: "#ef4444",
+                              padding: "1px 6px",
+                              borderRadius: "4px",
+                              marginLeft: "6px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            Hidden
+                          </span>
+                        )}
                         <span
                           style={{
                             fontSize: "12px",
@@ -699,7 +835,7 @@ export default function AdminProducts() {
                             fontWeight: "normal",
                           }}
                         >
-                          ({frame.frameColors?.length || 0} màu)
+                          ({frame.frameColors?.length || 0} colors)
                         </span>
                       </td>
                       <td>{frame.brand?.brandName || "N/A"}</td>
@@ -725,17 +861,33 @@ export default function AdminProducts() {
                           className="btn-edit"
                           style={{ padding: "6px 12px" }}
                         >
-                          Sửa chi tiết & Ảnh
+                          Edit Details & Images
                         </button>
-                        <button
-                          onClick={() =>
-                            handleDeleteFrame(frame.frameId || frame.id)
-                          }
-                          className="btn-delete"
-                          style={{ padding: "6px 12px" }}
-                        >
-                          Xóa kính
-                        </button>
+                        {frame.status?.toLowerCase() === "inactive" ? (
+                          <button
+                            onClick={() =>
+                              handleReactivateFrame(frame.frameId || frame.id)
+                            }
+                            className="btn-edit"
+                            style={{
+                              padding: "6px 12px",
+                              backgroundColor: "#059669",
+                              color: "#fff",
+                            }}
+                          >
+                            Reactivate
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleDeleteFrame(frame.frameId || frame.id)
+                            }
+                            className="btn-delete"
+                            style={{ padding: "6px 12px" }}
+                          >
+                            Disable
+                          </button>
+                        )}
                       </td>
                     </tr>
 
@@ -749,7 +901,7 @@ export default function AdminProducts() {
                               color: "#374151",
                             }}
                           >
-                            Các phiên bản màu:
+                            Color variants:
                           </strong>
                           <div
                             style={{
@@ -782,14 +934,14 @@ export default function AdminProducts() {
                                       border: "1px solid #d1d5db",
                                     }}
                                   ></span>
-                                  <span>{fc.color?.colorName || "Màu"}</span>
+                                  <span>{fc.color?.colorName || "Color"}</span>
                                   <span
                                     style={{
                                       color: "#6b7280",
                                       marginLeft: "5px",
                                     }}
                                   >
-                                    | Tồn:{" "}
+                                    | Stock:{" "}
                                     <strong style={{ color: "#111" }}>
                                       {fc.stockQuantity || 0}
                                     </strong>
@@ -803,7 +955,7 @@ export default function AdminProducts() {
                                   fontStyle: "italic",
                                 }}
                               >
-                                Chưa có cấu hình màu sắc.
+                                No color variants configured.
                               </span>
                             )}
                           </div>
@@ -816,12 +968,55 @@ export default function AdminProducts() {
             ) : (
               <tr>
                 <td colSpan="6" style={{ textAlign: "center" }}>
-                  Chưa có dữ liệu.
+                  No data available.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px",
+              padding: "16px 0",
+            }}
+          >
+            <button
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "4px",
+                border: "1px solid #d1d5db",
+                background: currentPage <= 1 ? "#f3f4f6" : "#fff",
+                cursor: currentPage <= 1 ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              ← Previous
+            </button>
+            <span style={{ fontWeight: "bold", color: "#374151" }}>
+              Page {currentPage} / {totalPages}
+            </span>
+            <button
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "4px",
+                border: "1px solid #d1d5db",
+                background: currentPage >= totalPages ? "#f3f4f6" : "#fff",
+                cursor: currentPage >= totalPages ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              Next →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ================= MODAL QUẢN LÝ KÍNH ================= */}
@@ -836,7 +1031,7 @@ export default function AdminProducts() {
               maxWidth: "95%",
             }}
           >
-            <h3>{isEditing ? "Sửa Thông Tin Kính" : "Thêm Kính Mới"}</h3>
+            <h3>{isEditing ? "Edit Frame" : "Add New Frame"}</h3>
             <form onSubmit={handleSaveFrame} className="admin-form" noValidate>
               <h4
                 style={{
@@ -846,11 +1041,11 @@ export default function AdminProducts() {
                   marginBottom: "15px",
                 }}
               >
-                1. Thông tin cơ bản
+                1. Basic Information
               </h4>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Tên Kính:</label>
+                  <label>Frame Name:</label>
                   <input
                     type="text"
                     name="frameName"
@@ -862,7 +1057,8 @@ export default function AdminProducts() {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Thương Hiệu:</label>
+
+                  <label>Brand:</label>
 
                   <select
                     name="brandId"
@@ -875,7 +1071,7 @@ export default function AdminProducts() {
                       border: "1px solid #d1d5db",
                     }}
                   >
-                    <option value="">-- Chọn Thương Hiệu --</option>
+                    <option value="">-- Select Brand --</option>
                     {brands.map((b) => (
                       <option key={b.brandId || b.id} value={b.brandId || b.id}>
                         {b.brandName}
@@ -887,7 +1083,7 @@ export default function AdminProducts() {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Chất Liệu:</label>
+                  <label>Material:</label>
                   <select
                     name="materialId"
                     value={formData.materialId}
@@ -899,7 +1095,7 @@ export default function AdminProducts() {
                       border: "1px solid #d1d5db",
                     }}
                   >
-                    <option value="">-- Chọn Chất Liệu --</option>
+                    <option value="">-- Select Material --</option>
                     {materials.map((m) => (
                       <option
                         key={m.materialId || m.id}
@@ -914,7 +1110,7 @@ export default function AdminProducts() {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Kiểu Dáng:</label>
+                  <label>Shape:</label>
                   <select
                     name="shapeId"
                     value={formData.shapeId}
@@ -926,7 +1122,7 @@ export default function AdminProducts() {
                       border: "1px solid #d1d5db",
                     }}
                   >
-                    <option value="">-- Chọn Kiểu Dáng --</option>
+                    <option value="">-- Select Shape --</option>
                     {shapes.map((s) => (
                       <option key={s.shapeId || s.id} value={s.shapeId || s.id}>
                         {s.shapeName}
@@ -938,7 +1134,7 @@ export default function AdminProducts() {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Giá Base ($):</label>
+                  <label>Base Price ($):</label>
                   <input
                     type="number"
                     name="basePrice"
@@ -948,7 +1144,7 @@ export default function AdminProducts() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Mức cảnh báo sắp hết hàng:</label>
+                  <label>Low stock warning level:</label>
                   <input
                     type="number"
                     name="reorderLevel"
@@ -968,11 +1164,11 @@ export default function AdminProducts() {
                   marginBottom: "15px",
                 }}
               >
-                2. Thông số kích thước
+                2. Dimensions
               </h4>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Kích cỡ quy đổi (Size):</label>
+                  <label>Size:</label>
                   <select
                     name="size"
                     value={
@@ -990,7 +1186,7 @@ export default function AdminProducts() {
                       border: "1px solid #d1d5db",
                     }}
                   >
-                    <option value="">-- Chọn Size --</option>
+                    <option value="">-- Select Size --</option>
                     {sizeOptions.map((s) => (
                       <option key={s} value={s}>
                         {s}
@@ -1002,7 +1198,7 @@ export default function AdminProducts() {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Rộng tròng kính (mm):</label>
+                  <label>Lens Width (mm):</label>
                   <input
                     type="number"
                     name="lensWidth"
@@ -1015,7 +1211,7 @@ export default function AdminProducts() {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Cầu kính (mm):</label>
+                  <label>Bridge Width (mm):</label>
                   <input
                     type="number"
                     name="bridgeWidth"
@@ -1028,7 +1224,7 @@ export default function AdminProducts() {
                   )}
                 </div>
                 <div className="form-group">
-                  <label>Càng kính (mm):</label>
+                  <label>Temple Length (mm):</label>
                   <input
                     type="number"
                     name="templeLength"
@@ -1044,7 +1240,7 @@ export default function AdminProducts() {
                   className="form-group"
                   style={{ gridColumn: "1 / span 2" }}
                 >
-                  <label>Rộng toàn khung kính (mm):</label>
+                  <label>Total Frame Width (mm):</label>
                   <input
                     type="number"
                     name="frameWidth"
@@ -1067,7 +1263,7 @@ export default function AdminProducts() {
                   marginBottom: "15px",
                 }}
               >
-                3. Y tế & Kỹ thuật (Rx, PD & Lens Types)
+                3. Medical & Technical (Rx, PD & Lens Types)
               </h4>
               <div
                 className="form-group"
@@ -1086,7 +1282,7 @@ export default function AdminProducts() {
                     display: "block",
                   }}
                 >
-                  Khoảng độ cận/viễn hỗ trợ (RX Range)
+                  Supported Prescription Range (RX)
                 </label>
                 <div style={{ display: "flex", gap: "15px" }}>
                   <div style={{ flex: 1 }}>
@@ -1129,7 +1325,7 @@ export default function AdminProducts() {
                     display: "block",
                   }}
                 >
-                  Khoảng cách đồng tử hỗ trợ (PD Range)
+                  Supported Pupillary Distance Range (PD)
                 </label>
                 <div style={{ display: "flex", gap: "15px" }}>
                   <div style={{ flex: 1 }}>
@@ -1179,7 +1375,7 @@ export default function AdminProducts() {
                     display: "block",
                   }}
                 >
-                  Loại tròng kính tương thích (Lens Types)
+                  Compatible Lens Types
                 </label>
                 <div
                   style={{
@@ -1220,7 +1416,7 @@ export default function AdminProducts() {
                           }
                         />
                         <span style={{ fontSize: "14px" }}>
-                          {lt.lensSpecification || lt.name || "Loại tròng"}
+                          {lt.lensSpecification || lt.name || "Lens type"}
                         </span>
                       </label>
                     );
@@ -1238,7 +1434,7 @@ export default function AdminProducts() {
                   marginBottom: "15px",
                 }}
               >
-                4. Biến thể Màu sắc & Kho
+                4. Color Variants & Stock
               </h4>
               <div
                 className="form-group"
@@ -1254,7 +1450,7 @@ export default function AdminProducts() {
                   style={{
                     display: "grid",
                     gridTemplateColumns: "1fr 1fr",
-                    gap: "15px",
+                    gap: "10px",
                   }}
                 >
                   {colors.map((c) => {
@@ -1267,14 +1463,16 @@ export default function AdminProducts() {
                         key={c.colorId}
                         style={{
                           display: "flex",
-                          alignItems: "center",
-                          gap: "15px",
+                          alignItems: isSelected ? "flex-start" : "center",
+                          flexDirection: isSelected ? "column" : "row",
+                          gap: isSelected ? "8px" : "15px",
                           padding: "8px",
                           background: isSelected ? "#fff" : "transparent",
                           borderRadius: "6px",
                           border: isSelected
                             ? "1px solid #cbd5e1"
                             : "1px solid transparent",
+                          gridColumn: isSelected ? "1 / -1" : "auto",
                         }}
                       >
                         <label
@@ -1314,35 +1512,83 @@ export default function AdminProducts() {
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              gap: "8px",
+                              gap: "12px",
                             }}
                           >
-                            <label
+                            <div
                               style={{
-                                fontSize: "13px",
-                                color: "#4b5563",
-                                margin: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
                               }}
                             >
-                              Tồn kho:
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              value={variant.stockQuantity}
-                              onChange={(e) =>
-                                handleColorStockQuantityChange(
-                                  c.colorId,
-                                  e.target.value,
-                                )
-                              }
+                              <label
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#4b5563",
+                                  margin: 0,
+                                }}
+                              >
+                                Stock:
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={variant.stockQuantity}
+                                onChange={(e) =>
+                                  handleColorStockQuantityChange(
+                                    c.colorId,
+                                    e.target.value,
+                                  )
+                                }
+                                style={{
+                                  width: "70px",
+                                  padding: "6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #cbd5e1",
+                                }}
+                              />
+                            </div>
+                            <div
                               style={{
-                                width: "80px",
-                                padding: "6px",
-                                borderRadius: "4px",
-                                border: "1px solid #cbd5e1",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
                               }}
-                            />
+                            >
+                              <label
+                                style={{
+                                  fontSize: "13px",
+                                  color: "#4b5563",
+                                  margin: 0,
+                                }}
+                              >
+                                Extra cost:
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={variant.colorExtraCost || 0}
+                                onChange={(e) =>
+                                  handleColorExtraCostChange(
+                                    c.colorId,
+                                    e.target.value,
+                                  )
+                                }
+                                style={{
+                                  width: "90px",
+                                  padding: "6px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #cbd5e1",
+                                }}
+                                placeholder="0"
+                              />
+                              <span
+                                style={{ fontSize: "12px", color: "#9ca3af" }}
+                              >
+                                ₫
+                              </span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1363,7 +1609,7 @@ export default function AdminProducts() {
                       marginBottom: "15px",
                     }}
                   >
-                    5. Thư viện hình ảnh theo màu
+                    5. Image Gallery by Color
                   </h4>
                   <div
                     className="image-management"
@@ -1383,7 +1629,7 @@ export default function AdminProducts() {
                               marginBottom: "15px",
                             }}
                           >
-                            Chưa có ảnh nào. Tải lên ảnh bên dưới.
+                            No images yet. Upload below.
                           </p>
                         );
 
@@ -1391,7 +1637,7 @@ export default function AdminProducts() {
                         const colorInfo =
                           colorId === "__no_color__"
                             ? {
-                                colorName: "Ảnh chung (không gắn màu)",
+                                colorName: "General (no color)",
                                 hexCode: "#e5e7eb",
                               }
                             : colors.find((c) => c.colorId === colorId) || {
@@ -1436,7 +1682,7 @@ export default function AdminProducts() {
                               <span
                                 style={{ fontSize: "12px", color: "#9ca3af" }}
                               >
-                                ({imgs.length} ảnh)
+                                ({imgs.length} images)
                               </span>
                             </div>
                             <div
@@ -1516,7 +1762,7 @@ export default function AdminProducts() {
                           color: "#1e40af",
                         }}
                       >
-                        Tải ảnh mới lên
+                        Upload New Image
                       </p>
                       <div
                         style={{
@@ -1540,7 +1786,7 @@ export default function AdminProducts() {
                               fontWeight: "bold",
                             }}
                           >
-                            Gắn với màu:
+                            Link to color:
                           </label>
                           <select
                             value={uploadColorId}
@@ -1554,7 +1800,7 @@ export default function AdminProducts() {
                             }}
                           >
                             <option value="">
-                              — Ảnh chung (không gắn màu) —
+                              — General (no color) —
                             </option>
                             {currentFrameColors.map((c) => (
                               <option key={c.colorId} value={c.colorId}>
@@ -1577,7 +1823,7 @@ export default function AdminProducts() {
                               fontWeight: "bold",
                             }}
                           >
-                            Chọn file:
+                            Select file:
                           </label>
                           <input
                             type="file"
@@ -1595,7 +1841,7 @@ export default function AdminProducts() {
                               fontWeight: "bold",
                             }}
                           >
-                            Đang tải lên...
+                            Uploading...
                           </span>
                         )}
                       </div>
@@ -1606,8 +1852,7 @@ export default function AdminProducts() {
                           color: "#6b7280",
                         }}
                       >
-                        Chọn màu để ảnh hiển thị đúng khi khách chọn màu đó. Nếu
-                        không chọn màu, ảnh sẽ dùng làm ảnh mặc định.
+                        Select a color so the image appears when customers choose that color. If no color is selected, the image will be used as the default.
                       </p>
                     </div>
                   </div>
@@ -1630,10 +1875,10 @@ export default function AdminProducts() {
                   onClick={() => setShowModal(false)}
                   className="btn-cancel"
                 >
-                  Hủy
+                  Cancel
                 </button>
                 <button type="submit" className="btn-save">
-                  Lưu Thông Tin Kính
+                  Save Frame
                 </button>
               </div>
             </form>
@@ -1649,14 +1894,14 @@ export default function AdminProducts() {
             className="modal-content"
             style={{ width: "500px", maxWidth: "90%" }}
           >
-            <h3>Quản Lý Thương Hiệu</h3>
+            <h3>Brand Management</h3>
             <form
               onSubmit={handleAddBrand}
               style={{ display: "flex", gap: "10px", marginBottom: "20px" }}
             >
               <input
                 type="text"
-                placeholder="Tên thương hiệu mới..."
+                placeholder="New brand name..."
                 value={brandForm.brandName}
                 onChange={(e) =>
                   setBrandForm({ ...brandForm, brandName: e.target.value })
@@ -1669,7 +1914,7 @@ export default function AdminProducts() {
                 }}
               />
               <button type="submit" className="btn-add">
-                Thêm
+                Add
               </button>
             </form>
             <div
@@ -1703,13 +1948,13 @@ export default function AdminProducts() {
                         fontWeight: "bold",
                       }}
                     >
-                      Xóa
+                      Delete
                     </button>
                   </div>
                 ))
               ) : (
                 <p style={{ textAlign: "center", color: "#888" }}>
-                  Chưa có dữ liệu
+                  No data available
                 </p>
               )}
             </div>
@@ -1718,7 +1963,7 @@ export default function AdminProducts() {
                 onClick={() => setShowBrandModal(false)}
                 className="btn-cancel"
               >
-                Đóng
+                Close
               </button>
             </div>
           </div>
@@ -1731,14 +1976,14 @@ export default function AdminProducts() {
             className="modal-content"
             style={{ width: "500px", maxWidth: "90%" }}
           >
-            <h3>Quản Lý Chất Liệu</h3>
+            <h3>Material Management</h3>
             <form
               onSubmit={handleAddMaterial}
               style={{ display: "flex", gap: "10px", marginBottom: "20px" }}
             >
               <input
                 type="text"
-                placeholder="Tên chất liệu mới..."
+                placeholder="New material name..."
                 value={materialForm.materialName}
                 onChange={(e) =>
                   setMaterialForm({
@@ -1754,7 +1999,7 @@ export default function AdminProducts() {
                 }}
               />
               <button type="submit" className="btn-add">
-                Thêm
+                Add
               </button>
             </form>
             <div
@@ -1788,13 +2033,13 @@ export default function AdminProducts() {
                         fontWeight: "bold",
                       }}
                     >
-                      Xóa
+                      Delete
                     </button>
                   </div>
                 ))
               ) : (
                 <p style={{ textAlign: "center", color: "#888" }}>
-                  Chưa có dữ liệu
+                  No data available
                 </p>
               )}
             </div>
@@ -1803,7 +2048,7 @@ export default function AdminProducts() {
                 onClick={() => setShowMaterialModal(false)}
                 className="btn-cancel"
               >
-                Đóng
+                Close
               </button>
             </div>
           </div>
@@ -1816,14 +2061,14 @@ export default function AdminProducts() {
             className="modal-content"
             style={{ width: "500px", maxWidth: "90%" }}
           >
-            <h3>Quản Lý Kiểu Dáng</h3>
+            <h3>Shape Management</h3>
             <form
               onSubmit={handleAddShape}
               style={{ display: "flex", gap: "10px", marginBottom: "20px" }}
             >
               <input
                 type="text"
-                placeholder="Tên kiểu dáng mới..."
+                placeholder="New shape name..."
                 value={shapeForm.shapeName}
                 onChange={(e) =>
                   setShapeForm({ ...shapeForm, shapeName: e.target.value })
@@ -1836,7 +2081,7 @@ export default function AdminProducts() {
                 }}
               />
               <button type="submit" className="btn-add">
-                Thêm
+                Add
               </button>
             </form>
             <div
@@ -1870,13 +2115,13 @@ export default function AdminProducts() {
                         fontWeight: "bold",
                       }}
                     >
-                      Xóa
+                      Delete
                     </button>
                   </div>
                 ))
               ) : (
                 <p style={{ textAlign: "center", color: "#888" }}>
-                  Chưa có dữ liệu
+                  No data available
                 </p>
               )}
             </div>
@@ -1885,7 +2130,7 @@ export default function AdminProducts() {
                 onClick={() => setShowShapeModal(false)}
                 className="btn-cancel"
               >
-                Đóng
+                Close
               </button>
             </div>
           </div>
@@ -1898,7 +2143,7 @@ export default function AdminProducts() {
             className="modal-content"
             style={{ width: "500px", maxWidth: "90%" }}
           >
-            <h3>Quản Lý Màu Sắc</h3>
+            <h3>Color Management</h3>
             <form
               onSubmit={handleAddColor}
               style={{
@@ -1924,7 +2169,7 @@ export default function AdminProducts() {
               />
               <input
                 type="text"
-                placeholder="Tên màu (VD: Đen nháp)..."
+                placeholder="Color name (e.g. Matte Black)..."
                 value={colorForm.colorName}
                 onChange={(e) =>
                   setColorForm({ ...colorForm, colorName: e.target.value })
@@ -1937,7 +2182,7 @@ export default function AdminProducts() {
                 }}
               />
               <button type="submit" className="btn-add">
-                Thêm
+                Add
               </button>
             </form>
             <div
@@ -1990,13 +2235,13 @@ export default function AdminProducts() {
                         fontWeight: "bold",
                       }}
                     >
-                      Xóa
+                      Delete
                     </button>
                   </div>
                 ))
               ) : (
                 <p style={{ textAlign: "center", color: "#888" }}>
-                  Chưa có dữ liệu
+                  No data available
                 </p>
               )}
             </div>
@@ -2005,7 +2250,7 @@ export default function AdminProducts() {
                 onClick={() => setShowColorModal(false)}
                 className="btn-cancel"
               >
-                Đóng
+                Close
               </button>
             </div>
           </div>

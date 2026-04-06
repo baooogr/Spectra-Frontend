@@ -22,10 +22,13 @@ export { useBrands } from "./hooks/useBrands";
 export { useColors } from "./hooks/useColors";
 
 // Hooks - Lens
-export { useLensTypes, useLensFeatures } from "./hooks/useLens";
+export { useLensTypes, useLensFeatures, useLensIndices } from "./hooks/useLens";
 
 // Hooks - User
 export { useCurrentUser, useUsers } from "./hooks/useUser";
 
 // Hooks - Orders
 export { useMyOrders, useOrders, useOrder } from "./hooks/useOrders";
+
+// Hooks - Exchange Rate
+export { useExchangeRate } from "./hooks/useExchangeRate";

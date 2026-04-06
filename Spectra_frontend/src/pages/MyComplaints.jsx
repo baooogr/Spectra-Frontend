@@ -110,13 +110,13 @@ export default function MyComplaints() {
           }}
         >
           <div>
-            <h2 style={{ margin: 0 }}>Khiếu nại của tôi</h2>
+            <h2 style={{ margin: 0 }}>Yêu cầu đổi hàng</h2>
             <p style={{ color: "#6b7280", fontSize: "14px", marginTop: "4px" }}>
-              Quản lý các yêu cầu trả hàng, đổi hàng, bảo hành
+              Quản lý các yêu cầu đổi hàng của bạn
             </p>
           </div>
           <Link
-            to="/complaints/new"
+            to="/orders"
             style={{
               padding: "10px 20px",
               background: "#111827",
@@ -127,7 +127,7 @@ export default function MyComplaints() {
               fontSize: "14px",
             }}
           >
-            + Tạo khiếu nại mới
+            Xem đơn hàng để đổi hàng
           </Link>
         </div>
       </div>

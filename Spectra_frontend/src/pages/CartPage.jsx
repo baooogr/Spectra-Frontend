@@ -3,10 +3,13 @@ import React, { useMemo } from "react";
 import "./CartPage.css";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useExchangeRate } from "../api";
+import { formatVNDNumber, roundVND } from "../utils/validation";
 
 export default function CartPage() {
   const navigate = useNavigate();
   const { cartItems, updateQty, removeItem } = useCart();
+  const { rate: exchangeRate } = useExchangeRate();
 
   const subtotal = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -18,12 +21,8 @@ export default function CartPage() {
       currency: "USD",
     }).format(n);
   const formatVND = (usd) => {
-    const vnd = usd * 25400;
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-      currencyDisplay: "code",
-    }).format(vnd);
+    const vnd = usd * exchangeRate;
+    return `${formatVNDNumber(vnd)} VND`;
   };
 
   const goCheckout = () => {
