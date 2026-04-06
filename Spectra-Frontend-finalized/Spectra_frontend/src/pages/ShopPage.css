@@ -1,0 +1,209 @@
+/* ===== SPECTRA SHOP PAGE — NEO-BRUTALISM ===== */
+.shop-page {
+  padding: 32px 24px 60px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.shop-header {
+  margin-bottom: 32px;
+  border-bottom: var(--border-thick);
+  padding-bottom: 20px;
+}
+
+.shop-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 900;
+  font-family: var(--font-display);
+  color: var(--color-brand-charcoal);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.shop-search-info {
+  margin-top: 8px;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+.shop-search-term {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+/* Layout */
+.shop-content {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* Sidebar Filter */
+.shop-filter {
+  background: var(--color-surface);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-md);
+  padding: 24px;
+  position: sticky;
+  top: 100px;
+}
+
+.shop-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shop-filter-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-brand-charcoal);
+}
+
+.shop-clear-btn {
+  font-size: 12px;
+  color: var(--color-error);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.shop-clear-btn:hover {
+  text-decoration: underline;
+}
+
+.shop-filter-divider {
+  border-bottom: var(--border-thin);
+  margin: 14px 0 20px;
+}
+
+.filter-group {
+  margin-bottom: 24px;
+}
+
+.filter-group h4 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-secondary);
+  border-bottom: var(--border-thin);
+  padding-bottom: 8px;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.filter-label:hover {
+  color: var(--color-primary-dark);
+}
+
+.filter-label input[type="checkbox"],
+.filter-label input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.filter-loading {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Product Grid */
+.shop-products {
+  min-height: 400px;
+}
+
+.shop-status {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--color-surface);
+  border: var(--border-thin);
+  box-shadow: var(--shadow-sm);
+}
+
+.shop-status p {
+  color: var(--color-text-muted);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.shop-status--error p {
+  color: var(--color-error);
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+/* Pagination */
+.shop-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 40px;
+}
+
+.page-btn {
+  padding: 10px 16px;
+  border: var(--border-thin);
+  background: var(--color-surface);
+  color: var(--color-brand-charcoal);
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: var(--transition-fast);
+}
+
+.page-btn:hover:not(:disabled) {
+  background: var(--color-brand-yellow);
+  box-shadow: var(--shadow-xs);
+  transform: translate(-1px, -1px);
+}
+
+.page-btn.active {
+  background: var(--color-brand-charcoal);
+  color: var(--color-brand-yellow);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .shop-content {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-filter {
+    position: static;
+  }
+}

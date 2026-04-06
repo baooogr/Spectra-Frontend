@@ -1,0 +1,176 @@
+/* ===== SPECTRA MY COMPLAINTS — NEO-BRUTALISM ===== */
+.mc-container {
+  max-width: 960px;
+  margin: 30px auto;
+  padding: 24px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.mc-header h2 {
+  margin: 0 0 4px;
+  font-size: 28px;
+  font-family: var(--font-display);
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mc-loading,
+.mc-error,
+.mc-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-text-muted);
+}
+
+.mc-error {
+  color: var(--color-error);
+}
+
+.mc-empty p {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+/* Filter tabs */
+.mc-filters {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+
+.mc-filter-btn {
+  padding: 7px 18px;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: var(--transition-fast);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mc-filter-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.mc-filter-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Complaint cards */
+.mc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mc-card {
+  background: var(--color-surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+}
+
+.mc-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translate(-2px, -2px);
+}
+
+.mc-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mc-card-top > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mc-type-badge {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-lighter);
+  padding: 4px 14px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mc-date {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.mc-reason {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+  line-height: 1.6;
+}
+
+.mc-staff-note {
+  font-size: 13px;
+  color: var(--color-primary-dark);
+  background: var(--color-primary-lighter);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  border: var(--border-thin);
+  border-left: 4px solid var(--color-primary);
+}
+
+.mc-card-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.mc-detail-link {
+  font-size: 14px;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: var(--transition-fast);
+}
+
+.mc-detail-link:hover {
+  text-decoration: underline;
+  color: var(--color-primary-dark);
+}
+
+.mc-edit-link {
+  font-size: 13px;
+  color: #f59e0b;
+  text-decoration: none;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: var(--transition-fast);
+}
+
+.mc-edit-link:hover {
+  text-decoration: underline;
+}

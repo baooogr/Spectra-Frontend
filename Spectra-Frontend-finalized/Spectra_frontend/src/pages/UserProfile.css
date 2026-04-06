@@ -1,0 +1,113 @@
+/* ===== SPECTRA USER PROFILE ===== */
+.profile-container {
+  max-width: 620px;
+  margin: 48px auto;
+  padding: 36px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  border: var(--border-thick);
+  animation: fadeInUp 0.5s ease-out;
+}
+.profile-title {
+  text-align: center;
+  margin-bottom: 24px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.profile-msg {
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: 800;
+}
+.profile-msg.success {
+  background-color: #ecfdf5;
+  color: #059669;
+  border: var(--border-thin);
+  border-color: #059669;
+}
+.profile-msg.error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: var(--border-thin);
+  border-color: #dc2626;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.form-label {
+  display: block;
+  font-weight: 800;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  box-sizing: border-box;
+  background: var(--color-bg);
+  transition: var(--transition-fast);
+}
+.form-input:focus {
+  border-color: var(--color-brand-charcoal);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  outline: none;
+}
+.form-input:disabled {
+  background-color: var(--color-bg);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.profile-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+.profile-info-text {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+.profile-status {
+  color: var(--color-success);
+  font-weight: 800;
+}
+
+.profile-btn-save {
+  padding: 14px;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 800;
+  border: var(--border-thick);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  margin-top: 10px;
+  transition: var(--transition-base);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.profile-btn-save:disabled {
+  background: var(--color-text-muted);
+  cursor: not-allowed;
+}
+.profile-btn-save:not(:disabled):hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}

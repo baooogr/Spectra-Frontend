@@ -1,0 +1,120 @@
+/* ===== SPECTRA ORDER DETAIL — NEO-BRUTALISM ===== */
+.order-detail-container {
+  max-width: 960px;
+  margin: 50px auto;
+  background: var(--color-surface);
+  padding: 36px 40px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: var(--border-thick);
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.order-detail-container h2 {
+  font-size: 26px;
+  font-weight: 900;
+  margin-bottom: 24px;
+  font-family: var(--font-display);
+  color: var(--color-brand-charcoal);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.order-detail-container p {
+  font-size: 15px;
+  margin: 8px 0;
+  color: var(--color-text-secondary);
+}
+
+.order-detail-container p b {
+  color: var(--color-text);
+  min-width: 160px;
+  display: inline-block;
+  font-weight: 800;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 900;
+  margin: 36px 0 16px;
+  font-family: var(--font-display);
+  color: var(--color-brand-charcoal);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.order-table-wrapper {
+  overflow-x: auto;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: var(--border-thick);
+}
+
+.order-table thead {
+  background: var(--color-primary-lighter);
+}
+
+.order-table th,
+.order-table td {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.order-table th {
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
+  border-bottom: var(--border-thick);
+}
+
+.order-table tbody tr {
+  border-bottom: var(--border-thin);
+  transition: var(--transition-fast);
+}
+
+.order-table tbody tr:hover {
+  background: var(--color-primary-lighter);
+}
+
+.order-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.order-table tbody td {
+  color: var(--color-text-secondary);
+}
+
+.order-table td:last-child,
+.order-table th:last-child {
+  text-align: right;
+}
+
+.order-grand-total {
+  text-align: right;
+  margin-top: 24px;
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--color-primary);
+}
+
+.payment-status {
+  font-weight: 800;
+}
+.payment-status.completed {
+  color: var(--color-success);
+}
+.payment-status.pending {
+  color: var(--color-warning);
+}
+.payment-status.failed {
+  color: var(--color-error);
+}

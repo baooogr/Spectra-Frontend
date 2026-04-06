@@ -1,0 +1,143 @@
+/* ===== SPECTRA ADMIN USERS — NEO-BRUTALISM ===== */
+.admin-users-container {
+  padding-bottom: 40px;
+}
+.admin-users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.admin-users-title {
+  margin: 0;
+  color: var(--color-brand-charcoal);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.btn-refresh {
+  padding: 8px 18px;
+  background: var(--color-primary);
+  color: white;
+  border: var(--border-thick);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.btn-refresh:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.table-container {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  border: var(--border-thick);
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.admin-table thead {
+  background: var(--color-brand-yellow);
+  border-bottom: var(--border-thick);
+}
+.admin-table th {
+  padding: 15px 16px;
+  color: var(--color-brand-charcoal);
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.admin-table tbody tr {
+  border-bottom: var(--border-thin);
+  transition: background 0.15s;
+}
+.admin-table tbody tr:hover {
+  background: var(--color-brand-cream);
+}
+.admin-table td {
+  padding: 15px 16px;
+  color: var(--color-text-secondary);
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.user-avatar {
+  width: 42px;
+  height: 42px;
+  background: var(--color-brand-yellow);
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  color: var(--color-brand-charcoal);
+  font-weight: 900;
+}
+.user-name {
+  margin: 0;
+  font-weight: 800;
+  color: var(--color-brand-charcoal);
+}
+.user-email {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.select-control {
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+  outline: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  background: var(--color-brand-cream);
+  transition: box-shadow 0.15s;
+}
+.select-control:focus {
+  border-color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-sm);
+}
+
+.select-role.admin {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #b91c1c;
+  border-width: 2px;
+}
+.select-role.customer {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #047857;
+  border-width: 2px;
+}
+
+.select-status.active {
+  color: #047857;
+}
+.select-status.inactive,
+.select-status.banned {
+  color: #dc2626;
+}

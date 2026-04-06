@@ -1,0 +1,250 @@
+/* ===== SPECTRA CART PAGE — Neo-Brutalism ===== */
+.cart {
+  background: var(--color-bg);
+  min-height: 100vh;
+  padding: 32px 16px;
+}
+
+.cart__container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.cart__title {
+  margin: 0 0 16px;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--color-brand-charcoal);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cart__grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.cart__left,
+.cart__right {
+  background: var(--color-surface);
+  border: var(--border-thick);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+}
+
+.cart__empty {
+  padding: 40px 8px;
+  text-align: center;
+  color: var(--color-brand-charcoal);
+  font-weight: 800;
+}
+.cart__empty small {
+  color: var(--color-text-muted);
+}
+
+.cart__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 86px 1fr 28px;
+  gap: 12px;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.cart-item:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.cart-item__img {
+  width: 86px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: var(--border-thin);
+}
+
+.cart-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cart-item__name {
+  font-weight: 800;
+  color: var(--color-brand-charcoal);
+}
+
+.cart-item__variant {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.cart-item__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.cart-item__price {
+  font-weight: 900;
+  color: var(--color-primary-dark);
+}
+
+.qty {
+  display: inline-flex;
+  align-items: center;
+  border: var(--border-thin);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  height: 34px;
+}
+
+.qty__btn {
+  width: 36px;
+  height: 34px;
+  border: 0;
+  background: var(--color-brand-cream);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 800;
+  transition: background 0.15s;
+}
+
+.qty__btn:hover {
+  background: var(--color-brand-yellow);
+  color: var(--color-brand-charcoal);
+}
+
+.qty__value {
+  width: 34px;
+  text-align: center;
+  font-weight: 800;
+  color: var(--color-brand-charcoal);
+}
+
+.cart-item__remove {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 22px;
+  color: var(--color-text-muted);
+  align-self: start;
+  transition: color 0.15s;
+}
+.cart-item__remove:hover {
+  color: var(--color-error);
+}
+
+.cart__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.summary__title {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--color-brand-charcoal);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.summary__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  color: var(--color-brand-charcoal);
+  font-weight: 600;
+}
+
+.summary__divider {
+  height: 2px;
+  background: var(--color-brand-charcoal);
+  margin: 6px 0;
+}
+
+.summary__row--total {
+  font-weight: 900;
+  font-size: 16px;
+  color: var(--color-primary-dark);
+}
+
+.summary__note {
+  display: block;
+  margin-top: 10px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.btn {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 12px 18px;
+  border: var(--border-thick);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn--ghost {
+  background: var(--color-surface);
+  color: var(--color-brand-charcoal);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-xs);
+}
+
+.btn--ghost:hover {
+  background: var(--color-brand-cream);
+  color: var(--color-brand-charcoal);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn--full {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .cart__grid {
+    grid-template-columns: 1fr;
+  }
+}

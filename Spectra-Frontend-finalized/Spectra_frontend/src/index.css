@@ -1,0 +1,176 @@
+/* ===== SPECTRA GLOBAL DESIGN SYSTEM — NEO-BRUTALISM ===== */
+:root {
+  /* Primary Palette — Sage Green Theme */
+  --color-primary: #97b68a;
+  --color-primary-light: #b8d4ac;
+  --color-primary-lighter: #e8f0e4;
+  --color-primary-dark: #5d8653;
+
+  /* Brand extensions */
+  --color-brand-sage: #97b68a;
+  --color-brand-sage-light: #b8d4ac;
+  --color-brand-sage-dark: #7a9e6c;
+  --color-brand-forest: #5d8653;
+  --color-brand-mint: #c9e2bf;
+  --color-brand-olive: #6b8f5e;
+  --color-brand-cream: #f8faf6;
+  --color-brand-charcoal: #1a1a2e;
+  --color-brand-yellow: #facc15;
+
+  /* Accent */
+  --color-accent: #facc15;
+  --color-accent-light: #fde68a;
+  --color-accent-bg: #fefce8;
+
+  /* Neutrals */
+  --color-bg: #fafaf9;
+  --color-surface: #ffffff;
+  --color-border: #1a1a2e;
+  --color-border-light: #d4e4ce;
+  --color-text: #1a1a2e;
+  --color-text-secondary: #5a7a4d;
+  --color-text-muted: #6b7280;
+
+  /* Status */
+  --color-success: #5d8653;
+  --color-warning: #facc15;
+  --color-error: #ef4444;
+  --color-info: #97b68a;
+
+  /* Neo-Brutalism Shadows — hard offset, no blur */
+  --shadow-xs: 2px 2px 0px #1a1a2e;
+  --shadow-sm: 3px 3px 0px #1a1a2e;
+  --shadow-md: 4px 4px 0px #1a1a2e;
+  --shadow-lg: 6px 6px 0px #1a1a2e;
+  --shadow-xl: 8px 8px 0px #1a1a2e;
+  --shadow-glow: 4px 4px 0px #97b68a;
+
+  /* Radii — Neo-Brutalism: slightly rounded */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Neo-Brutalism border */
+  --border-thick: 3px solid #1a1a2e;
+  --border-thin: 2px solid #1a1a2e;
+
+  /* Transitions */
+  --transition-fast: 0.1s ease;
+  --transition-base: 0.15s ease;
+  --transition-slow: 0.25s ease;
+}
+
+/* ===== RESET & BASE ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* ===== UTILITY ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ===== SCROLLBAR STYLING ===== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+  border-left: var(--border-thin);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border: 2px solid #1a1a2e;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-dark);
+}
+
+/* ===== SELECTION ===== */
+::selection {
+  background-color: var(--color-brand-yellow);
+  color: var(--color-text);
+}

@@ -1,0 +1,300 @@
+/* ===== SPECTRA ADMIN DASHBOARD — NEO-BRUTALISM ===== */
+.admin-dashboard-container {
+  padding-bottom: 40px;
+}
+.admin-dashboard-title {
+  margin-bottom: 24px;
+  color: var(--color-text);
+  margin-top: 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+
+/* Filters */
+.dashboard-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+  background: var(--color-surface);
+  padding: 22px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 24px;
+  border: var(--border-thick);
+}
+.dashboard-filters .filter-group {
+  display: flex;
+  gap: 15px;
+  padding-right: 20px;
+  border-right: var(--border-thick);
+}
+.filter-item {
+  display: flex;
+  flex-direction: column;
+}
+.filter-item label {
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.filter-item input,
+.filter-item select {
+  padding: 9px 12px;
+  border: var(--border-thin);
+  outline: none;
+  transition: var(--transition-fast);
+  background: var(--color-bg);
+  font-weight: 600;
+}
+.filter-item input:focus,
+.filter-item select:focus {
+  border-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-xs);
+}
+.filter-item input {
+  width: 140px;
+}
+.filter-item select {
+  width: 120px;
+}
+
+.btn-filter {
+  padding: 10px 24px;
+  background: var(--color-brand-sage);
+  color: var(--color-brand-charcoal);
+  border: var(--border-thin);
+  cursor: pointer;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: var(--shadow-xs);
+  transition: var(--transition-fast);
+}
+.btn-filter:hover {
+  background: var(--color-brand-yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Messages */
+.dashboard-msg {
+  text-align: center;
+  padding: 20px;
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  border: var(--border-thin);
+}
+.msg-loading {
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+}
+.msg-error {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+/* Summary Cards */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.summary-card {
+  background: var(--color-surface);
+  padding: 24px;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+.summary-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}
+.summary-card:nth-child(1) {
+  border-left: 6px solid var(--color-brand-sage);
+}
+.summary-card:nth-child(2) {
+  border-left: 6px solid var(--color-brand-yellow);
+}
+.summary-card:nth-child(3) {
+  border-left: 6px solid var(--color-brand-forest);
+}
+.summary-card:nth-child(4) {
+  border-left: 6px solid var(--color-brand-olive);
+}
+.summary-card:nth-child(5) {
+  border-left: 6px solid var(--color-brand-mint);
+}
+.summary-card:nth-child(6) {
+  border-left: 6px solid #8b5cf6;
+}
+.summary-card.card-preorder {
+  border-left: 6px solid #f59e0b;
+  background: linear-gradient(135deg, var(--color-surface) 90%, #fef3c720);
+}
+.card-title {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 800;
+}
+.card-value {
+  font-size: 30px;
+  font-weight: 900;
+  margin: 10px 0 0 0;
+  color: var(--color-text);
+}
+.card-value.highlight {
+  color: var(--color-brand-forest);
+}
+
+/* Glasses sold breakdown */
+.card-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.breakdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.breakdown-dot.dot-order {
+  background-color: #3b82f6;
+}
+.breakdown-dot.dot-preorder {
+  background-color: #f59e0b;
+}
+
+/* Main Grid */
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+.main-left-column,
+.main-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  background: var(--color-surface);
+  padding: 24px;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.chart-title {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--color-text);
+  font-size: 18px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.chart-wrapper {
+  width: 100%;
+  height: 300px;
+}
+.pie-wrapper {
+  width: 100%;
+  height: 250px;
+}
+.empty-data-msg {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 20px 0;
+  font-weight: 600;
+}
+
+/* Top 10 List */
+.top-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.top-item {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--color-border-light);
+  padding-bottom: 12px;
+  transition: var(--transition-fast);
+}
+.top-item:hover {
+  padding-left: 4px;
+}
+.top-item-index {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 13px;
+  margin-right: 14px;
+  border: var(--border-thin);
+}
+.top-item-index.top-3 {
+  background: var(--color-brand-yellow);
+  color: var(--color-brand-charcoal);
+  box-shadow: var(--shadow-xs);
+}
+.top-item-index.normal {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+.top-item-name {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: 14px;
+}
+.top-item-sold {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.top-item-sold span {
+  font-weight: 800;
+  color: var(--color-brand-forest);
+}
