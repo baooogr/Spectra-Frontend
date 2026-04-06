@@ -108,7 +108,7 @@ export default function UserProfile() {
         });
       }
     } catch (err) {
-      console.error("Lỗi profile");
+      console.error("Error profile");
     } finally {
       setIsLoading(false);
     }
@@ -127,7 +127,7 @@ export default function UserProfile() {
         setPrescriptions(data.items || data || []);
       }
     } catch (err) {
-      console.error("Lỗi lấy toa thuốc");
+      console.error("Prescription error");
     }
   };
 
@@ -145,27 +145,27 @@ export default function UserProfile() {
         setComplaints(data.items || []);
       }
     } catch (err) {
-      console.error("Lỗi lấy khiếu nại");
+      console.error("Error taking complaints");
     }
     setComplaintsLoading(false);
   };
 
   const complaintStatusMap = {
-    pending: { text: "Chờ xử lý", color: "#d97706", bg: "#fef3c7" },
-    under_review: { text: "Đang xem xét", color: "#6366f1", bg: "#e0e7ff" },
-    approved: { text: "Đã duyệt", color: "#059669", bg: "#d1fae5" },
-    rejected: { text: "Từ chối", color: "#dc2626", bg: "#fee2e2" },
-    in_progress: { text: "Đang xử lý", color: "#3b82f6", bg: "#dbeafe" },
-    resolved: { text: "Đã giải quyết", color: "#10b981", bg: "#d1fae5" },
-    cancelled: { text: "Đã huỷ", color: "#6b7280", bg: "#f3f4f6" },
+    pending: { text: "Pending", color: "#d97706", bg: "#fef3c7" },
+    under_review: { text: "Under review", color: "#6366f1", bg: "#e0e7ff" },
+    approved: { text: "Approved", color: "#059669", bg: "#d1fae5" },
+    rejected: { text: "Rejected", color: "#dc2626", bg: "#fee2e2" },
+    in_progress: { text: "In progress", color: "#3b82f6", bg: "#dbeafe" },
+    resolved: { text: "Resolved", color: "#10b981", bg: "#d1fae5" },
+    cancelled: { text: "Cancelled", color: "#6b7280", bg: "#f3f4f6" },
   };
 
   const complaintTypeMap = {
-    return: "Trả hàng",
-    exchange: "Đổi hàng",
-    refund: "Hoàn tiền",
-    complaint: "Khiếu nại",
-    warranty: "Bảo hành",
+    return: "Return",
+    exchange: "Exchange",
+    refund: "Refund",
+    complaint: "Complaint",
+    warranty: "Warranty",
   };
 
   const handleUpdateProfile = async (e) => {
@@ -174,16 +174,16 @@ export default function UserProfile() {
 
     if (formData.phone && !isValidVNPhone(formData.phone)) {
       setPhoneError(
-        "Số điện thoại không hợp lệ. Vui lòng nhập đúng định dạng VN (+84 hoặc 0xx).",
+        "The phone number is invalid. Please enter the correct format VN (+84 or 0xx).",
       );
       return;
     }
     if (!formData.province || !formData.district || !formData.ward) {
-      alert("Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện và Phường/Xã.");
+      alert("Please select the full Province/City, District/County, and Ward/Commune.");
       return;
     }
     if (!formData.addressDetail.trim()) {
-      alert("Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường).");
+      alert("Please enter the detailed address (house number, street name).");
       return;
     }
 
@@ -208,12 +208,12 @@ export default function UserProfile() {
         }),
       });
       if (res.ok) {
-        alert("Cập nhật thành công!");
+        alert("Updated successfully!");
         setEditMode(false);
         fetchProfile();
       }
     } catch (err) {
-      alert("Lỗi khi cập nhật");
+      alert("Error while updating");
     }
   };
 
@@ -223,19 +223,19 @@ export default function UserProfile() {
     setPasswordSuccess("");
 
     if (!passwordForm.currentPassword) {
-      setPasswordError("Vui lòng nhập mật khẩu hiện tại");
+      setPasswordError("Please enter your current password.");
       return;
     }
     if (!passwordForm.newPassword) {
-      setPasswordError("Vui lòng nhập mật khẩu mới");
+      setPasswordError("Please enter your new password.");
       return;
     }
     if (passwordForm.newPassword.length < 6) {
-      setPasswordError("Mật khẩu mới phải có ít nhất 6 ký tự");
+      setPasswordError("The new password must have at least 6 characters.");
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError("Mật khẩu xác nhận không khớp");
+      setPasswordError("The verification password does not match.");
       return;
     }
 
@@ -257,7 +257,7 @@ export default function UserProfile() {
       );
       const data = await res.json();
       if (res.ok) {
-        setPasswordSuccess(data.message || "Đổi mật khẩu thành công!");
+        setPasswordSuccess(data.message || "Password changed successfully.!");
         setPasswordForm({
           currentPassword: "",
           newPassword: "",
@@ -266,11 +266,11 @@ export default function UserProfile() {
       } else {
         setPasswordError(
           data.message ||
-            "Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại.",
+            "Password cannot be changed. Please double-check your current password.",
         );
       }
     } catch (err) {
-      setPasswordError("Lỗi kết nối. Vui lòng thử lại.");
+      setPasswordError("Connection error. Please try again.");
     } finally {
       setIsChangingPassword(false);
     }
@@ -289,7 +289,7 @@ export default function UserProfile() {
     ) {
       setValidationErrors({
         other: [
-          "Lỗi: Khi bạn có độ Loạn (CYL), bạn bắt buộc phải chọn Trục (AXIS) từ 1 đến 180.",
+          "Error: When you have Cyclism (CYL), you are required to select Axis (AXIS) from 1 to 180.",
         ],
       });
       return;
@@ -306,8 +306,8 @@ export default function UserProfile() {
       AxisLeft: Number(prescriptionForm.axisLeft),
       AddLeft: null, // Gửi null để tránh lỗi Range(0.75, 3.5)
       PupillaryDistance: Number(prescriptionForm.pupillaryDistance),
-      DoctorName: prescriptionForm.doctorName || "Khách tự nhập",
-      ClinicName: prescriptionForm.clinicName || "Khách tự nhập",
+      DoctorName: prescriptionForm.doctorName || "Customers self-enter",
+      ClinicName: prescriptionForm.clinicName || "Customers self-enter",
       ExpirationDate: "2026-12-31",
     };
 
@@ -325,7 +325,7 @@ export default function UserProfile() {
       );
 
       if (res.ok) {
-        alert("Đã lưu toa thuốc thành công!");
+        alert("Prescription successfully saved.!");
         setIsAddingPrescription(false);
         fetchPrescriptions();
       } else {
@@ -343,18 +343,18 @@ export default function UserProfile() {
           });
         } else {
           setValidationErrors({
-            other: [err.message || "Lỗi nhập liệu. Vui lòng kiểm tra lại."],
+            other: [err.message || "Input error. Please check again."],
           });
         }
       }
     } catch (err) {
-      setValidationErrors({ other: ["Lỗi kết nối mạng."] });
+      setValidationErrors({ other: ["Network connection error."] });
     }
   };
 
   if (isLoading)
     return (
-      <div style={{ textAlign: "center", padding: "50px" }}>Đang tải...</div>
+      <div style={{ textAlign: "center", padding: "50px" }}>Loading...</div>
     );
 
   return (
@@ -368,7 +368,7 @@ export default function UserProfile() {
       }}
     >
       <h2 style={{ borderBottom: "2px solid #000", paddingBottom: "10px" }}>
-        Quản Lý Tài Khoản
+        Account Management
       </h2>
 
       <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
@@ -384,7 +384,7 @@ export default function UserProfile() {
             cursor: "pointer",
           }}
         >
-          Thông tin cá nhân
+          Personal information
         </button>
         <button
           onClick={() => setActiveTab("prescription")}
@@ -398,7 +398,7 @@ export default function UserProfile() {
             cursor: "pointer",
           }}
         >
-          Toa thuốc của tôi
+          My prescription
         </button>
         <button
           onClick={() => setActiveTab("complaints")}
@@ -412,7 +412,7 @@ export default function UserProfile() {
             cursor: "pointer",
           }}
         >
-          Khiếu nại của tôi
+          My complaint
         </button>
         <button
           onClick={() => setActiveTab("password")}
@@ -426,7 +426,7 @@ export default function UserProfile() {
             cursor: "pointer",
           }}
         >
-          Đổi mật khẩu
+          Change password
         </button>
       </div>
 
@@ -441,19 +441,19 @@ export default function UserProfile() {
           {!editMode ? (
             <div>
               <p>
-                <b>Họ và tên:</b> {profile?.fullName}
+                <b>Full name:</b> {profile?.fullName}
               </p>
               <p>
                 <b>Email:</b> {profile?.email}
               </p>
               <p>
-                <b>Số điện thoại:</b> {profile?.phone || "Chưa cập nhật"}
+                <b>Phone number:</b> {profile?.phone || "Not updated yet"}
               </p>
               <p>
-                <b>Địa chỉ:</b>{" "}
+                <b>Address:</b>{" "}
                 {profile?.address
                   ? getAddressDisplayString(profile.address)
-                  : "Chưa cập nhật"}
+                  : "Not updated yet"}
               </p>
               <button
                 onClick={() => setEditMode(true)}
@@ -467,7 +467,7 @@ export default function UserProfile() {
                   cursor: "pointer",
                 }}
               >
-                Sửa Thông Tin
+                Edit Information
               </button>
             </div>
           ) : (
@@ -481,7 +481,7 @@ export default function UserProfile() {
                 onChange={(e) =>
                   setFormData({ ...formData, fullName: e.target.value })
                 }
-                placeholder="Họ và tên"
+                placeholder="Full name"
                 required
                 style={{ padding: "10px" }}
               />
@@ -492,7 +492,7 @@ export default function UserProfile() {
                   setFormData({ ...formData, phone: e.target.value });
                   setPhoneError("");
                 }}
-                placeholder="Số điện thoại (VD: 0912345678)"
+                placeholder="Phone number (Ex: 0912345678)"
                 required
                 style={{
                   padding: "10px",
@@ -525,7 +525,7 @@ export default function UserProfile() {
                 required
                 style={{ padding: "10px" }}
               >
-                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                <option value="">-- Select Province/City --</option>
                 {VIETNAM_PROVINCES.map((p) => (
                   <option key={p.name} value={p.name}>
                     {p.name}
@@ -547,7 +547,7 @@ export default function UserProfile() {
                 disabled={!formData.province}
                 style={{ padding: "10px" }}
               >
-                <option value="">-- Chọn Quận/Huyện --</option>
+                <option value="">-- Select District/County --</option>
                 {(
                   VIETNAM_PROVINCES.find((p) => p.name === formData.province)
                     ?.districts || []
@@ -568,7 +568,7 @@ export default function UserProfile() {
                 disabled={!formData.district}
                 style={{ padding: "10px" }}
               >
-                <option value="">-- Chọn Phường/Xã --</option>
+                <option value="">-- Select Ward/Commune --</option>
                 {(
                   VIETNAM_PROVINCES.find(
                     (p) => p.name === formData.province,
@@ -588,7 +588,7 @@ export default function UserProfile() {
                 onChange={(e) =>
                   setFormData({ ...formData, addressDetail: e.target.value })
                 }
-                placeholder="Số nhà, tên đường..."
+                placeholder="House number, street name..."
                 required
                 style={{ padding: "10px" }}
               />
@@ -604,7 +604,7 @@ export default function UserProfile() {
                     cursor: "pointer",
                   }}
                 >
-                  Lưu thay đổi
+                  Save changes
                 </button>
                 <button
                   type="button"
@@ -618,7 +618,7 @@ export default function UserProfile() {
                     cursor: "pointer",
                   }}
                 >
-                  Hủy
+                  Cancel
                 </button>
               </div>
             </form>
@@ -651,11 +651,11 @@ export default function UserProfile() {
                   marginBottom: "20px",
                 }}
               >
-                + Thêm toa đo mắt mới
+                + Add a new eye prescription.
               </button>
 
               {prescriptions.length === 0 ? (
-                <p>Bạn chưa lưu toa thuốc nào.</p>
+                <p>You haven't saved any prescriptions.</p>
               ) : (
                 prescriptions.map((p, idx) => (
                   <div
@@ -683,18 +683,18 @@ export default function UserProfile() {
                           fontWeight: "bold",
                         }}
                       >
-                        Đã hết hạn
+                        Expired
                       </span>
                     )}
                     <h4 style={{ marginTop: 0, color: "#4338ca" }}>
-                      Toa thuốc{" "}
+                      Prescription{" "}
                       {new Date(p.createdAt).toLocaleDateString("vi-VN")}
                     </h4>
                     <p style={{ margin: "5px 0", fontSize: "14px" }}>
-                      <b>Bác sĩ/Phòng khám:</b> {p.doctorName} - {p.clinicName}
+                      <b>Doctor/Clinic:</b> {p.doctorName} - {p.clinicName}
                     </p>
                     <p style={{ margin: "5px 0", fontSize: "14px" }}>
-                      <b>Ngày hết hạn:</b>{" "}
+                      <b>Expirition date:</b>{" "}
                       {new Date(p.expirationDate).toLocaleDateString("vi-VN")}
                     </p>
 
@@ -710,11 +710,11 @@ export default function UserProfile() {
                     >
                       <div>
                         <strong style={{ color: "#dc2626" }}>
-                          Mắt Phải (R):
+                          Right Eye (R):
                         </strong>
                         <div style={{ fontSize: "14px" }}>
-                          Cận/Viễn (SPH): {p.sphereRight} | Loạn (CYL):{" "}
-                          {p.cylinderRight} | Trục (AXIS): {p.axisRight}
+                          Nearsightedness/Farsightedness (SPH): {p.sphereRight} | Cylinder (CYL):{" "}
+                          {p.cylinderRight} | Axis (AXIS): {p.axisRight}
                         </div>
                       </div>
                       <div
@@ -724,16 +724,16 @@ export default function UserProfile() {
                         }}
                       >
                         <strong style={{ color: "#2563eb" }}>
-                          Mắt Trái (L):
+                          Left Eye (L):
                         </strong>
                         <div style={{ fontSize: "14px" }}>
-                          Cận/Viễn (SPH): {p.sphereLeft} | Loạn (CYL):{" "}
-                          {p.cylinderLeft} | Trục (AXIS): {p.axisLeft}
+                          Nearsightedness/Farsightedness (SPH): {p.sphereLeft} | Cylinder (CYL):{" "}
+                          {p.cylinderLeft} | Axis (AXIS): {p.axisLeft}
                         </div>
                       </div>
                     </div>
                     <p style={{ margin: "10px 0 0 0", fontWeight: "bold" }}>
-                      Khoảng cách đồng tử (PD): {p.pupillaryDistance} mm
+                      Pupillary Distance (PD): {p.pupillaryDistance} mm
                     </p>
                   </div>
                 ))
@@ -749,7 +749,7 @@ export default function UserProfile() {
                 border: "1px solid #e5e7eb",
               }}
             >
-              <h3 style={{ marginTop: 0 }}>Thêm Toa Thuốc Mới</h3>
+              <h3 style={{ marginTop: 0 }}>Add New Prescription</h3>
               <p
                 style={{
                   fontSize: "13px",
@@ -757,8 +757,7 @@ export default function UserProfile() {
                   marginBottom: "20px",
                 }}
               >
-                Vui lòng điền các thông số theo giấy khám mắt của bạn. (Số âm là
-                cận, số dương là viễn).
+                Please fill in the information according to your eye exam report. (Negative numbers indicate nearsightedness, positive numbers indicate farsightedness).
               </p>
 
               <div
@@ -778,7 +777,7 @@ export default function UserProfile() {
                   }}
                 >
                   <h4 style={{ color: "#dc2626", marginTop: 0 }}>
-                    Mắt Phải (OD/Right)
+                    Right Eye (OD/Right)
                   </h4>
 
                   <label
@@ -789,7 +788,7 @@ export default function UserProfile() {
                       fontWeight: "bold",
                     }}
                   >
-                    Độ Cầu (SPH):
+                    Sphere (SPH):
                   </label>
                   <select
                     style={{
@@ -822,7 +821,7 @@ export default function UserProfile() {
                       fontWeight: "bold",
                     }}
                   >
-                    Độ Loạn (CYL):
+                    Cylinder (CYL):
                   </label>
                   <select
                     style={{
@@ -869,7 +868,7 @@ export default function UserProfile() {
                           : "#000",
                     }}
                   >
-                    Trục (AXIS) 0-180:
+                    Axis (AXIS) 0-180:
                   </label>
                   <select
                     disabled={Number(prescriptionForm.cylinderRight) === 0}
@@ -929,7 +928,7 @@ export default function UserProfile() {
                   }}
                 >
                   <h4 style={{ color: "#2563eb", marginTop: 0 }}>
-                    Mắt Trái (OS/Left)
+                    Left Eye (OS/Left)
                   </h4>
 
                   <label
@@ -940,7 +939,7 @@ export default function UserProfile() {
                       fontWeight: "bold",
                     }}
                   >
-                    Độ Cầu (SPH):
+                    Sphere (SPH):
                   </label>
                   <select
                     style={{
@@ -973,7 +972,7 @@ export default function UserProfile() {
                       fontWeight: "bold",
                     }}
                   >
-                    Độ Loạn (CYL):
+                    Cylinder (CYL):
                   </label>
                   <select
                     style={{
@@ -1020,7 +1019,7 @@ export default function UserProfile() {
                           : "#000",
                     }}
                   >
-                    Trục (AXIS) 0-180:
+                    Axis (AXIS) 0-180:
                   </label>
                   <select
                     disabled={Number(prescriptionForm.cylinderLeft) === 0}
@@ -1087,7 +1086,7 @@ export default function UserProfile() {
                     marginBottom: "5px",
                   }}
                 >
-                  Khoảng cách đồng tử (PD - mm):
+                  Pupillary Distance (PD - mm):
                 </label>
                 <select
                   style={{
@@ -1130,7 +1129,7 @@ export default function UserProfile() {
                       fontWeight: "bold",
                     }}
                   >
-                    Tên Bác sĩ (Tùy chọn):
+                    Doctor's Name (Optional):
                   </label>
                   <input
                     type="text"
@@ -1147,7 +1146,7 @@ export default function UserProfile() {
                       borderRadius: "4px",
                       border: "1px solid #ccc",
                     }}
-                    placeholder="Nhập tên bác sĩ..."
+                    placeholder="Enter the doctor's name..."
                   />
                 </div>
                 <div>
@@ -1159,7 +1158,7 @@ export default function UserProfile() {
                       fontWeight: "bold",
                     }}
                   >
-                    Phòng khám/Bệnh viện (Tùy chọn):
+                    Clinic/Hospital (Optional):
                   </label>
                   <input
                     type="text"
@@ -1176,7 +1175,7 @@ export default function UserProfile() {
                       borderRadius: "4px",
                       border: "1px solid #ccc",
                     }}
-                    placeholder="Nhập tên phòng khám..."
+                    placeholder="Enter the clinic name..."
                   />
                 </div>
               </div>
@@ -1213,7 +1212,7 @@ export default function UserProfile() {
                     fontSize: "15px",
                   }}
                 >
-                  Lưu Toa Thuốc
+                  Save Prescriptions
                 </button>
                 <button
                   type="button"
@@ -1229,7 +1228,7 @@ export default function UserProfile() {
                     fontSize: "15px",
                   }}
                 >
-                  Hủy bỏ
+                  Cancel
                 </button>
               </div>
             </form>
@@ -1254,7 +1253,7 @@ export default function UserProfile() {
               gap: "10px",
             }}
           >
-            <h3 style={{ margin: 0 }}>Danh sách khiếu nại</h3>
+            <h3 style={{ margin: 0 }}>List of complaints</h3>
             <Link
               to="/orders"
               style={{
@@ -1268,16 +1267,15 @@ export default function UserProfile() {
                 fontSize: "14px",
               }}
             >
-              Xem đơn hàng để khiếu nại
+              View your order to file a complaint.
             </Link>
           </div>
 
           {complaintsLoading ? (
-            <p>Đang tải...</p>
+            <p>Loading...</p>
           ) : complaints.length === 0 ? (
             <p>
-              Bạn chưa có khiếu nại nào. Nếu gặp vấn đề với đơn hàng, hãy tạo
-              khiếu nại mới.
+              You don't have any complaints yet. If you have a problem with your order, please create a new complaint.
             </p>
           ) : (
             complaints.map((c) => {
@@ -1367,7 +1365,7 @@ export default function UserProfile() {
                         fontWeight: 600,
                       }}
                     >
-                      Xem chi tiết →
+                      See details →
                     </Link>
                     {c.canModify && (
                       <Link
@@ -1379,7 +1377,7 @@ export default function UserProfile() {
                           fontWeight: 600,
                         }}
                       >
-                        Chỉnh sửa
+                        Edit
                       </Link>
                     )}
                   </div>
@@ -1399,7 +1397,7 @@ export default function UserProfile() {
             maxWidth: "500px",
           }}
         >
-          <h3 style={{ marginTop: 0, marginBottom: "20px" }}>Đổi mật khẩu</h3>
+          <h3 style={{ marginTop: 0, marginBottom: "20px" }}>Change password</h3>
 
           <form onSubmit={handleChangePassword}>
             <div style={{ marginBottom: "20px" }}>
@@ -1411,7 +1409,7 @@ export default function UserProfile() {
                   fontSize: "14px",
                 }}
               >
-                Mật khẩu hiện tại
+                Current password
               </label>
               <input
                 type="password"
@@ -1422,7 +1420,7 @@ export default function UserProfile() {
                     currentPassword: e.target.value,
                   })
                 }
-                placeholder="Nhập mật khẩu hiện tại"
+                placeholder="Enter your current password"
                 style={{
                   width: "100%",
                   padding: "12px",
@@ -1443,7 +1441,7 @@ export default function UserProfile() {
                   fontSize: "14px",
                 }}
               >
-                Mật khẩu mới
+                New password
               </label>
               <input
                 type="password"
@@ -1454,7 +1452,7 @@ export default function UserProfile() {
                     newPassword: e.target.value,
                   })
                 }
-                placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+                placeholder="Enter a new password (at least 6 characters)"
                 style={{
                   width: "100%",
                   padding: "12px",
@@ -1475,7 +1473,7 @@ export default function UserProfile() {
                   fontSize: "14px",
                 }}
               >
-                Xác nhận mật khẩu mới
+                Confirm new password
               </label>
               <input
                 type="password"
@@ -1486,7 +1484,7 @@ export default function UserProfile() {
                     confirmPassword: e.target.value,
                   })
                 }
-                placeholder="Nhập lại mật khẩu mới"
+                placeholder="Re-enter your new password."
                 style={{
                   width: "100%",
                   padding: "12px",
@@ -1542,7 +1540,7 @@ export default function UserProfile() {
                 cursor: isChangingPassword ? "not-allowed" : "pointer",
               }}
             >
-              {isChangingPassword ? "Đang xử lý..." : "Đổi mật khẩu"}
+              {isChangingPassword ? "Processing..." : "Change password"}
             </button>
           </form>
         </div>
