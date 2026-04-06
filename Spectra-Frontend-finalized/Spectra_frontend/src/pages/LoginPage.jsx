@@ -39,14 +39,14 @@ export default function LoginPage() {
           fullName: data.fullName,
           role: data.role,
         });
-        setModalMsg(`Xin chào, ${data.fullName}!`);
+        setModalMsg(`Hello, ${data.fullName}!`);
         setShowModal(true);
         setTimeout(() => navigate("/"), 2000);
       } else {
-        setErrorMsg(data.message || "Sai tài khoản hoặc mật khẩu!");
+        setErrorMsg(data.message || "Incorrect account or password!");
       }
     } catch (error) {
-      setErrorMsg("Không thể kết nối đến Server.");
+      setErrorMsg("Unable to connect to the server.");
     } finally {
       setIsLoading(false);
     }
@@ -75,14 +75,14 @@ export default function LoginPage() {
           fullName: data.fullName,
           role: data.role,
         });
-        setModalMsg(`Đăng nhập Google thành công!`);
+        setModalMsg(`Successfully logged into Google.!`);
         setShowModal(true);
         setTimeout(() => navigate("/"), 2000);
       } else {
-        setErrorMsg("Xác thực Google thất bại!");
+        setErrorMsg("Google authentication failed!");
       }
     } catch (error) {
-      setErrorMsg("Lỗi kết nối API Google.");
+      setErrorMsg("Google API connection error.");
     } finally {
       setIsLoading(false);
     }
@@ -106,9 +106,9 @@ export default function LoginPage() {
                 />
               </svg>
             </div>
-            <h3 style={styles.modalTitle}>Đăng nhập thành công!</h3>
+            <h3 style={styles.modalTitle}>Log in successfully!</h3>
             <p style={styles.modalMsg}>{modalMsg}</p>
-            <p style={styles.modalSub}>Đang chuyển hướng về trang chủ...</p>
+            <p style={styles.modalSub}>Redirecting to the homepage...</p>
             <div style={styles.progressBar}>
               <div style={styles.progressFill} />
             </div>
@@ -116,7 +116,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      <h2 className="auth-title">Đăng Nhập</h2>
+      <h2 className="auth-title">Login</h2>
 
       {errorMsg && <div className="auth-msg error">{errorMsg}</div>}
 
@@ -128,17 +128,17 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            placeholder="Nhập email của bạn"
+            placeholder="Enter your email"
           />
         </div>
         <div className="form-group">
-          <label>Mật khẩu:</label>
+          <label>Password:</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            placeholder="Nhập mật khẩu"
+            placeholder="Enter password"
           />
         </div>
         <div style={{ textAlign: "right", marginBottom: "15px" }}>
@@ -150,33 +150,33 @@ export default function LoginPage() {
               textDecoration: "none",
             }}
           >
-            Quên mật khẩu?
+            Forgot password?
           </Link>
         </div>
         <button type="submit" disabled={isLoading} className="btn-submit">
-          {isLoading ? "Đang xử lý..." : "Đăng Nhập"}
+          {isLoading ? "Redirecting..." : "Login"}
         </button>
       </form>
 
       <div className="auth-divider">
         <div className="line"></div>
-        <span className="text">HOẶC</span>
+        <span className="text">OR</span>
         <div className="line"></div>
       </div>
 
       <div className="auth-google-btn">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
-          onError={() => setErrorMsg("Đăng nhập Google thất bại")}
+          onError={() => setErrorMsg("Google login failed")}
           shape="pill"
           theme="outline"
         />
       </div>
 
       <div className="auth-footer">
-        Chưa có tài khoản?{" "}
+        Don't have an account yet?{" "}
         <Link to="/register" className="auth-link">
-          Đăng ký ngay
+          Register now
         </Link>
       </div>
     </div>
