@@ -16,26 +16,16 @@ export default function CheckoutSuccess() {
   const customer = location.state?.customer;
   const total = location.state?.total; // Giả sử total này đang là USD
 
-  // Hàm chuyển đổi tỷ giá và format ra định dạng "$100 (2.625.000 ₫)"
+  // Use centralized formatter to apply VND rounding policy
   const formatCurrency = (amountInUSD) => {
     if (typeof amountInUSD !== "number") return null;
-
-    const EXCHANGE_RATE = 25400; 
-    
-    // 1. Format USD: bỏ phần thập phân .00 nếu là số chẵn
-    const formattedUSD = new Intl.NumberFormat("en-US", {
+    // Chỉ hiển thị định dạng USD
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(amountInUSD);
-
-    // 2. Format VND: Chỉ lấy phần số (để có dấu chấm 4.593.750), không dùng style "currency" để tránh bị dính ký hiệu ₫
-    const amountInVND = amountInUSD * EXCHANGE_RATE;
-    const formattedVND = new Intl.NumberFormat("vi-VN").format(amountInVND);
-
-    // 3. Ghép chuỗi: Ép sát ngoặc đơn vào USD và thêm chữ VND
-    return `${formattedUSD}(${formattedVND} VND)`;
   };
 
   return (
@@ -43,13 +33,13 @@ export default function CheckoutSuccess() {
       <div className="success__box">
         <div className="success__icon">✓</div>
 
-        <h1 className="success__title">Đặt hàng thành công!</h1>
+        <h1 className="success__title">Order Successful!</h1>
         <p className="success__desc">
-          Cảm ơn bạn đã đặt hàng. Đơn hàng đã được ghi nhận.
+          Thank you for your order. Your order has been successfully recorded.
         </p>
 
         <div className="success__order">
-          <span>Mã đơn:</span>
+          <span>Order ID:</span>
           <strong>{orderId}</strong>
         </div>
 
@@ -57,21 +47,21 @@ export default function CheckoutSuccess() {
           <div className="success__info">
             {customer?.fullName && (
               <div className="info-row">
-                <span>Khách hàng</span>
+                <span>Customer</span>
                 <span>{customer.fullName}</span>
               </div>
             )}
 
             {customer?.phone && (
               <div className="info-row">
-                <span>Số điện thoại</span>
+                <span>Phone Number</span>
                 <span>{customer.phone}</span>
               </div>
             )}
 
             {customer?.address && (
               <div className="info-row">
-                <span>Địa chỉ</span>
+                <span>Address</span>
                 <span className="info-row__right">{customer.address}</span>
               </div>
             )}
@@ -79,7 +69,7 @@ export default function CheckoutSuccess() {
             {/* Đã sửa dòng này để gọi hàm formatCurrency mới */}
             {typeof total === "number" && (
               <div className="info-row info-row--total">
-                <span>Tổng tiền</span>
+                <span>Total Amount</span>
                 <span>{formatCurrency(total)}</span>
               </div>
             )}
@@ -88,14 +78,12 @@ export default function CheckoutSuccess() {
 
         <div className="success__actions">
           <button className="btn" onClick={() => navigate("/orders")}>
-            Xem đơn hàng
+            View Orders
           </button>
           <button className="btn btn--ghost" onClick={() => navigate("/")}>
-            Về trang chủ
+            Back to Home
           </button>
         </div>
-
-        
       </div>
     </div>
   );
