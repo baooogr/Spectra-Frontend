@@ -7,53 +7,53 @@ const API_BASE = "https://myspectra.runasp.net/api";
 
 const requestTypes = [
   // Only showing exchange for now — other types hidden per business decision
-  // { value: "complaint", label: "Khiếu nại (Phản hồi nhẹ)" },
-  // { value: "return", label: "Trả hàng" },
-  { value: "exchange", label: "Đổi hàng" },
-  // { value: "refund", label: "Hoàn tiền" },
-  // { value: "warranty", label: "Bảo hành" },
+  // { value: "complaint", label: "Complaint (Light feedback)" },
+  // { value: "return", label: "Return" },
+  { value: "exchange", label: "Exchange" },
+  // { value: "refund", label: "Refund" },
+  // { value: "warranty", label: "Warranty" },
 ];
 
 // Business rules: predefined reasons per complaint type
 const COMPLAINT_REASONS = {
   return: [
-    "Hàng không đúng màu so với mong đợi",
-    "Hàng không hợp với nét mặt",
-    "Kích thước gọng không phù hợp",
-    "Tròng kính không đúng độ",
-    "Sản phẩm bị lỗi / hư hỏng khi nhận",
-    "Nhận sai sản phẩm",
-    "Thay đổi ý định mua hàng",
+    "The product color is not as expected",
+    "The product does not suit the face",
+    "Frame size is not suitable",
+    "Lens prescription is incorrect",
+    "Product is defective / damaged upon arrival",
+    "Received the wrong product",
+    "Changed mind about the purchase",
   ],
   exchange: [
-    "Nhận sai màu sắc sản phẩm",
-    "Nhận sai kích cỡ gọng",
-    "Sản phẩm bị lỗi sản xuất",
-    "Muốn đổi sang mẫu khác",
-    "Tròng kính bị trầy xước khi nhận",
-    "Nhận sai loại tròng kính",
+    "Received the wrong product color",
+    "Received the wrong frame size",
+    "Product has a manufacturing defect",
+    "Want to exchange for another model",
+    "Lens is scratched upon arrival",
+    "Received the wrong lens type",
   ],
   refund: [
-    "Sản phẩm không đúng mô tả",
-    "Sản phẩm bị hư hỏng nặng",
-    "Đã trả hàng nhưng chưa được hoàn tiền",
-    "Bị tính phí sai",
-    "Đơn hàng bị giao trễ quá lâu",
+    "Product does not match the description",
+    "Product is severely damaged",
+    "Returned the product but have not received a refund",
+    "Incorrect charge applied",
+    "Order was delivered too late",
   ],
   warranty: [
-    "Gọng kính bị gãy/nứt trong thời gian bảo hành",
-    "Tròng kính bị tróc lớp phủ",
-    "Bản lề gọng bị lỏng/hỏng",
-    "Lớp sơn gọng bị bong tróc",
-    "Ốc vít bị tuột/mất",
+    "Frame is broken/cracked during warranty period",
+    "Lens coating is peeling off",
+    "Frame hinge is loose/damaged",
+    "Frame paint is peeling",
+    "Screw is loose/missing",
   ],
   complaint: [
-    "Chất lượng sản phẩm không như kỳ vọng",
-    "Thái độ phục vụ không tốt",
-    "Giao hàng chậm trễ",
-    "Đóng gói không cẩn thận",
-    "Thông tin sản phẩm trên web không chính xác",
-    "Khác (ghi rõ bên dưới)",
+    "Product quality is not as expected",
+    "Service attitude is not good",
+    "Delivery is delayed",
+    "Packaging is not careful",
+    "Product information on the website is inaccurate",
+    "Other (please specify below)",
   ],
 };
 
@@ -153,11 +153,11 @@ export default function ComplaintForm() {
     setError("");
 
     if (!selectedOrderItemId) {
-      setError("Vui lòng chọn sản phẩm cần khiếu nại.");
+      setError("Please select the product to complain about.");
       return;
     }
     if (!reason.trim() && !selectedReason) {
-      setError("Vui lòng chọn hoặc nhập lý do.");
+      setError("Please select or enter a reason.");
       return;
     }
 
@@ -166,7 +166,7 @@ export default function ComplaintForm() {
     const hasLink = mediaUrl.trim().length > 0;
     if (!hasImages && !hasLink) {
       setError(
-        "Vui lòng tải lên ít nhất 1 hình ảnh hoặc nhập link minh chứng để staff có thể xác nhận vấn đề.",
+        "Please upload at least 1 image or enter a proof link so staff can verify the issue.",
       );
       return;
     }
@@ -204,15 +204,15 @@ export default function ComplaintForm() {
         navigate(`/complaints/${data.requestId || data.RequestId}`);
       } else {
         const err = await res.json();
-        setError(err.message || err.Message || "Không thể tạo khiếu nại.");
+        setError(err.message || err.Message || "Unable to create complaint.");
       }
     } catch {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
+      setError("Connection error. Please try again.");
     }
     setSubmitting(false);
   };
 
-  if (loading) return <div className="mc-loading">Đang tải...</div>;
+  if (loading) return <div className="mc-loading">Loading...</div>;
 
   // Flatten all order items from delivered orders (including preorder-converted)
   // Filter by 7-day complaint window
@@ -263,11 +263,11 @@ export default function ComplaintForm() {
         fontFamily: "sans-serif",
       }}
     >
-      <h2 style={{ marginBottom: "8px" }}>Yêu cầu đổi hàng</h2>
+      <h2 style={{ marginBottom: "8px" }}>Exchange Request</h2>
       <p style={{ color: "#6b7280", fontSize: "14px", marginBottom: "24px" }}>
         {preselectedItem
-          ? "Đổi hàng cho sản phẩm từ đơn hàng đã chọn."
-          : "Chọn sản phẩm từ đơn hàng đã giao và mô tả vấn đề của bạn."}
+          ? "Exchange the product from the selected order."
+          : "Select a product from a delivered order and describe your issue."}
       </p>
 
       <form
@@ -289,7 +289,7 @@ export default function ComplaintForm() {
               fontSize: "14px",
             }}
           >
-            Sản phẩm cần khiếu nại <span style={{ color: "#dc2626" }}>*</span>
+            Product to complain about <span style={{ color: "#dc2626" }}>*</span>
           </label>
           {filteredOrderItems.length === 0 ? (
             <p
@@ -301,8 +301,8 @@ export default function ComplaintForm() {
                 borderRadius: "8px",
               }}
             >
-              Bạn chưa có đơn hàng đã giao nào trong thời hạn khiếu nại (7
-              ngày).
+              You do not have any delivered orders within the complaint period (7
+              days).
             </p>
           ) : (
             <select
@@ -319,16 +319,16 @@ export default function ComplaintForm() {
                 backgroundColor: preselectedOrderItemId ? "#f3f4f6" : "#fff",
               }}
             >
-              <option value="">-- Chọn sản phẩm --</option>
+              <option value="">-- Select product --</option>
               {filteredOrderItems.map((item) => {
                 const itemId = item.orderItemId || item.OrderItemId;
                 const name =
-                  item.frameName || item.productName || item.name || "Sản phẩm";
+                  item.frameName || item.productName || item.name || "Product";
                 const color = item.colorName || item.color || "";
                 const orderLabel =
                   item.isFromPreorder && item.preorderId
-                    ? `Đặt trước #${String(item.preorderId).slice(0, 8)}`
-                    : `Đơn #${String(item.orderId).slice(0, 8)}`;
+                    ? `Preorder #${String(item.preorderId).slice(0, 8)}`
+                    : `Order #${String(item.orderId).slice(0, 8)}`;
                 return (
                   <option key={itemId} value={itemId}>
                     {name} {color ? `(${color})` : ""} — {orderLabel}
@@ -349,7 +349,7 @@ export default function ComplaintForm() {
               fontSize: "14px",
             }}
           >
-            Loại yêu cầu <span style={{ color: "#dc2626" }}>*</span>
+            Request Type <span style={{ color: "#dc2626" }}>*</span>
           </label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {requestTypes.map((t) => (
@@ -387,7 +387,7 @@ export default function ComplaintForm() {
               fontSize: "14px",
             }}
           >
-            Lý do <span style={{ color: "#dc2626" }}>*</span>
+            Reason <span style={{ color: "#dc2626" }}>*</span>
           </label>
           {requestType && COMPLAINT_REASONS[requestType] ? (
             <select
@@ -404,7 +404,7 @@ export default function ComplaintForm() {
                 backgroundColor: "#fff",
               }}
             >
-              <option value="">-- Chọn lý do --</option>
+              <option value="">-- Select reason --</option>
               {COMPLAINT_REASONS[requestType].map((r, idx) => (
                 <option key={idx} value={r}>
                   {r}
@@ -419,14 +419,14 @@ export default function ComplaintForm() {
                 marginBottom: "10px",
               }}
             >
-              Vui lòng chọn loại yêu cầu trước
+              Please select a request type first
             </p>
           )}
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
-            placeholder="Bổ sung chi tiết thêm (tuỳ chọn)..."
+            placeholder="Add more details (optional)..."
             style={{
               width: "100%",
               padding: "10px 12px",
@@ -449,7 +449,7 @@ export default function ComplaintForm() {
               fontSize: "14px",
             }}
           >
-            Hình ảnh / Link minh chứng{" "}
+            Images / Proof Link{" "}
             <span style={{ color: "#dc2626" }}>*</span>
           </label>
 
@@ -471,7 +471,7 @@ export default function ComplaintForm() {
                 margin: "0 0 8px 0",
               }}
             >
-              Tải ảnh trực tiếp từ thiết bị (tối đa 10MB mỗi ảnh)
+              Upload images directly from your device (maximum 10MB per image)
             </p>
             <input
               type="file"
@@ -485,7 +485,7 @@ export default function ComplaintForm() {
               <p
                 style={{ fontSize: "13px", color: "#3b82f6", marginTop: "8px" }}
               >
-                Đang tải ảnh lên...
+                Uploading images...
               </p>
             )}
           </div>
@@ -551,7 +551,7 @@ export default function ComplaintForm() {
           <p
             style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}
           >
-            Hoặc nhập link ảnh/video bên ngoài:
+            Or enter an external image/video link:
           </p>
           <input
             value={mediaUrl}
@@ -598,7 +598,7 @@ export default function ComplaintForm() {
               cursor: submitting ? "not-allowed" : "pointer",
             }}
           >
-            {submitting ? "Đang gửi..." : "Gửi khiếu nại"}
+            {submitting ? "Submitting..." : "Submit Complaint"}
           </button>
           <button
             type="button"
@@ -614,7 +614,7 @@ export default function ComplaintForm() {
               cursor: "pointer",
             }}
           >
-            Huỷ
+            Cancel
           </button>
         </div>
       </form>

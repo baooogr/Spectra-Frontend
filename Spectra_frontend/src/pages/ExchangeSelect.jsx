@@ -80,16 +80,16 @@ export default function ExchangeSelect() {
         const status = (c.status || "").toLowerCase();
         const type = (c.requestType || "").toLowerCase();
         if (type !== "exchange") {
-          setError("Khiếu nại này không phải loại Đổi hàng.");
+          setError("This complaint is not an Exchange type.");
         } else if (c.exchangeOrderId) {
-          setError("Đơn đổi hàng đã được tạo cho khiếu nại này.");
+          setError("An exchange order has already been created for this complaint.");
         } else if (status !== "approved" && status !== "in_progress") {
-          setError("Yêu cầu chưa được duyệt. Vui lòng chờ nhân viên xử lý.");
+          setError("The request has not been approved yet. Please wait for staff to process it.");
         } else {
           setComplaint(c);
         }
       } else {
-        setError("Không thể tải thông tin khiếu nại.");
+        setError("Unable to load complaint information.");
       }
 
       if (fRes.ok) {
@@ -104,7 +104,7 @@ export default function ExchangeSelect() {
         setFrames(unique);
       }
     } catch {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
+      setError("Connection error. Please try again.");
     }
     setLoading(false);
   };
@@ -151,29 +151,29 @@ export default function ExchangeSelect() {
 
   const handleSubmit = async () => {
     if (!selectedFrame) {
-      setError("Vui lòng chọn sản phẩm thay thế.");
+      setError("Please select a replacement product.");
       return;
     }
     if (frameDetail?.frameColors?.length > 0 && !selectedColor) {
-      setError("Vui lòng chọn màu sắc.");
+      setError("Please select a color.");
       return;
     }
     if (!lensConfig) {
       setError(
-        "Vui lòng cấu hình tròng kính (nhấn nút 'Cấu hình tròng kính').",
+        "Please configure the lenses (click the 'Configure Lenses' button).",
       );
       return;
     }
     if (!fullName.trim()) {
-      setError("Vui lòng nhập họ tên người nhận.");
+      setError("Please enter the recipient's full name.");
       return;
     }
     if (!phone.trim()) {
-      setError("Vui lòng nhập số điện thoại.");
+      setError("Please enter the phone number.");
       return;
     }
     if (!address.trim()) {
-      setError("Vui lòng nhập địa chỉ giao hàng.");
+      setError("Please enter the shipping address.");
       return;
     }
     setSubmitting(true);
@@ -227,15 +227,15 @@ export default function ExchangeSelect() {
         const data = await res.json().catch(() => null);
         const exchangeTotal = data?.exchangeOrderTotal;
         const origPrice = data?.originalItemPrice;
-        let msg = "Đơn hàng thay thế đã được tạo thành công!";
+        let msg = "Replacement order has been created successfully!";
         if (exchangeTotal != null && origPrice != null) {
           const diff = exchangeTotal - origPrice;
           if (diff > 0) {
-            msg += `\n\nSản phẩm mới đắt hơn ${fmt(diff)}₫. Bạn cần thanh toán phần chênh lệch.`;
+            msg += `\n\nThe new product is more expensive by ${fmt(diff)}₫. You need to pay the difference.`;
           } else if (diff < 0) {
-            msg += `\n\nSản phẩm mới rẻ hơn ${fmt(Math.abs(diff))}₫. Phần chênh lệch sẽ được hoàn lại cho bạn.`;
+            msg += `\n\nThe new product is cheaper by ${fmt(Math.abs(diff))}₫. The difference will be refunded to you.`;
           } else {
-            msg += "\n\nGiá sản phẩm tương đương, không phát sinh chênh lệch.";
+            msg += "\n\nThe product prices are equivalent, so there is no price difference.";
           }
         }
         alert(msg);
@@ -245,11 +245,11 @@ export default function ExchangeSelect() {
         setError(
           err?.message ||
             err?.Message ||
-            "Tạo đơn đổi hàng thất bại. Vui lòng thử lại.",
+            "Failed to create exchange order. Please try again.",
         );
       }
     } catch {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
+      setError("Connection error. Please try again.");
     }
     setSubmitting(false);
   };
@@ -257,7 +257,7 @@ export default function ExchangeSelect() {
   if (loading)
     return (
       <div style={{ textAlign: "center", padding: "60px", fontSize: "16px" }}>
-        Đang tải...
+        Loading...
       </div>
     );
   if (error && !complaint)
@@ -265,7 +265,7 @@ export default function ExchangeSelect() {
       <div style={{ textAlign: "center", padding: "60px" }}>
         <h2 style={{ color: "#dc2626" }}>{error}</h2>
         <Link to={`/complaints/${id}`} style={{ color: "#3b82f6" }}>
-          ← Quay lại chi tiết khiếu nại
+          ← Back to complaint details
         </Link>
       </div>
     );
@@ -318,11 +318,11 @@ export default function ExchangeSelect() {
           marginBottom: "20px",
         }}
       >
-        ← Quay lại chi tiết khiếu nại
+        ← Back to complaint details
       </Link>
 
       <h2 style={{ margin: "0 0 8px", fontSize: "24px" }}>
-        Chọn sản phẩm thay thế
+        Select Replacement Product
       </h2>
       <p
         style={{
@@ -332,7 +332,7 @@ export default function ExchangeSelect() {
           fontSize: "14px",
         }}
       >
-        Mã khiếu nại: <b>#{String(complaint.requestId).slice(0, 8)}</b>
+        Complaint Code: <b>#{String(complaint.requestId).slice(0, 8)}</b>
       </p>
 
       {/* Original item summary */}
@@ -354,7 +354,7 @@ export default function ExchangeSelect() {
               fontSize: "14px",
             }}
           >
-            Sản phẩm gốc (trả lại)
+            Original Product (to be returned)
           </h4>
           <p style={{ margin: "2px 0", fontSize: "14px" }}>
             <b>{originalItem.frameName}</b> — {fmt(originalItem.unitPrice)}₫ ×{" "}
@@ -367,7 +367,7 @@ export default function ExchangeSelect() {
       <div style={{ marginBottom: "16px" }}>
         <input
           type="text"
-          placeholder="Tìm kiếm sản phẩm..."
+          placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
@@ -454,7 +454,7 @@ export default function ExchangeSelect() {
                     fontWeight: 700,
                   }}
                 >
-                  ✓ Đã chọn
+                  ✓ Selected
                 </span>
               )}
             </div>
@@ -469,7 +469,7 @@ export default function ExchangeSelect() {
               padding: "40px 0",
             }}
           >
-            Không tìm thấy sản phẩm.
+            No products found.
           </p>
         )}
       </div>
@@ -486,11 +486,11 @@ export default function ExchangeSelect() {
           }}
         >
           <h3 style={{ marginTop: 0, marginBottom: "16px", fontSize: "18px" }}>
-            Xác nhận đổi hàng
+            Confirm Exchange
           </h3>
 
           {loadingDetail ? (
-            <p style={{ color: "#6b7280" }}>Đang tải thông tin sản phẩm...</p>
+            <p style={{ color: "#6b7280" }}>Loading product information...</p>
           ) : (
             <>
               {/* Old vs New comparison */}
@@ -518,7 +518,7 @@ export default function ExchangeSelect() {
                         color: "#dc2626",
                       }}
                     >
-                      SẢN PHẨM CŨ (TRẢ LẠI)
+                      OLD PRODUCT (RETURNED)
                     </p>
                     <p
                       style={{
@@ -536,7 +536,7 @@ export default function ExchangeSelect() {
                         color: "#6b7280",
                       }}
                     >
-                      Tổng đã trả: {fmt(originalPrice)}₫
+                      Total paid: {fmt(originalPrice)}₫
                     </p>
                   </div>
                 )}
@@ -555,7 +555,7 @@ export default function ExchangeSelect() {
                       color: "#2563eb",
                     }}
                   >
-                    SẢN PHẨM MỚI
+                    NEW PRODUCT
                   </p>
                   <p
                     style={{
@@ -573,7 +573,7 @@ export default function ExchangeSelect() {
                       color: "#059669",
                     }}
                   >
-                    Giá gọng: {fmt(displayPrice)}₫
+                    Frame price: {fmt(displayPrice)}₫
                   </p>
                 </div>
               </div>
@@ -608,8 +608,8 @@ export default function ExchangeSelect() {
                         }}
                       >
                         {priceDiff === 0
-                          ? "✓ Giá tương đương — Có thể đổi hàng"
-                          : "✗ Giá không tương đương — Không thể đổi hàng"}
+                          ? "✓ Equivalent price — Exchange allowed"
+                          : "✗ Price not equivalent — Exchange not allowed"}
                       </p>
                       <p
                         style={{
@@ -618,7 +618,7 @@ export default function ExchangeSelect() {
                           color: "#6b7280",
                         }}
                       >
-                        Sản phẩm cũ: {fmt(originalPrice)}₫ → Sản phẩm mới:{" "}
+                        Old product: {fmt(originalPrice)}₫ → New product:{" "}
                         {fmt(newTotalPrice)}₫
                       </p>
                     </div>
@@ -645,8 +645,9 @@ export default function ExchangeSelect() {
                         fontStyle: "italic",
                       }}
                     >
-                      Chỉ được đổi sang sản phẩm có giá tương đương. Vui lòng
-                      chọn sản phẩm khác hoặc thay đổi cấu hình tròng kính.
+                      You can only exchange for a product with an equivalent
+                      price. Please choose another product or change the lens
+                      configuration.
                     </p>
                   )}
                 </div>
@@ -663,7 +664,7 @@ export default function ExchangeSelect() {
                       fontSize: "14px",
                     }}
                   >
-                    Chọn màu sắc *
+                    Select Color *
                   </label>
                   <div
                     style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
@@ -710,7 +711,7 @@ export default function ExchangeSelect() {
                               color: stock > 0 ? "#059669" : "#dc2626",
                             }}
                           >
-                            ({stock > 0 ? `Còn ${stock}` : "Hết"})
+                            ({stock > 0 ? `${stock} left` : "Out of stock"})
                           </span>
                         </button>
                       );
@@ -729,7 +730,7 @@ export default function ExchangeSelect() {
                     fontSize: "14px",
                   }}
                 >
-                  Cấu hình tròng kính *
+                  Lens Configuration *
                 </label>
                 {lensConfig ? (
                   <div
@@ -753,8 +754,8 @@ export default function ExchangeSelect() {
                       >
                         ✅{" "}
                         {lensConfig.lensIncluded
-                          ? "Gọng + Tròng kính"
-                          : "Chỉ gọng kính"}
+                          ? "Frame + Lenses"
+                          : "Frame Only"}
                       </p>
                       <p
                         style={{
@@ -763,7 +764,7 @@ export default function ExchangeSelect() {
                           color: "#047857",
                         }}
                       >
-                        Tổng: ${lensConfig.finalPrice}
+                        Total: ${lensConfig.finalPrice}
                       </p>
                     </div>
                     <button
@@ -779,7 +780,7 @@ export default function ExchangeSelect() {
                         fontSize: "13px",
                       }}
                     >
-                      Thay đổi
+                      Change
                     </button>
                   </div>
                 ) : (
@@ -800,7 +801,7 @@ export default function ExchangeSelect() {
                       fontSize: "14px",
                     }}
                   >
-                    👓 Cấu hình tròng kính
+                    👓 Configure Lenses
                   </button>
                 )}
               </div>
@@ -815,7 +816,7 @@ export default function ExchangeSelect() {
                     fontSize: "14px",
                   }}
                 >
-                  Số lượng
+                  Quantity
                 </label>
                 <input
                   type="number"
@@ -845,13 +846,13 @@ export default function ExchangeSelect() {
                     fontSize: "14px",
                   }}
                 >
-                  Họ tên người nhận *
+                  Recipient Full Name *
                 </label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Nguyễn Văn A"
+                  placeholder="Nguyen Van A"
                   style={{
                     width: "100%",
                     padding: "10px 12px",
@@ -871,7 +872,7 @@ export default function ExchangeSelect() {
                     fontSize: "14px",
                   }}
                 >
-                  Số điện thoại *
+                  Phone Number *
                 </label>
                 <input
                   type="tel"
@@ -897,13 +898,13 @@ export default function ExchangeSelect() {
                     fontSize: "14px",
                   }}
                 >
-                  Địa chỉ giao hàng *
+                  Shipping Address *
                 </label>
                 <input
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="123 Đường ABC, Quận 1, TP.HCM"
+                  placeholder="123 ABC Street, District 1, HCMC"
                   style={{
                     width: "100%",
                     padding: "10px 12px",
@@ -953,7 +954,7 @@ export default function ExchangeSelect() {
                         : "pointer",
                   }}
                 >
-                  {submitting ? "Đang tạo đơn..." : "Xác nhận đổi hàng"}
+                  {submitting ? "Creating order..." : "Confirm Exchange"}
                 </button>
                 <Link
                   to={`/complaints/${id}`}
@@ -969,7 +970,7 @@ export default function ExchangeSelect() {
                     alignItems: "center",
                   }}
                 >
-                  Huỷ
+                  Cancel
                 </Link>
               </div>
             </>

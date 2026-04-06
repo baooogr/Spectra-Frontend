@@ -1328,7 +1328,7 @@ export default function OrderDetail() {
                     Tạm tính: {formatPrice(unitPrice * qty)}
                   </div>
 
-                  {item.orderItemId && (
+                  {/* {item.orderItemId && (
                     <div style={{ marginTop: "10px", textAlign: "left" }}>
                       <Link
                         to={`/complaint?orderItemId=${item.orderItemId}`}
@@ -1347,7 +1347,7 @@ export default function OrderDetail() {
                         Gửi khiếu nại / đổi trả
                       </Link>
                     </div>
-                  )}
+                  )} */}
                 </div>
               );
             })}
