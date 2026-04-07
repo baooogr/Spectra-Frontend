@@ -7,22 +7,22 @@ const API_ORDERS = "https://myspectra.runasp.net/api/OrdersV2";
 const API_SHIPPING = "https://myspectra.runasp.net/api/Shipping";
 
 const statusMap = {
-  pending: { text: "Chờ xử lý", color: "#d97706", bg: "#fef3c7" },
-  under_review: { text: "Đang xem xét", color: "#6366f1", bg: "#e0e7ff" },
-  approved: { text: "Đã duyệt", color: "#059669", bg: "#d1fae5" },
-  rejected: { text: "Từ chối", color: "#dc2626", bg: "#fee2e2" },
-  in_progress: { text: "Đang xử lý", color: "#3b82f6", bg: "#dbeafe" },
-  resolved: { text: "Đã giải quyết", color: "#10b981", bg: "#d1fae5" },
-  cancelled: { text: "Đã huỷ", color: "#6b7280", bg: "#f3f4f6" },
-  customer_cancelled: { text: "Khách đã hủy", color: "#9333ea", bg: "#f3e8ff" },
+  pending: { text: "Pending", color: "#d97706", bg: "#fef3c7" },
+  under_review: { text: "Under_Review", color: "#6366f1", bg: "#e0e7ff" },
+  approved: { text: "Approved", color: "#059669", bg: "#d1fae5" },
+  rejected: { text: "Rejected", color: "#dc2626", bg: "#fee2e2" },
+  in_progress: { text: "In_Progress", color: "#3b82f6", bg: "#dbeafe" },
+  resolved: { text: "Resolved", color: "#10b981", bg: "#d1fae5" },
+  cancelled: { text: "Cancelled", color: "#6b7280", bg: "#f3f4f6" },
+  customer_cancelled: { text: "Customer_Cancelled", color: "#9333ea", bg: "#f3e8ff" },
 };
 
 const typeMap = {
-  return: "Trả hàng",
-  exchange: "Đổi hàng",
-  refund: "Hoàn tiền",
-  complaint: "Khiếu nại",
-  warranty: "Bảo hành",
+  return: "Return",
+  exchange: "Exchange",
+  refund: "Refund",
+  complaint: "Complaint",
+  warranty: "Warranty",
 };
 
 // Valid transitions per the backend workflow
@@ -276,9 +276,9 @@ export default function AdminComplaints() {
     setPackageWeight(500);
   };
 
-  const handleAhamoveEstimate = async () => {
+const handleAhamoveEstimate = async () => {
     if (!destAddress.trim() || !destLat || !destLng) {
-      setAhamoveError("Vui lòng nhập đầy đủ địa chỉ và tọa độ người nhận.");
+      setAhamoveError("Please enter a complete address and recipient's coordinates.");
       return;
     }
     setAhamoveLoading(true);
@@ -291,24 +291,24 @@ export default function AdminComplaints() {
           destinationAddress: destAddress.trim(),
           destinationLat: destLat,
           destinationLng: destLng,
-          recipientName: recipientName || "Khách hàng",
+          recipientName: recipientName || "Customer",
           recipientPhone: recipientPhone || "0900000000",
         }),
       });
       if (res.ok) {
         const data = await res.json();
         if (data.length === 0) {
-          setAhamoveError("Không tìm thấy dịch vụ vận chuyển cho địa chỉ này.");
+          setAhamoveError("No shipping services found for this address.");
         } else {
           setAhamoveServices(data);
           setAhamoveStep(2);
         }
       } else {
         const err = await res.json().catch(() => null);
-        setAhamoveError(err?.message || "Không thể lấy giá cước từ Ahamove.");
+        setAhamoveError(err?.message || "Unable to fetch shipping rates from Ahamove.");
       }
     } catch {
-      setAhamoveError("Lỗi kết nối Ahamove.");
+      setAhamoveError("Ahamove connection error.");
     } finally {
       setAhamoveLoading(false);
     }
@@ -329,23 +329,23 @@ export default function AdminComplaints() {
           destinationAddress: destAddress.trim(),
           destinationLat: destLat,
           destinationLng: destLng,
-          recipientName: recipientName || "Khách hàng",
+          recipientName: recipientName || "Customer",
           recipientPhone: recipientPhone || "0900000000",
           serviceId: ahamoveSelectedService,
         }),
       });
       if (res.ok) {
-        setActionMsg("Đã tạo vận đơn Ahamove thành công!");
+        setActionMsg("Ahamove order created successfully!");
         setTrackingConfirmed(true);
         setAhamoveStep(1);
         fetchComplaints(activeFilter, page);
       } else {
         const err = await res.json().catch(() => null);
-        setAhamoveError(err?.message || "Không thể tạo vận đơn Ahamove.");
+        setAhamoveError(err?.message || "Unable to create Ahamove order.");
         setAhamoveStep(2);
       }
     } catch {
-      setAhamoveError("Lỗi kết nối khi tạo vận đơn.");
+      setAhamoveError("Connection error while creating order.");
       setAhamoveStep(2);
     } finally {
       setAhamoveLoading(false);
@@ -373,21 +373,21 @@ export default function AdminComplaints() {
   return (
     <div className="ac-container">
       <div className="ac-header">
-        <h2>Quản lý Khiếu nại</h2>
-        <p>Xử lý yêu cầu trả hàng, đổi hàng, bảo hành từ khách hàng</p>
+        <h2>Complaint Management</h2>
+        <p>Process return, exchange, and warranty requests from customers</p>
       </div>
 
       {/* Filter tabs */}
       <div className="ac-filters">
         {[
-          { key: "all", label: "Tất cả" },
-          { key: "pending", label: "Chờ xử lý" },
-          { key: "under_review", label: "Đang xem xét" },
-          { key: "approved", label: "Đã duyệt" },
-          { key: "in_progress", label: "Đang xử lý" },
-          { key: "resolved", label: "Đã giải quyết" },
-          { key: "rejected", label: "Từ chối" },
-          { key: "cancelled", label: "Đã huỷ" },
+          { key: "all", label: "All" },
+          { key: "pending", label: "Pending" },
+          { key: "under_review", label: "Under review" },
+          { key: "approved", label: "Approved" },
+          { key: "in_progress", label: "In Progress" },
+          { key: "resolved", label: "Resolved" },
+          { key: "rejected", label: "Rejected" },
+          { key: "cancelled", label: "Cancelled" },
         ].map((f) => (
           <button
             key={f.key}
@@ -401,23 +401,23 @@ export default function AdminComplaints() {
 
       {/* Table */}
       {loading ? (
-        <div className="ac-loading">Đang tải...</div>
+        <div className="ac-loading">Loading...</div>
       ) : complaints.length === 0 ? (
-        <div className="ac-empty">Không có khiếu nại nào.</div>
+        <div className="ac-empty">No complaints.</div>
       ) : (
         <>
           <div className="ac-table-wrapper">
             <table className="ac-table">
               <thead>
                 <tr>
-                  <th>Mã</th>
-                  <th>Khách hàng</th>
-                  <th>Sản phẩm</th>
-                  <th>Loại</th>
-                  <th>Lý do</th>
-                  <th>Trạng thái</th>
-                  <th>Ngày tạo</th>
-                  <th>Thao tác</th>
+                  <th>ID</th>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th>Type</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Creation Date</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -588,7 +588,7 @@ export default function AdminComplaints() {
                             className="ac-action-btn"
                             onClick={() => openStatusModal(c)}
                           >
-                            Xử lý
+                            Process
                           </button>
                         ) : (
                           <span style={{ color: "#9ca3af", fontSize: "13px" }}>
@@ -610,16 +610,16 @@ export default function AdminComplaints() {
                 disabled={page <= 1}
                 onClick={() => fetchComplaints(activeFilter, page - 1)}
               >
-                ← Trước
+                ← Before
               </button>
               <span>
-                Trang {page}/{totalPages}
+                Page {page}/{totalPages}
               </span>
               <button
                 disabled={page >= totalPages}
                 onClick={() => fetchComplaints(activeFilter, page + 1)}
               >
-                Tiếp →
+                After →
               </button>
             </div>
           )}
@@ -674,11 +674,11 @@ export default function AdminComplaints() {
             if (needsTracking && !trackingConfirmed) {
               canShowStatusUpdate = false;
               statusBlockReason =
-                "Vui lòng tạo vận đơn trả hàng (J&T hoặc thủ công) trước khi cập nhật trạng thái.";
+                "Please create a return shipment order (J&T or manual) before updating the status.";
             } else if (needsRefund && !refundConfirmed) {
               canShowStatusUpdate = false;
               statusBlockReason =
-                "Vui lòng nhập số tiền hoàn trước khi cập nhật trạng thái.";
+                "Please enter the refund amount before updating the status.";
             }
           }
 
@@ -686,7 +686,7 @@ export default function AdminComplaints() {
             if (!hasExchangeOrder) {
               canShowStatusUpdate = false;
               statusBlockReason =
-                "Khách hàng chưa chọn sản phẩm thay thế. Không thể chuyển sang trạng thái 'Đang xử lý' cho đến khi khách hoàn tất chọn sản phẩm đổi.";
+                "The customer has not selected a replacement product yet. Cannot move to 'In Progress' until the customer completes the replacement selection.";
             }
           }
 
@@ -700,7 +700,7 @@ export default function AdminComplaints() {
               if (transitions.length === 0) {
                 canShowStatusUpdate = false;
                 statusBlockReason =
-                  "Không thể hoàn tất khiếu nại cho đến khi đơn hàng thay thế đã được giao đến khách hàng.";
+                  "The complaint cannot be completed until the replacement order has been delivered to the customer.";
               }
             }
           }
@@ -712,7 +712,7 @@ export default function AdminComplaints() {
             if (!refundConfirmed) {
               canShowStatusUpdate = false;
               statusBlockReason =
-                "Vui lòng nhập số tiền hoàn trước khi cập nhật trạng thái.";
+                "Please enter the refund amount before updating the status.";
             }
           }
 
@@ -723,7 +723,7 @@ export default function AdminComplaints() {
             if (needsTracking && !trackingConfirmed) {
               canShowStatusUpdate = false;
               statusBlockReason =
-                "Vui lòng tạo vận đơn bảo hành (J&T hoặc thủ công) trước khi cập nhật trạng thái.";
+                "Please create a warranty shipment order (J&T or manual) before updating the status.";
             }
           }
 
@@ -745,7 +745,7 @@ export default function AdminComplaints() {
                   overflowY: "auto",
                 }}
               >
-                <h3>Xử lý khiếu nại</h3>
+                <h3>Handle Complaint</h3>
                 <p
                   style={{
                     color: "#6b7280",
@@ -753,7 +753,7 @@ export default function AdminComplaints() {
                     margin: "8px 0 6px",
                   }}
                 >
-                  Mã:{" "}
+                  Code:{" "}
                   <b>
                     #
                     {String(
@@ -762,9 +762,9 @@ export default function AdminComplaints() {
                     ).slice(0, 8)}
                   </b>
                   {" · "}
-                  Loại: <b>{typeMap[cType] || cType}</b>
+                  Type: <b>{typeMap[cType] || cType}</b>
                   {" · "}
-                  Hiện tại: {getStatusBadge(cStatus)}
+                  Current: {getStatusBadge(cStatus)}
                 </p>
                 <p
                   style={{
@@ -773,7 +773,7 @@ export default function AdminComplaints() {
                     margin: "0 0 12px",
                   }}
                 >
-                  Lý do:{" "}
+                  Reason:{" "}
                   {(
                     selectedComplaint.reason ||
                     selectedComplaint.Reason ||
@@ -804,7 +804,7 @@ export default function AdminComplaints() {
                     );
                     return (
                       <div style={{ margin: "0 0 16px" }}>
-                        <b style={{ fontSize: "13px" }}>Bằng chứng:</b>
+                        <b style={{ fontSize: "13px" }}>Evidence:</b>
                         {imageUrls.length > 0 && (
                           <div
                             style={{
@@ -823,7 +823,7 @@ export default function AdminComplaints() {
                               >
                                 <img
                                   src={url}
-                                  alt={`Ảnh ${idx + 1}`}
+                                  alt={`Image ${idx + 1}`}
                                   style={{
                                     width: "100px",
                                     height: "100px",
@@ -847,7 +847,7 @@ export default function AdminComplaints() {
                               rel="noopener noreferrer"
                               style={{ color: "#2563eb" }}
                             >
-                              Xem file đính kèm{" "}
+                              View attached file{" "}
                               {otherUrls.length > 1 ? idx + 1 : ""}
                             </a>
                           </p>
@@ -876,7 +876,7 @@ export default function AdminComplaints() {
                         color: "#0f172a",
                       }}
                     >
-                      Sản phẩm bị khiếu nại
+                                           Complained Product
                     </label>
                     <p style={{ margin: "2px 0", fontSize: "13px" }}>
                       <b>OrderItem ID:</b>{" "}
@@ -885,27 +885,27 @@ export default function AdminComplaints() {
                         "—"}
                     </p>
                     <p style={{ margin: "2px 0", fontSize: "13px" }}>
-                      <b>Tên:</b>{" "}
+                      <b>Name:</b>{" "}
                       {complaintDetail.originalItem.frameName ||
                         complaintDetail.originalItem.productName ||
                         "—"}
                     </p>
                     <p style={{ margin: "2px 0", fontSize: "13px" }}>
-                      <b>Giá:</b>{" "}
+                      <b>Price:</b>{" "}
                       {(
                         complaintDetail.originalItem.unitPrice || 0
                       ).toLocaleString("vi-VN")}{" "}
                       $
                     </p>
                     <p style={{ margin: "2px 0", fontSize: "13px" }}>
-                      <b>Số lượng:</b>{" "}
+                      <b>Quantity:</b>{" "}
                       {complaintDetail.originalItem.quantity ||
                         complaintDetail.originalItem.Quantity ||
                         1}
                     </p>
                     {complaintDetail.originalItem.selectedSize && (
                       <p style={{ margin: "2px 0", fontSize: "13px" }}>
-                        <b>Kích thước:</b>{" "}
+                        <b>Size:</b>{" "}
                         {complaintDetail.originalItem.selectedSize}
                       </p>
                     )}
@@ -932,7 +932,7 @@ export default function AdminComplaints() {
                         color: "#0369a1",
                       }}
                     >
-                      Thông tin đổi hàng
+                      Exchange Information
                     </label>
                     {hasExchangeOrder ? (
                       <div>
@@ -951,7 +951,7 @@ export default function AdminComplaints() {
                               fontSize: "13px",
                             }}
                           >
-                            Khách đã chọn sản phẩm thay thế
+                            Customer has selected a replacement product
                           </span>
                         </div>
                         {exchangeOrderDetail && (
@@ -970,7 +970,7 @@ export default function AdminComplaints() {
                                 color: "#374151",
                               }}
                             >
-                              <b>Mã đơn đổi:</b> #
+                              <b>Exchange Order Code:</b> #
                               {String(exchangeOrderDetail.orderId || "").slice(
                                 0,
                                 8,
@@ -983,7 +983,7 @@ export default function AdminComplaints() {
                                 color: "#374151",
                               }}
                             >
-                              <b>Trạng thái:</b>{" "}
+                              <b>Status:</b>{" "}
                               {exchangeOrderDetail.status || "—"}
                             </p>
                             <p
@@ -993,7 +993,7 @@ export default function AdminComplaints() {
                                 color: "#374151",
                               }}
                             >
-                              <b>Địa chỉ giao:</b>{" "}
+                              <b>Shipping Address:</b>{" "}
                               {exchangeOrderDetail.shippingAddress || "—"}
                             </p>
                             {(
@@ -1012,15 +1012,15 @@ export default function AdminComplaints() {
                                 }}
                               >
                                 <p style={{ margin: "2px 0" }}>
-                                  <b>Sản phẩm:</b>{" "}
+                                  <b>Product:</b>{" "}
                                   {item.frame?.frameName ||
                                     item.frameName ||
-                                    "Gọng kính"}
+                                    "Eyeglass Frame"}
                                   {(item.selectedColor || item.frame?.color) &&
-                                    ` - Màu: ${item.selectedColor || item.frame?.color}`}
+                                    ` - Color: ${item.selectedColor || item.frame?.color}`}
                                 </p>
                                 <p style={{ margin: "2px 0" }}>
-                                  <b>SL:</b> {item.quantity || 1} · <b>Giá:</b>{" "}
+                                  <b>Qty:</b> {item.quantity || 1} · <b>Price:</b>{" "}
                                   {(
                                     item.unitPrice ||
                                     item.orderPrice ||
@@ -1038,7 +1038,7 @@ export default function AdminComplaints() {
                                 color: "#0369a1",
                               }}
                             >
-                              Tổng đơn đổi:{" "}
+                              Total Exchange Order:{" "}
                               {(
                                 exchangeOrderDetail.totalAmount || 0
                               ).toLocaleString("vi-VN")}
@@ -1064,7 +1064,7 @@ export default function AdminComplaints() {
                             fontWeight: "600",
                           }}
                         >
-                          Khách hàng chưa chọn sản phẩm thay thế
+                          Customer has not selected a replacement product yet
                         </p>
                         <p
                           style={{
@@ -1073,8 +1073,8 @@ export default function AdminComplaints() {
                             color: "#a16207",
                           }}
                         >
-                          Không thể chuyển sang "Đang xử lý" cho đến khi khách
-                          hoàn tất chọn sản phẩm đổi.
+                          Cannot move to "In Progress" until the customer
+                          completes selecting a replacement product.
                         </p>
                       </div>
                     )}
@@ -1120,20 +1120,20 @@ export default function AdminComplaints() {
                       }}
                     >
                       {trackingConfirmed ? "" : "① "}
-                      Vận đơn trả hàng / gửi bảo hành
+                      Return / Warranty Shipment
                     </label>
                     {trackingConfirmed ? (
                       <div style={{ fontSize: "13px", color: "#065f46" }}>
-                        <p style={{ margin: 0 }}>Đã tạo vận đơn thành công.</p>
+                        <p style={{ margin: 0 }}>Shipment created successfully.</p>
                         {(complaintDetail?.returnShippingCarrier ||
                           complaintDetail?.ReturnShippingCarrier) && (
                           <p style={{ margin: "4px 0 0", fontSize: "12px" }}>
-                            Hãng vận chuyển:{" "}
+                            Carrier:{" "}
                             <b>
                               {complaintDetail.returnShippingCarrier ||
                                 complaintDetail.ReturnShippingCarrier}
                             </b>
-                            {" — "}Mã:{" "}
+                            {" — "}Code:{" "}
                             <b>
                               {complaintDetail.returnTrackingNumber ||
                                 complaintDetail.ReturnTrackingNumber}
@@ -1195,7 +1195,7 @@ export default function AdminComplaints() {
                               cursor: "pointer",
                             }}
                           >
-                            Nhập thủ công
+                            Manual Entry
                           </button>
                         </div>
 
@@ -1229,7 +1229,7 @@ export default function AdminComplaints() {
                               onChange={(e) =>
                                 setTrackingNumber(e.target.value)
                               }
-                              placeholder="VD: GHTK123456789"
+                              placeholder="Ex: GHTK123456789"
                               style={{
                                 flex: 1,
                                 padding: "8px 12px",
@@ -1253,7 +1253,7 @@ export default function AdminComplaints() {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              Cập nhật
+                              Update
                             </button>
                           </div>
                         ) : (
@@ -1268,7 +1268,7 @@ export default function AdminComplaints() {
                                     fontSize: "13px",
                                   }}
                                 >
-                                  Địa chỉ người nhận
+                                  Recipient Address
                                 </p>
                                 <div
                                   style={{
@@ -1286,7 +1286,7 @@ export default function AdminComplaints() {
                                         color: "#374151",
                                       }}
                                     >
-                                      Tên:
+                                      Name:
                                     </label>
                                     <input
                                       type="text"
@@ -1312,7 +1312,7 @@ export default function AdminComplaints() {
                                         color: "#374151",
                                       }}
                                     >
-                                      SĐT:
+                                      Phone:
                                     </label>
                                     <input
                                       type="text"
@@ -1338,7 +1338,7 @@ export default function AdminComplaints() {
                                         color: "#374151",
                                       }}
                                     >
-                                      Địa chỉ đầy đủ:{" "}
+                                      Full Address:{" "}
                                       <span style={{ color: "red" }}>*</span>
                                     </label>
                                     <input
@@ -1347,7 +1347,7 @@ export default function AdminComplaints() {
                                       onChange={(e) =>
                                         setDestAddress(e.target.value)
                                       }
-                                      placeholder="VD: 123 Nguyễn Huệ, Quận 1, TP.HCM"
+                                      placeholder="Ex: 123 Nguyen Hue, District 1, HCMC"
                                       style={{
                                         width: "100%",
                                         padding: "6px 10px",
@@ -1366,7 +1366,7 @@ export default function AdminComplaints() {
                                         color: "#374151",
                                       }}
                                     >
-                                      Vĩ độ (Lat):{" "}
+                                      Latitude (Lat):{" "}
                                       <span style={{ color: "red" }}>*</span>
                                     </label>
                                     <input
@@ -1375,7 +1375,7 @@ export default function AdminComplaints() {
                                       onChange={(e) =>
                                         setDestLat(e.target.value)
                                       }
-                                      placeholder="VD: 10.7769"
+                                      placeholder="Ex: 10.7769"
                                       style={{
                                         width: "100%",
                                         padding: "6px 10px",
@@ -1394,7 +1394,7 @@ export default function AdminComplaints() {
                                         color: "#374151",
                                       }}
                                     >
-                                      Kinh độ (Lng):{" "}
+                                      Longitude (Lng):{" "}
                                       <span style={{ color: "red" }}>*</span>
                                     </label>
                                     <input
@@ -1403,7 +1403,7 @@ export default function AdminComplaints() {
                                       onChange={(e) =>
                                         setDestLng(e.target.value)
                                       }
-                                      placeholder="VD: 106.7009"
+                                      placeholder="Ex: 106.7009"
                                       style={{
                                         width: "100%",
                                         padding: "6px 10px",
@@ -1422,7 +1422,7 @@ export default function AdminComplaints() {
                                     fontSize: "13px",
                                   }}
                                 >
-                                  Thông tin kiện hàng
+                                  Package Information
                                 </p>
                                 <div style={{ marginBottom: "10px" }}>
                                   <label
@@ -1432,7 +1432,7 @@ export default function AdminComplaints() {
                                       color: "#374151",
                                     }}
                                   >
-                                    Cân nặng (g):
+                                    Weight (g):
                                   </label>
                                   <input
                                     type="number"
@@ -1468,8 +1468,8 @@ export default function AdminComplaints() {
                                   }}
                                 >
                                   {ahamoveLoading
-                                    ? "Đang tải..."
-                                    : "Lấy giá cước →"}
+                                    ? "Loading..."
+                                    : "Get Shipping Rate →"}
                                 </button>
                               </div>
                             )}
@@ -1483,8 +1483,7 @@ export default function AdminComplaints() {
                                     fontSize: "13px",
                                   }}
                                 >
-                                  Chọn dịch vụ ({ahamoveServices.length} dịch
-                                  vụ)
+                                  Select Service ({ahamoveServices.length} services)
                                 </p>
                                 <div
                                   style={{
@@ -1523,7 +1522,7 @@ export default function AdminComplaints() {
                                         {svc.name ||
                                           svc.serviceName ||
                                           svc.id ||
-                                          "Dịch vụ"}
+                                          "Service"}
                                       </div>
                                       <div
                                         style={{
@@ -1568,7 +1567,7 @@ export default function AdminComplaints() {
                                       fontSize: "13px",
                                     }}
                                   >
-                                    ← Quay lại
+                                    ← Back
                                   </button>
                                   <button
                                     onClick={handleAhamoveCreateOrder}
@@ -1593,8 +1592,8 @@ export default function AdminComplaints() {
                                     }}
                                   >
                                     {ahamoveLoading
-                                      ? "Đang tạo..."
-                                      : "Tạo vận đơn ✓"}
+                                      ? "Creating..."
+                                      : "Create Shipment ✓"}
                                   </button>
                                 </div>
                               </div>
@@ -1614,7 +1613,7 @@ export default function AdminComplaints() {
                                     fontWeight: 600,
                                   }}
                                 >
-                                  Đang tạo vận đơn...
+                                  Creating shipment...
                                 </p>
                               </div>
                             )}
@@ -1645,7 +1644,7 @@ export default function AdminComplaints() {
                         color: "#065f46",
                       }}
                     >
-                      Xử lý hoàn tiền
+                      Process Refund
                     </label>
                     {refundConfirmed ? (
                       <p
@@ -1655,7 +1654,7 @@ export default function AdminComplaints() {
                           color: "#065f46",
                         }}
                       >
-                        Đã nhập số tiền hoàn thành công.
+                        Refund amount entered successfully.
                       </p>
                     ) : (
                       <div
@@ -1671,7 +1670,7 @@ export default function AdminComplaints() {
                           step="1000"
                           value={refundAmount}
                           onChange={(e) => setRefundAmount(e.target.value)}
-                          placeholder="Số tiền"
+                          placeholder="Amount"
                           style={{
                             flex: 1,
                             padding: "8px 12px",
@@ -1695,7 +1694,7 @@ export default function AdminComplaints() {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          Hoàn tiền
+                          Refund
                         </button>
                       </div>
                     )}
@@ -1759,7 +1758,7 @@ export default function AdminComplaints() {
                                 cStatus === "in_progress")
                             ? "② "
                             : ""}
-                      Cập nhật trạng thái
+                      Update Status
                     </label>
                     <div
                       style={{
@@ -1800,7 +1799,7 @@ export default function AdminComplaints() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        Cập nhật
+                        Update
                       </button>
                     </div>
                   </div>
@@ -1816,7 +1815,7 @@ export default function AdminComplaints() {
                       fontSize: "14px",
                     }}
                   >
-                    Ghi chú nhân viên
+                    Staff Note
                   </label>
                   <textarea
                     value={staffNote}
@@ -1867,7 +1866,7 @@ export default function AdminComplaints() {
                       fontWeight: "600",
                     }}
                   >
-                    Đóng
+                    Close
                   </button>
                 </div>
               </div>

@@ -6,22 +6,22 @@ import "./MyComplaints.css";
 const API = "https://myspectra.runasp.net/api/Complaints";
 
 const statusMap = {
-  pending: { text: "Chờ xử lý", color: "#d97706", bg: "#fef3c7" },
-  under_review: { text: "Đang xem xét", color: "#6366f1", bg: "#e0e7ff" },
-  approved: { text: "Đã duyệt", color: "#059669", bg: "#d1fae5" },
-  rejected: { text: "Từ chối", color: "#dc2626", bg: "#fee2e2" },
-  in_progress: { text: "Đang xử lý", color: "#3b82f6", bg: "#dbeafe" },
-  resolved: { text: "Đã giải quyết", color: "#10b981", bg: "#d1fae5" },
-  cancelled: { text: "Đã huỷ", color: "#6b7280", bg: "#f3f4f6" },
-  customer_cancelled: { text: "Bạn đã rút", color: "#9333ea", bg: "#f3e8ff" },
+  pending: { text: "Pending", color: "#d97706", bg: "#fef3c7" },
+  under_review: { text: "Under Review", color: "#6366f1", bg: "#e0e7ff" },
+  approved: { text: "Approved", color: "#059669", bg: "#d1fae5" },
+  rejected: { text: "Rejected", color: "#dc2626", bg: "#fee2e2" },
+  in_progress: { text: "In Progress", color: "#3b82f6", bg: "#dbeafe" },
+  resolved: { text: "Resolved", color: "#10b981", bg: "#d1fae5" },
+  cancelled: { text: "Cancelled", color: "#6b7280", bg: "#f3f4f6" },
+  customer_cancelled: { text: "You Withdrawn", color: "#9333ea", bg: "#f3e8ff" },
 };
 
 const typeMap = {
-  return: "Trả hàng",
-  exchange: "Đổi hàng",
-  refund: "Hoàn tiền",
-  complaint: "Khiếu nại",
-  warranty: "Bảo hành",
+  return: "Return",
+  exchange: "Exchange",
+  refund: "Refund",
+  complaint: "Complaint",
+  warranty: "Warranty",
 };
 
 const statusFlow = [
@@ -34,39 +34,39 @@ const statusFlow = [
 
 const flowDescriptions = {
   exchange: [
-    "Gửi yêu cầu đổi hàng",
-    "Nhân viên xem xét yêu cầu",
-    "Yêu cầu được duyệt — Chọn sản phẩm thay thế",
-    "Đang xử lý đổi hàng — Gửi trả sản phẩm cũ",
-    "Hoàn tất đổi hàng",
+    "Submit exchange request",
+    "Staff reviews the request",
+    "Request approved — Select replacement product",
+    "Processing exchange — Return old product",
+    "Exchange completed",
   ],
   return: [
-    "Gửi yêu cầu trả hàng",
-    "Nhân viên xem xét yêu cầu",
-    "Yêu cầu được duyệt — Chờ hướng dẫn trả hàng",
-    "Gửi trả sản phẩm — Chờ hoàn tiền",
-    "Hoàn tất trả hàng & hoàn tiền",
+    "Submit return request",
+    "Staff reviews the request",
+    "Request approved — Awaiting return instructions",
+    "Return product — Awaiting refund",
+    "Return & refund completed",
   ],
   refund: [
-    "Gửi yêu cầu hoàn tiền",
-    "Nhân viên xem xét yêu cầu",
-    "Yêu cầu được duyệt",
-    "Đang xử lý hoàn tiền",
-    "Hoàn tiền thành công",
+    "Submit refund request",
+    "Staff reviews the request",
+    "Request approved",
+    "Refund is being processed",
+    "Refund completed successfully",
   ],
   warranty: [
-    "Gửi yêu cầu bảo hành",
-    "Nhân viên xem xét yêu cầu",
-    "Yêu cầu được duyệt — Chờ hướng dẫn gửi hàng",
-    "Đang sửa chữa / thay thế sản phẩm",
-    "Hoàn tất bảo hành",
+    "Submit warranty request",
+    "Staff reviews the request",
+    "Request approved — Awaiting shipping instructions",
+    "Repairing / replacing product",
+    "Warranty completed",
   ],
   complaint: [
-    "Gửi khiếu nại",
-    "Nhân viên xem xét",
-    "Khiếu nại được duyệt",
-    "Đang xử lý",
-    "Đã giải quyết",
+    "Submit complaint",
+    "Staff reviews",
+    "Complaint approved",
+    "Processing",
+    "Resolved",
   ],
 };
 
@@ -100,23 +100,23 @@ export default function ComplaintDetail() {
         },
       });
       if (res.ok) setComplaint(await res.json());
-      else if (res.status === 404) setError("Không tìm thấy khiếu nại này.");
+      else if (res.status === 404) setError("Complaint not found.");
       else if (res.status === 403)
-        setError("Bạn không có quyền xem khiếu nại này.");
-      else setError("Có lỗi xảy ra khi tải dữ liệu.");
+        setError("You do not have permission to view this complaint.");
+      else setError("An error occurred while loading data.");
     } catch {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
+      setError("Connection error. Please try again.");
     }
     setLoading(false);
   };
 
-  if (loading) return <div className="mc-loading">Đang tải...</div>;
+  if (loading) return <div className="mc-loading">Loading...</div>;
   if (error)
     return (
       <div style={{ textAlign: "center", padding: "60px" }}>
         <h2 style={{ color: "#dc2626" }}>{error}</h2>
         <Link to="/profile" style={{ color: "#3b82f6" }}>
-          ← Quay lại
+          ← Back
         </Link>
       </div>
     );
@@ -157,7 +157,7 @@ export default function ComplaintDetail() {
   const canCancel = ["pending", "under_review", "approved"].includes(status);
 
   const handleCancelComplaint = async () => {
-    if (!window.confirm("Bạn có chắc muốn rút khiếu nại này không?")) return;
+    if (!window.confirm("Are you sure you want to withdraw this complaint?")) return;
     setCancelling(true);
     try {
       const res = await fetch(`${API}/${reqId}/cancel`, {
@@ -171,10 +171,10 @@ export default function ComplaintDetail() {
         fetchDetail();
       } else {
         const err = await res.json().catch(() => null);
-        alert(err?.message || err?.Message || "Không thể rút khiếu nại.");
+        alert(err?.message || err?.Message || "Unable to withdraw complaint.");
       }
     } catch {
-      alert("Lỗi kết nối.");
+      alert("Connection error.");
     }
     setCancelling(false);
   };
@@ -198,7 +198,7 @@ export default function ComplaintDetail() {
           marginBottom: "20px",
         }}
       >
-        ← Quay lại trang cá nhân
+        ← Back to profile page
       </Link>
 
       <div
@@ -224,12 +224,12 @@ export default function ComplaintDetail() {
         >
           <div>
             <h2 style={{ margin: 0, fontSize: "22px" }}>
-              {typeMap[type] || "Khiếu nại"} — Chi Tiết
+              {typeMap[type] || "Complaint"} — Detail
             </h2>
             <p
               style={{ margin: "6px 0 0", color: "#6b7280", fontSize: "14px" }}
             >
-              Mã:{" "}
+              Code:{" "}
               <b style={{ color: "#111827" }}>#{String(reqId).slice(0, 8)}</b>
               {" · "}
               {date ? new Date(date).toLocaleString("vi-VN") : ""}
@@ -329,8 +329,8 @@ export default function ComplaintDetail() {
             }}
           >
             {status === "rejected"
-              ? "Yêu cầu đã bị từ chối"
-              : "Yêu cầu đã bị huỷ"}
+              ? "Request has been rejected"
+              : "Request has been cancelled"}
           </div>
         )}
 
@@ -353,7 +353,7 @@ export default function ComplaintDetail() {
                 fontSize: "15px",
               }}
             >
-              Sản phẩm gốc
+              Original Product
             </h4>
             <div
               style={{
@@ -378,17 +378,17 @@ export default function ComplaintDetail() {
               )}
               <div>
                 <p style={{ margin: "4px 0", fontSize: "14px" }}>
-                  <b>Tên:</b> {originalItem.frameName || "—"}
+                  <b>Name:</b> {originalItem.frameName || "—"}
                 </p>
                 <p style={{ margin: "4px 0", fontSize: "14px" }}>
-                  <b>Giá:</b> {fmt(originalItem.unitPrice)}$
+                  <b>Price:</b> {fmt(originalItem.unitPrice)}$
                 </p>
                 <p style={{ margin: "4px 0", fontSize: "14px" }}>
-                  <b>Số lượng:</b> {originalItem.quantity || 1}
+                  <b>Quantity:</b> {originalItem.quantity || 1}
                 </p>
                 {originalItem.selectedSize && (
                   <p style={{ margin: "4px 0", fontSize: "14px" }}>
-                    <b>Kích thước:</b> {originalItem.selectedSize}
+                    <b>Size:</b> {originalItem.selectedSize}
                   </p>
                 )}
               </div>
@@ -414,7 +414,7 @@ export default function ComplaintDetail() {
               fontSize: "15px",
             }}
           >
-            Lý do
+            Reason
           </h4>
           <p
             style={{
@@ -438,7 +438,7 @@ export default function ComplaintDetail() {
                 color: "#374151",
               }}
             >
-              Hình ảnh/Video đính kèm
+              Attached Images/Videos
             </h4>
             {(() => {
               const urls = mediaUrl
@@ -477,7 +477,7 @@ export default function ComplaintDetail() {
                         >
                           <img
                             src={url}
-                            alt={`Ảnh ${idx + 1}`}
+                            alt={`Image ${idx + 1}`}
                             style={{
                               width: "120px",
                               height: "120px",
@@ -502,7 +502,7 @@ export default function ComplaintDetail() {
                         marginBottom: "4px",
                       }}
                     >
-                      Xem tệp đính kèm {otherUrls.length > 1 ? idx + 1 : ""} →
+                      View attachment {otherUrls.length > 1 ? idx + 1 : ""} →
                     </a>
                   ))}
                 </>
@@ -530,7 +530,7 @@ export default function ComplaintDetail() {
                 fontSize: "15px",
               }}
             >
-              Ghi chú từ nhân viên
+              Staff Note
             </h4>
             <p
               style={{
@@ -547,7 +547,7 @@ export default function ComplaintDetail() {
 
         {/* === TYPE-SPECIFIC FLOW SECTIONS === */}
 
-        {/* EXCHANGE (Đổi hàng) */}
+        {/* EXCHANGE (Exchange) */}
         {type === "exchange" && (
           <div
             style={{
@@ -566,7 +566,7 @@ export default function ComplaintDetail() {
                 fontSize: "15px",
               }}
             >
-              Thông tin Đổi hàng
+              Exchange Information
             </h4>
             {exchangeOrderId ? (
               <div>
@@ -577,7 +577,7 @@ export default function ComplaintDetail() {
                     color: "#065f46",
                   }}
                 >
-                  Đơn đổi hàng đã được tạo
+                  Exchange order has been created
                 </p>
                 <Link
                   to={`/orders/${exchangeOrderId}`}
@@ -593,7 +593,7 @@ export default function ComplaintDetail() {
                     fontSize: "14px",
                   }}
                 >
-                  Xem đơn hàng thay thế →
+                  View replacement order →
                 </Link>
               </div>
             ) : status === "approved" || status === "in_progress" ? (
@@ -605,8 +605,8 @@ export default function ComplaintDetail() {
                     color: "#374151",
                   }}
                 >
-                  Yêu cầu đổi hàng đã được duyệt. Bạn có thể chọn sản phẩm thay
-                  thế ngay bây giờ.
+                  Your exchange request has been approved. You can choose a
+                  replacement product right now.
                 </p>
                 <Link
                   to={`/complaints/${reqId}/exchange`}
@@ -621,20 +621,20 @@ export default function ComplaintDetail() {
                     fontSize: "14px",
                   }}
                 >
-                  Chọn sản phẩm thay thế →
+                  Select replacement product →
                 </Link>
               </div>
             ) : (
               <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
                 {status === "pending" || status === "under_review"
-                  ? "Vui lòng chờ nhân viên xem xét và duyệt yêu cầu đổi hàng."
-                  : "Quy trình đổi hàng đã kết thúc."}
+                  ? "Please wait for staff to review and approve your exchange request."
+                  : "The exchange process has ended."}
               </p>
             )}
           </div>
         )}
 
-        {/* RETURN (Trả hàng) */}
+        {/* RETURN (Return) */}
         {type === "return" && (
           <div
             style={{
@@ -653,12 +653,12 @@ export default function ComplaintDetail() {
                 fontSize: "15px",
               }}
             >
-              Thông tin Trả hàng
+              Return Information
             </h4>
             {returnTrackingNumber ? (
               <div style={{ marginBottom: "12px" }}>
                 <p style={{ margin: "4px 0", fontSize: "14px" }}>
-                  <b>Mã vận đơn trả hàng:</b>{" "}
+                  <b>Return tracking number:</b>{" "}
                   <span style={{ color: "#1d4ed8", fontWeight: 600 }}>
                     {returnTrackingNumber}
                   </span>
@@ -672,8 +672,8 @@ export default function ComplaintDetail() {
                   color: "#374151",
                 }}
               >
-                Yêu cầu đã được duyệt. Vui lòng chờ nhân viên cung cấp mã vận
-                đơn trả hàng.
+                Your request has been approved. Please wait for staff to provide
+                the return tracking number.
               </p>
             ) : (
               <p
@@ -684,7 +684,7 @@ export default function ComplaintDetail() {
                 }}
               >
                 {status === "pending" || status === "under_review"
-                  ? "Đang chờ xem xét."
+                  ? "Waiting for review."
                   : ""}
               </p>
             )}
@@ -704,12 +704,12 @@ export default function ComplaintDetail() {
                     color: "#065f46",
                   }}
                 >
-                  Số tiền sẽ hoàn: {fmt(refundAmount)}$
+                  Refund amount: {fmt(refundAmount)}$
                 </p>
                 {refundedAt && (
                   <p style={{ margin: 0, fontSize: "13px", color: "#047857" }}>
-                    Nhân viên sẽ liên hệ với bạn qua số điện thoại hoặc email để
-                    hỗ trợ hoàn tiền.
+                    Staff will contact you by phone number or email to assist
+                    with the refund.
                   </p>
                 )}
               </div>
@@ -717,7 +717,7 @@ export default function ComplaintDetail() {
           </div>
         )}
 
-        {/* REFUND (Hoàn tiền) */}
+        {/* REFUND (Refund) */}
         {type === "refund" && (
           <div
             style={{
@@ -736,7 +736,7 @@ export default function ComplaintDetail() {
                 fontSize: "15px",
               }}
             >
-              Thông tin Hoàn tiền
+              Refund Information
             </h4>
             {refundAmount != null && refundAmount > 0 ? (
               <div>
@@ -758,7 +758,7 @@ export default function ComplaintDetail() {
                       color: "#047857",
                     }}
                   >
-                    Đã hoàn tiền ngày{" "}
+                    Refunded on{" "}
                     {new Date(refundedAt).toLocaleString("vi-VN")}
                   </p>
                 ) : (
@@ -769,26 +769,26 @@ export default function ComplaintDetail() {
                       color: "#92400e",
                     }}
                   >
-                    Đang xử lý hoàn tiền...
+                    Processing refund...
                   </p>
                 )}
               </div>
             ) : status === "approved" || status === "in_progress" ? (
               <p style={{ margin: 0, fontSize: "14px", color: "#374151" }}>
-                Yêu cầu đã được duyệt. Nhân viên sẽ xử lý hoàn tiền cho bạn sớm
-                nhất.
+                Your request has been approved. Staff will process your refund
+                as soon as possible.
               </p>
             ) : (
               <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
                 {status === "pending" || status === "under_review"
-                  ? "Đang chờ nhân viên xem xét yêu cầu hoàn tiền."
-                  : "Quy trình hoàn tiền đã kết thúc."}
+                  ? "Waiting for staff to review your refund request."
+                  : "The refund process has ended."}
               </p>
             )}
           </div>
         )}
 
-        {/* WARRANTY (Bảo hành) */}
+        {/* WARRANTY (Warranty) */}
         {type === "warranty" && (
           <div
             style={{
@@ -807,12 +807,12 @@ export default function ComplaintDetail() {
                 fontSize: "15px",
               }}
             >
-              Thông tin Bảo hành
+              Warranty Information
             </h4>
             {returnTrackingNumber ? (
               <div style={{ marginBottom: "12px" }}>
                 <p style={{ margin: "4px 0", fontSize: "14px" }}>
-                  <b>Mã vận đơn gửi bảo hành:</b>{" "}
+                  <b>Warranty shipment tracking number:</b>{" "}
                   <span style={{ color: "#1d4ed8", fontWeight: 600 }}>
                     {returnTrackingNumber}
                   </span>
@@ -824,8 +824,8 @@ export default function ComplaintDetail() {
                     color: "#6b7280",
                   }}
                 >
-                  Hãy gửi sản phẩm về trung tâm bảo hành theo mã vận đơn phía
-                  trên.
+                  Please send the product to the warranty center using the
+                  tracking number above.
                 </p>
               </div>
             ) : status === "approved" || status === "in_progress" ? (
@@ -836,14 +836,14 @@ export default function ComplaintDetail() {
                   color: "#374151",
                 }}
               >
-                Yêu cầu bảo hành đã được duyệt. Vui lòng chờ nhân viên cung cấp
-                mã vận đơn để gửi sản phẩm.
+                Your warranty request has been approved. Please wait for staff
+                to provide the tracking number to send the product.
               </p>
             ) : (
               <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
                 {status === "pending" || status === "under_review"
-                  ? "Đang chờ xem xét yêu cầu bảo hành."
-                  : "Quy trình bảo hành đã kết thúc."}
+                  ? "Waiting for warranty request review."
+                  : "The warranty process has ended."}
               </p>
             )}
           </div>
@@ -871,7 +871,7 @@ export default function ComplaintDetail() {
                 fontSize: "14px",
               }}
             >
-              Chỉnh sửa khiếu nại
+              Edit complaint
             </Link>
           )}
           {canCancel && (
@@ -889,7 +889,7 @@ export default function ComplaintDetail() {
                 fontSize: "14px",
               }}
             >
-              {cancelling ? "Đang hủy..." : "Rút khiếu nại"}
+              {cancelling ? "Cancelling..." : "Withdraw complaint"}
             </button>
           )}
           <Link
@@ -904,7 +904,7 @@ export default function ComplaintDetail() {
               fontSize: "14px",
             }}
           >
-            Quay lại trang cá nhân
+            Back to profile page
           </Link>
         </div>
       </div>

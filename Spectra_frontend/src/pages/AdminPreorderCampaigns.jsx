@@ -90,7 +90,7 @@ export default function AdminPreorderCampaigns() {
     const frameStatus = frame.status?.toLowerCase();
     if (frameStatus === "inactive") {
       alert(
-        '⚠️ Kính này đang bị vô hiệu hóa. Vui lòng kích hoạt lại kính trong tab "Quản Lý Kính" trước khi thêm vào chiến dịch Pre-order.',
+        '⚠️ This frame is currently disabled. Please reactivate it in the "Frames Management" tab before adding it to a Pre-order campaign.',
       );
       return;
     }
@@ -132,19 +132,17 @@ export default function AdminPreorderCampaigns() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.frames.length === 0) {
-      alert(
-        "Bạn phải chọn ít nhất 1 sản phẩm hết hàng để đưa vào chiến dịch này!",
-      );
+      alert("You must select at least 1 out-of-stock product for this campaign!");
       return;
     }
     if (new Date(formData.startDate) >= new Date(formData.endDate)) {
-      alert("Lỗi: Ngày bắt đầu phải TRƯỚC ngày kết thúc!");
+      alert("Error: Start date must be BEFORE end date!");
       return;
     }
     if (
       new Date(formData.endDate) >= new Date(formData.estimatedDeliveryDate)
     ) {
-      alert("Lỗi: Ngày kết thúc chiến dịch phải TRƯỚC ngày giao hàng dự kiến!");
+      alert("Error: Campaign end date must be BEFORE estimated delivery date!");
       return;
     }
 
@@ -170,15 +168,15 @@ export default function AdminPreorderCampaigns() {
         { method: "POST", headers, body: JSON.stringify(payload) },
       );
       if (res.ok || res.status === 201) {
-        alert("Tạo chiến dịch Pre-order thành công!");
+        alert("Pre-order campaign created successfully!");
         setIsModalOpen(false);
         fetchCampaigns();
       } else {
         const err = await res.json();
-        alert("Lỗi khi tạo: " + (err.message || res.status));
+        alert("Failed to create: " + (err.message || res.status));
       }
     } catch (err) {
-      alert("Lỗi kết nối tới máy chủ.");
+      alert("Server connection error.");
     } finally {
       setIsSubmitting(false);
     }
@@ -221,15 +219,15 @@ export default function AdminPreorderCampaigns() {
       );
 
       if (res.ok || res.status === 200 || res.status === 204) {
-        alert("Cập nhật thông tin chiến dịch thành công!");
+        alert("Campaign updated successfully!");
         setIsEditModalOpen(false);
         fetchCampaigns();
       } else {
         const err = await res.json();
-        alert("Lỗi khi cập nhật: " + (err.message || res.status));
+        alert("Failed to update: " + (err.message || res.status));
       }
     } catch (err) {
-      alert("Lỗi kết nối tới máy chủ.");
+      alert("Server connection error.");
     } finally {
       setIsSubmitting(false);
     }
@@ -237,7 +235,7 @@ export default function AdminPreorderCampaigns() {
 
   // --- HANDLER DỪNG SỚM ---
   const handleEndCampaign = async (id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn KẾT THÚC SỚM chiến dịch này?"))
+    if (!window.confirm("Are you sure you want to END this campaign early?"))
       return;
     try {
       const res = await fetch(
@@ -245,13 +243,13 @@ export default function AdminPreorderCampaigns() {
         { method: "PATCH", headers },
       );
       if (res.ok) {
-        alert("Đã ép kết thúc chiến dịch!");
+        alert("Campaign ended successfully!");
         fetchCampaigns();
       } else {
-        alert("Lỗi khi kết thúc chiến dịch.");
+        alert("Failed to end campaign.");
       }
     } catch (err) {
-      alert("Lỗi kết nối mạng.");
+      alert("Network connection error.");
     }
   };
 
@@ -285,19 +283,19 @@ export default function AdminPreorderCampaigns() {
     <div className="admin-products-container">
       <div className="admin-products-header">
         <h2 className="admin-products-title">
-          Quản Lý Chiến Dịch Đặt Trước (Pre-order)
+          Pre-order Campaign Management
         </h2>
         <button onClick={handleOpenModal} className="btn-add">
-          + Tạo Chiến Dịch Mới
+          + Create New Campaign
         </button>
       </div>
 
       {/* Filter tabs */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
         {[
-          { key: "all", label: "Tất cả" },
-          { key: "running", label: "Đang chạy" },
-          { key: "ended", label: "Đã kết thúc" },
+          { key: "all", label: "All" },
+          { key: "running", label: "Running" },
+          { key: "ended", label: "Ended" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -328,13 +326,13 @@ export default function AdminPreorderCampaigns() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Tên Chiến Dịch</th>
-              <th>Thời gian chạy</th>
-              <th>Ngày giao (Dự kiến)</th>
-              <th>Số Suất (Slots)</th>
-              <th>Trạng thái</th>
+              <th>Campaign Name</th>
+              <th>Duration</th>
+              <th>Est. Delivery Date</th>
+              <th>Slots</th>
+              <th>Status</th>
               <th className="col-action" style={{ minWidth: "200px" }}>
-                Hành Động
+                Actions
               </th>
             </tr>
           </thead>
@@ -342,13 +340,13 @@ export default function AdminPreorderCampaigns() {
             {isLoading ? (
               <tr>
                 <td colSpan="6" className="col-action">
-                  Đang tải dữ liệu...
+                  Loading data...
                 </td>
               </tr>
             ) : pagedCampaigns.length === 0 ? (
               <tr>
                 <td colSpan="6" className="col-action">
-                  Chưa có chiến dịch nào được tìm thấy.
+                  No campaigns found.
                 </td>
               </tr>
             ) : (
@@ -366,21 +364,21 @@ export default function AdminPreorderCampaigns() {
                         {camp.campaignName}
                       </div>
                       <div style={{ fontSize: "13px", color: "#6b7280" }}>
-                        Gồm {camp.frames?.length || 0} sản phẩm
+                        Includes {camp.frames?.length || 0} products
                       </div>
                     </td>
                     <td style={{ fontSize: "14px", lineHeight: "1.5" }}>
                       <span style={{ color: "#047857" }}>
-                        Bắt đầu: {startDt.toLocaleDateString("vi-VN")}{" "}
-                        {startDt.toLocaleTimeString("vi-VN", {
+                        Start: {startDt.toLocaleDateString("en-US")}{" "}
+                        {startDt.toLocaleTimeString("en-US", {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
                       </span>{" "}
                       <br />
                       <span style={{ color: "#be123c" }}>
-                        Kết thúc: {endDt.toLocaleDateString("vi-VN")}{" "}
-                        {endDt.toLocaleTimeString("vi-VN", {
+                        End: {endDt.toLocaleDateString("en-US")}{" "}
+                        {endDt.toLocaleTimeString("en-US", {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -388,7 +386,7 @@ export default function AdminPreorderCampaigns() {
                     </td>
                     <td style={{ fontWeight: "bold" }}>
                       {new Date(camp.estimatedDeliveryDate).toLocaleDateString(
-                        "vi-VN",
+                        "en-US",
                       )}
                     </td>
                     <td>
@@ -417,7 +415,7 @@ export default function AdminPreorderCampaigns() {
                             fontSize: "12px",
                           }}
                         >
-                          Đã kết thúc
+                          Ended
                         </span>
                       ) : currentStatus === "upcoming" ? (
                         <span
@@ -430,7 +428,7 @@ export default function AdminPreorderCampaigns() {
                             fontSize: "12px",
                           }}
                         >
-                          Chưa bắt đầu
+                          Upcoming
                         </span>
                       ) : currentStatus === "active" ? (
                         <span
@@ -443,7 +441,7 @@ export default function AdminPreorderCampaigns() {
                             fontSize: "12px",
                           }}
                         >
-                          Đang chạy
+                          Running
                         </span>
                       ) : (
                         <span
@@ -483,7 +481,7 @@ export default function AdminPreorderCampaigns() {
                           fontSize: "12px",
                         }}
                       >
-                        Sửa
+                        Edit
                       </button>
                       {canEndEarly && (
                         <button
@@ -501,7 +499,7 @@ export default function AdminPreorderCampaigns() {
                             fontSize: "12px",
                           }}
                         >
-                          Dừng Khẩn Cấp
+                          Force End
                         </button>
                       )}
                     </td>
@@ -533,10 +531,10 @@ export default function AdminPreorderCampaigns() {
                 fontWeight: "bold",
               }}
             >
-              ← Trước
+              ← Previous
             </button>
             <span style={{ fontWeight: "bold", color: "#374151" }}>
-              Trang {currentPage} / {totalPages}
+              Page {currentPage} / {totalPages}
             </span>
             <button
               disabled={currentPage >= totalPages}
@@ -550,7 +548,7 @@ export default function AdminPreorderCampaigns() {
                 fontWeight: "bold",
               }}
             >
-              Sau →
+              Next →
             </button>
           </div>
         )}
@@ -592,7 +590,7 @@ export default function AdminPreorderCampaigns() {
                 paddingBottom: "15px",
               }}
             >
-              Tạo Chiến Dịch Kích Cầu (Pre-order)
+              Create Pre-order Campaign
             </h2>
             <form onSubmit={handleSubmit}>
               <div
@@ -611,7 +609,7 @@ export default function AdminPreorderCampaigns() {
                       marginBottom: "5px",
                     }}
                   >
-                    Tên Chiến Dịch (*)
+                    Campaign Name (*)
                   </label>
                   <input
                     type="text"
@@ -627,7 +625,7 @@ export default function AdminPreorderCampaigns() {
                       border: "1px solid #ccc",
                       fontSize: "14px",
                     }}
-                    placeholder="VD: Mở bán giới hạn Kính Râm Hè 2026..."
+                    placeholder="e.g. Limited Summer Sunglasses Sale 2026..."
                   />
                 </div>
                 <div>
@@ -638,7 +636,7 @@ export default function AdminPreorderCampaigns() {
                       marginBottom: "5px",
                     }}
                   >
-                    Tổng Số Suất Cho Phép (*)
+                    Total Slots (*)
                   </label>
                   <input
                     type="number"
@@ -667,7 +665,7 @@ export default function AdminPreorderCampaigns() {
                       color: "#047857",
                     }}
                   >
-                    Ngày Bắt Đầu Mở Bán (*)
+                    Start Date (*)
                   </label>
                   <input
                     type="datetime-local"
@@ -694,7 +692,7 @@ export default function AdminPreorderCampaigns() {
                       color: "#be123c",
                     }}
                   >
-                    Ngày Kết Thúc (*)
+                    End Date (*)
                   </label>
                   <input
                     type="datetime-local"
@@ -721,7 +719,7 @@ export default function AdminPreorderCampaigns() {
                       color: "#2563eb",
                     }}
                   >
-                    Ngày Dự Kiến Giao Hàng (*)
+                    Estimated Delivery Date (*)
                   </label>
                   <input
                     type="datetime-local"
@@ -752,7 +750,7 @@ export default function AdminPreorderCampaigns() {
                 }}
               >
                 <h3 style={{ margin: "0 0 10px 0" }}>
-                  Chọn Sản Phẩm (Kho Đang Báo Hết Hàng)
+                  Select Products (Out of Stock)
                 </h3>
                 <p
                   style={{
@@ -761,7 +759,7 @@ export default function AdminPreorderCampaigns() {
                     margin: "0 0 15px 0",
                   }}
                 >
-                  Tích chọn sản phẩm để đưa vào đợt Pre-order.
+                  Check products to include in this Pre-order campaign.
                 </p>
                 <div
                   style={{
@@ -781,7 +779,7 @@ export default function AdminPreorderCampaigns() {
                         fontWeight: "bold",
                       }}
                     >
-                      Không có sản phẩm nào hết hàng để chạy chiến dịch lúc này.
+                      No out-of-stock products available for a campaign right now.
                     </div>
                   ) : (
                     outOfStockFrames.map((frame) => {
@@ -824,7 +822,7 @@ export default function AdminPreorderCampaigns() {
                             <span
                               style={{ fontSize: "13px", color: "#6b7280" }}
                             >
-                              Giá đang bán:{" "}
+                              Current price:{" "}
                               <strong
                                 style={{ textDecoration: "line-through" }}
                               >
@@ -843,7 +841,7 @@ export default function AdminPreorderCampaigns() {
                                     color: "#059669",
                                   }}
                                 >
-                                  Giá KM Pre-order ($)
+                                  Pre-order Price ($)
                                 </label>
                               </div>
                               <div>
@@ -854,7 +852,7 @@ export default function AdminPreorderCampaigns() {
                                     fontWeight: "bold",
                                   }}
                                 >
-                                  Giới hạn Mua/Đơn
+                                  Max Qty/Order
                                 </label>
                                 <input
                                   type="number"
@@ -906,7 +904,7 @@ export default function AdminPreorderCampaigns() {
                     fontSize: "14px",
                   }}
                 >
-                  Hủy Bỏ
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -923,7 +921,7 @@ export default function AdminPreorderCampaigns() {
                     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   }}
                 >
-                  {isSubmitting ? "Đang xử lý..." : "Chạy Chiến Dịch Ngay"}
+                  {isSubmitting ? "Processing..." : "Launch Campaign"}
                 </button>
               </div>
             </form>
@@ -967,7 +965,7 @@ export default function AdminPreorderCampaigns() {
                 paddingBottom: "15px",
               }}
             >
-              Cập Nhật Chiến Dịch
+              Update Campaign
             </h2>
             <form onSubmit={handleEditSubmit}>
               <div
@@ -986,7 +984,7 @@ export default function AdminPreorderCampaigns() {
                       marginBottom: "5px",
                     }}
                   >
-                    Tên Chiến Dịch (*)
+                    Campaign Name (*)
                   </label>
                   <input
                     type="text"
@@ -1015,7 +1013,7 @@ export default function AdminPreorderCampaigns() {
                       marginBottom: "5px",
                     }}
                   >
-                    Mô tả chiến dịch
+                    Campaign Description
                   </label>
                   <textarea
                     value={editFormData.description}
@@ -1044,7 +1042,7 @@ export default function AdminPreorderCampaigns() {
                         marginBottom: "5px",
                       }}
                     >
-                      Số Suất (Max Slots)
+                      Max Slots
                     </label>
                     <input
                       type="number"
@@ -1075,7 +1073,7 @@ export default function AdminPreorderCampaigns() {
                         color: "#2563eb",
                       }}
                     >
-                      Ngày Giao Hàng
+                      Delivery Date
                     </label>
                     <input
                       type="datetime-local"
@@ -1105,8 +1103,7 @@ export default function AdminPreorderCampaigns() {
                     margin: 0,
                   }}
                 >
-                  *Lưu ý: Không thể sửa ngày bắt đầu/kết thúc và danh sách sản
-                  phẩm sau khi đã tạo để đảm bảo logic đơn hàng của hệ thống.
+                  *Note: Start/end dates and product list cannot be changed after creation to ensure order integrity.
                 </p>
               </div>
               <div
@@ -1129,7 +1126,7 @@ export default function AdminPreorderCampaigns() {
                     cursor: "pointer",
                   }}
                 >
-                  Hủy Bỏ
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -1144,7 +1141,7 @@ export default function AdminPreorderCampaigns() {
                     cursor: "pointer",
                   }}
                 >
-                  {isSubmitting ? "Đang lưu..." : "Lưu Thay Đổi"}
+                  {isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>

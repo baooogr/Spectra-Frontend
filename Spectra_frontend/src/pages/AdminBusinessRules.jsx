@@ -4,9 +4,9 @@ import { authFetcher, putData } from "../api/fetcher";
 import "./AdminBusinessRules.css";
 
 const CATEGORY_LABELS = {
-  shipping: "Vận Chuyển",
-  complaint: "Khiếu Nại",
-  exchange_rate: "Tỷ Giá",
+  shipping: "Shipping",
+  complaint: "Complaint",
+  exchange_rate: "Exchange Rate",
 };
 
 export default function AdminBusinessRules() {
@@ -25,7 +25,7 @@ export default function AdminBusinessRules() {
       const data = await authFetcher(url);
       setRules(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError("Không thể tải danh sách quy tắc.");
+      setError("Unable to load the list of rules.");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -75,14 +75,14 @@ export default function AdminBusinessRules() {
         setSaved((prev) => ({ ...prev, [rule.ruleKey]: false }));
       }, 2000);
     } catch (err) {
-      alert(`Lỗi khi lưu: ${err.message}`);
+      alert(`Error while saving: ${err.message}`);
     } finally {
       setSaving((prev) => ({ ...prev, [rule.ruleKey]: false }));
     }
   };
 
   if (isLoading) {
-    return <div className="rules-loading">Đang tải quy tắc kinh doanh...</div>;
+    return <div className="rules-loading">Loading business rules...</div>;
   }
 
   if (error) {
@@ -92,7 +92,7 @@ export default function AdminBusinessRules() {
   return (
     <div className="admin-rules-container">
       <div className="admin-rules-header">
-        <h2 className="admin-rules-title">Quản Lý Quy Tắc Kinh Doanh</h2>
+        <h2 className="admin-rules-title">Business Rules Management</h2>
       </div>
 
       <div
@@ -107,9 +107,9 @@ export default function AdminBusinessRules() {
               <table className="rules-table">
                 <thead>
                   <tr>
-                    <th>Mã Quy Tắc</th>
-                    <th>Mô Tả</th>
-                    <th>Giá Trị</th>
+                    <th>Rule Code</th>
+                    <th>Description</th>
+                    <th>Value</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -143,10 +143,10 @@ export default function AdminBusinessRules() {
                             disabled={!isDirty || saving[rule.ruleKey]}
                             onClick={() => handleSave(rule)}
                           >
-                            {saving[rule.ruleKey] ? "..." : "Lưu"}
+                            {saving[rule.ruleKey] ? "..." : "Save"}
                           </button>
                           {saved[rule.ruleKey] && (
-                            <span className="rules-success">✓ Đã lưu</span>
+                            <span className="rules-success">✓ Saved</span>
                           )}
                         </td>
                       </tr>

@@ -26,22 +26,22 @@ export default function ResetPassword() {
     setMessage("");
 
     if (!token.trim()) {
-      setError("Token đặt lại mật khẩu không hợp lệ");
+      setError("Invalid password reset token!");
       return;
     }
 
     if (!newPassword.trim()) {
-      setError("Vui lòng nhập mật khẩu mới");
+      setError("Please enter your new password.");
       return;
     }
 
     if (newPassword.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự");
+      setError("The password must have at least 6 characters.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
+      setError("The verification password does not match.");
       return;
     }
 
@@ -67,16 +67,16 @@ export default function ResetPassword() {
       if (res.ok) {
         setMessage(
           data.message ||
-            "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu mới.",
+            "Password reset successful! You can log in with your new password.",
         );
         setTimeout(() => {
           navigate("/login");
         }, 3000);
       } else {
-        setError(data.message || "Có lỗi xảy ra. Token có thể đã hết hạn.");
+        setError(data.message || "An error occurred. The token may have expired.");
       }
     } catch (err) {
-      setError("Lỗi kết nối. Vui lòng kiểm tra đường truyền và thử lại.");
+      setError("Connection error. Please check your internet connection and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +96,7 @@ export default function ResetPassword() {
         }}
       >
         <h2 style={{ textAlign: "center", marginBottom: "10px" }}>
-          Đặt lại mật khẩu
+          Reset password
         </h2>
         <p
           style={{
@@ -106,7 +106,7 @@ export default function ResetPassword() {
             fontSize: "14px",
           }}
         >
-          Nhập mật khẩu mới cho tài khoản của bạn
+          Enter a new password for your account.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -120,13 +120,13 @@ export default function ResetPassword() {
                   fontSize: "14px",
                 }}
               >
-                Token đặt lại mật khẩu
+                Password reset token
               </label>
               <input
                 type="text"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="Nhập token từ email"
+                placeholder="Import token from email"
                 style={{
                   width: "100%",
                   padding: "12px 16px",
@@ -150,13 +150,13 @@ export default function ResetPassword() {
                 fontSize: "14px",
               }}
             >
-              Mật khẩu mới
+              New password
             </label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
+              placeholder="Enter a new password (at least 6 characters)"
               style={{
                 width: "100%",
                 padding: "12px 16px",
@@ -179,13 +179,13 @@ export default function ResetPassword() {
                 fontSize: "14px",
               }}
             >
-              Xác nhận mật khẩu mới
+              Confirm new password
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Nhập lại mật khẩu mới"
+              placeholder="Re-enter your new password."
               style={{
                 width: "100%",
                 padding: "12px 16px",
@@ -227,7 +227,7 @@ export default function ResetPassword() {
             >
               {message}
               <p style={{ margin: "8px 0 0", fontSize: "12px" }}>
-                Đang chuyển hướng đến trang đăng nhập...
+                Redirecting to login page...
               </p>
             </div>
           )}
@@ -248,7 +248,7 @@ export default function ResetPassword() {
               marginBottom: "20px",
             }}
           >
-            {isLoading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
+            {isLoading ? "Processing..." : "Reset password"}
           </button>
         </form>
 
@@ -261,7 +261,7 @@ export default function ResetPassword() {
               fontSize: "14px",
             }}
           >
-            ← Quay lại đăng nhập
+            ← Return to login
           </Link>
         </div>
       </div>

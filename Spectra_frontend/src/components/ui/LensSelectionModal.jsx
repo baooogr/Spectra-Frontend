@@ -11,18 +11,6 @@ import {
   buildUrl,
   authFetcher,
 } from "../../api";
-import { FALLBACK_EXCHANGE_RATE } from "../../utils/validation";
-
-const formatVND = (usdAmount, rate) => {
-  const vndAmount = usdAmount * (rate || FALLBACK_EXCHANGE_RATE);
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    currencyDisplay: "code",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(vndAmount);
-};
 
 // --- QUY TẮC TƯƠNG THÍCH LOẠI TRÒNG ↔ CHIẾT SUẤT ---
 // maxIndex: chiết suất tối đa cho loại tròng đó (null = không giới hạn)
@@ -99,8 +87,8 @@ export default function LensSelectionModal({
     cylinderLeft: "0.00",
     axisLeft: 0,
     pupillaryDistance: 60,
-    doctorName: "Khách tự nhập",
-    clinicName: "Khách tự nhập",
+    doctorName: "Self-entry",
+    clinicName: "Self-entry",
   });
   const [isSavingNew, setIsSavingNew] = useState(false);
 
@@ -143,7 +131,7 @@ export default function LensSelectionModal({
         }
       }
     } catch (err) {
-      console.error("Lỗi fetch Prescriptions", err);
+      console.error("Fetch Prescriptions Error", err);
     }
   };
 
@@ -180,7 +168,7 @@ export default function LensSelectionModal({
     const userStr = localStorage.getItem("user");
     const token = userStr ? JSON.parse(userStr)?.token : null;
     if (!token) {
-      alert("Vui lòng đăng nhập để lưu toa thuốc!");
+      alert("Please log in to save your prescription!");
       return;
     }
 
@@ -192,7 +180,7 @@ export default function LensSelectionModal({
     ) {
       setValidationErrors({
         other: [
-          "Lỗi: Khi bạn có độ Loạn (CYL), bạn bắt buộc phải chọn Trục (AXIS) từ 1 đến 180.",
+          "Error: When you have Cylinder (CYL), you must select an Axis from 1 to 180.",
         ],
       });
       return;
@@ -231,7 +219,7 @@ export default function LensSelectionModal({
 
       if (res.ok) {
         const newData = await res.json();
-        alert("Đã lưu toa thuốc mới thành công!");
+        alert("New prescription saved successfully!");
         setValidationErrors({ right: [], left: [], other: [] });
         await fetchMyPrescriptions();
         setSelectedPrescriptionId(newData.prescriptionId);
@@ -251,12 +239,12 @@ export default function LensSelectionModal({
           });
         } else {
           setValidationErrors({
-            other: [err.message || "Lỗi không xác định."],
+            other: [err.message || "An unknown error occurred."],
           });
         }
       }
     } catch {
-      setValidationErrors({ other: ["Lỗi kết nối mạng."] });
+      setValidationErrors({ other: ["Network connection error."] });
     } finally {
       setIsSavingNew(false);
     }
@@ -273,8 +261,8 @@ export default function LensSelectionModal({
     if (!selectedTypeData) return all;
     const typeKey = getLensTypeKey(
       selectedTypeData.lensSpecification ||
-        selectedTypeData.typeName ||
-        selectedTypeData.category,
+      selectedTypeData.typeName ||
+      selectedTypeData.category,
     );
     if (!typeKey) return all;
     const rules = LENS_TYPE_INDEX_RULES[typeKey];
@@ -363,10 +351,10 @@ export default function LensSelectionModal({
             paddingBottom: "10px",
           }}
         >
-          Cấu Hình Tròng Kính
+          Lens Configuration
         </h3>
         <p style={{ color: "#666", marginBottom: "20px" }}>
-          Gọng: <strong>{product?.frameName}</strong> (${basePrice})
+          Frame: <strong>{product?.frameName}</strong> (${basePrice})
         </p>
 
         <div
@@ -386,7 +374,7 @@ export default function LensSelectionModal({
                 marginBottom: "8px",
               }}
             >
-              1. Chọn Loại Tròng:
+              1. Select Lens Type:
             </label>
             <select
               style={{
@@ -417,12 +405,12 @@ export default function LensSelectionModal({
                     (s) =>
                       s.lensTypeId === (lens.id || lens.lensTypeId) ||
                       s.lensSpecification ===
-                        (lens.lensSpecification || lens.typeName),
+                      (lens.lensSpecification || lens.typeName),
                   );
 
                 if (!isSupported) {
                   alert(
-                    `Gọng kính này không hỗ trợ: ${lens.lensSpecification || lens.typeName}`,
+                    `This frame does not support: ${lens.lensSpecification || lens.typeName}`,
                   );
                   return;
                 }
@@ -430,7 +418,7 @@ export default function LensSelectionModal({
                 setSelectedLensIndex(""); // reset chiết suất khi đổi loại tròng
               }}
             >
-              <option value="">-- Chọn loại tròng --</option>
+              <option value="">-- Choose lens type --</option>
               {lensTypes.map((lens) => {
                 const isSupported =
                   supportedLensTypes.length === 0 ||
@@ -438,7 +426,7 @@ export default function LensSelectionModal({
                     (s) =>
                       s.lensTypeId === (lens.id || lens.lensTypeId) ||
                       s.lensSpecification ===
-                        (lens.lensSpecification || lens.typeName),
+                      (lens.lensSpecification || lens.typeName),
                   );
                 return (
                   <option
@@ -450,7 +438,7 @@ export default function LensSelectionModal({
                   >
                     {lens.lensSpecification || lens.typeName} (+$
                     {lens.basePrice || 0})
-                    {!isSupported ? " (Không hỗ trợ)" : ""}
+                    {!isSupported ? " (Not supported)" : ""}
                   </option>
                 );
               })}
@@ -476,8 +464,8 @@ export default function LensSelectionModal({
                 }}
               >
                 {isLensInfoExpanded
-                  ? "Ẩn thông tin các loại tròng"
-                  : "Xem thông tin các loại tròng"}
+                  ? "Hide information about lens types"
+                  : "View information on lens types"}
                 <span
                   style={{
                     fontSize: "10px",
@@ -521,24 +509,23 @@ export default function LensSelectionModal({
                     }}
                   >
                     <li>
-                      <strong>Tròng đơn (Single Vision):</strong> Điều chỉnh cho
-                      một khoảng cách (gần hoặc xa). Đơn kính phổ biến nhất.
+                      <strong>Single Vision:</strong> Corrects for
+                      a single distance (near or far).
                     </li>
                     <li>
-                      <strong>Đa tròng (Progressives):</strong> Tầm nhìn liền
-                      mạch ở mọi khoảng cách.
+                      <strong>Progressives:</strong> Seamless
+                      vision at all distances.
                     </li>
                     <li>
-                      <strong>Kính đọc sách (Reading):</strong> Tầm nhìn gần cho
-                      các hoạt động ở cự ly ngắn.
+                      <strong>Reading:</strong> Near vision for
+                      short-distance activities.
                     </li>
                     <li>
-                      <strong>Hai tròng (Bifocals):</strong> Tầm nhìn gần và xa,
-                      được phân tách bởi một đường kẻ rõ rệt.
+                      <strong>Bifocals:</strong> Both near and far vision,
+                      separated by a line.
                     </li>
                     <li>
-                      <strong>Không độ (Non-prescription):</strong> Dành cho mục
-                      đích thời trang và bảo vệ mắt.
+                      <strong>Non-prescription:</strong> For fashion or eye protection.
                     </li>
                   </ul>
                 </div>
@@ -555,7 +542,7 @@ export default function LensSelectionModal({
                 marginBottom: "8px",
               }}
             >
-              2. Chọn Chiết Suất:
+              2. Select Refractive Index:
             </label>
             <select
               style={{
@@ -569,7 +556,7 @@ export default function LensSelectionModal({
               value={selectedLensIndex}
               onChange={(e) => setSelectedLensIndex(e.target.value)}
             >
-              <option value="">-- Chọn chiết suất --</option>
+              <option value="">-- Choose index --</option>
               {(compatibleIndices || []).map((idx) => (
                 <option
                   key={idx.id || idx.lensIndexId}
@@ -589,7 +576,7 @@ export default function LensSelectionModal({
                     margin: "-10px 0 10px 0",
                   }}
                 >
-                  ℹ️ Chỉ hiển thị chiết suất tương thích với loại tròng đã chọn.
+                  ℹ️ Showing only refractive indices compatible with the selected lens type.
                 </p>
               )}
           </div>
@@ -605,7 +592,7 @@ export default function LensSelectionModal({
                 marginBottom: "8px",
               }}
             >
-              3. Tính Năng Tròng:
+              3. Lens Features:
             </label>
             <select
               style={{
@@ -618,14 +605,15 @@ export default function LensSelectionModal({
               value={selectedLensFeature}
               onChange={(e) => setSelectedLensFeature(e.target.value)}
             >
-              <option value="">-- Vui lòng chọn --</option>
+              <option value="">-- Choose feature --</option>
               {[...lensFeatures].map((feat, idx) => (
                 <option
                   key={idx}
                   value={feat.id || feat.lensFeatureId || feat.featureId}
                 >
                   {feat.featureSpecification || feat.featureName || feat.name}{" "}
-                  (+${feat.extraPrice || 0})
+                  (+$
+                  {feat.extraPrice || 0})
                 </option>
               ))}
             </select>
@@ -656,7 +644,7 @@ export default function LensSelectionModal({
               <label
                 style={{ fontWeight: "bold", color: "#b91c1c", margin: 0 }}
               >
-                THÔNG SỐ TOA THUỐC
+                PRESCRIPTION SPECIFICATIONS
               </label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
@@ -674,7 +662,7 @@ export default function LensSelectionModal({
                     borderRadius: "6px",
                   }}
                 >
-                  Toa đã lưu
+                  Saved Prescriptions
                 </button>
                 <button
                   onClick={() => {
@@ -691,7 +679,7 @@ export default function LensSelectionModal({
                     borderRadius: "6px",
                   }}
                 >
-                  + Nhập mới
+                  + Enter New
                 </button>
               </div>
             </div>
@@ -723,11 +711,11 @@ export default function LensSelectionModal({
                       else setRxOutOfRange(false);
                     }}
                   >
-                    <option value="">-- Chọn toa thuốc hợp lệ --</option>
+                    <option value="">-- Select a valid prescription --</option>
                     {savedPrescriptions.map((p) => (
                       <option key={p.prescriptionId} value={p.prescriptionId}>
-                        Ngày {new Date(p.createdAt).toLocaleDateString("vi-VN")}{" "}
-                        (P:{p.sphereRight} / T:{p.sphereLeft})
+                        Date: {new Date(p.createdAt).toLocaleDateString("en-US")}{" "}
+                        (R:{p.sphereRight} / L:{p.sphereLeft})
                       </option>
                     ))}
                   </select>
@@ -739,7 +727,7 @@ export default function LensSelectionModal({
                       textAlign: "center",
                     }}
                   >
-                    Bạn chưa có toa thuốc nào. Hãy chọn "Nhập mới".
+                    You have no saved prescriptions. Please select "Enter New".
                   </p>
                 )}
               </div>
@@ -771,13 +759,13 @@ export default function LensSelectionModal({
                     }}
                   >
                     <h5 style={{ color: "#dc2626", margin: "0 0 10px 0" }}>
-                      Mắt Phải (OD)
+                      Right Eye (OD)
                     </h5>
                     <div style={{ display: "flex", gap: "5px" }}>
                       <div style={{ flex: 1 }}>
                         <label
                           style={{ fontSize: "11px", cursor: "help" }}
-                          title="Sphere (SPH) – Độ cận/viễn. Giá trị (-) là cận thị, (+) là viễn thị. Đơn vị: Diopters."
+                          title="Sphere (SPH) – Near/Far power. (-) is nearsighted, (+) is farsighted."
                         >
                           SPH ℹ️
                         </label>
@@ -806,7 +794,7 @@ export default function LensSelectionModal({
                       <div style={{ flex: 1 }}>
                         <label
                           style={{ fontSize: "11px", cursor: "help" }}
-                          title="Cylinder (CYL) – Độ loạn thị. Nếu = 0 nghĩa là không có loạn. Giá trị (-) phổ biến nhất."
+                          title="Cylinder (CYL) – Astigmatism power. Leave 0.00 if none."
                         >
                           CYL ℹ️
                         </label>
@@ -835,7 +823,7 @@ export default function LensSelectionModal({
                       <div style={{ flex: 1 }}>
                         <label
                           style={{ fontSize: "11px", cursor: "help" }}
-                          title="Axis (AXIS) – Trục loạn thị, từ 1° đến 180°. Chỉ cần chọn khi CYL khác 0. Xác định hướng điều chỉnh độ loạn."
+                          title="Axis (AXIS) – Orientation of astigmatism, 1° to 180°."
                         >
                           AXIS ℹ️
                         </label>
@@ -854,7 +842,7 @@ export default function LensSelectionModal({
                         >
                           {axisOptions.map((v) =>
                             Number(prescriptionForm.cylinderRight) !== 0 &&
-                            v === 0 ? null : (
+                              v === 0 ? null : (
                               <option key={v} value={v}>
                                 {v}
                               </option>
@@ -863,21 +851,6 @@ export default function LensSelectionModal({
                         </select>
                       </div>
                     </div>
-                    {validationErrors.right?.length > 0 && (
-                      <ul
-                        style={{
-                          margin: "8px 0 0 0",
-                          paddingLeft: "15px",
-                          color: "#be123c",
-                          fontSize: "11px",
-                          listStyleType: "circle",
-                        }}
-                      >
-                        {validationErrors.right.map((err, i) => (
-                          <li key={i}>{err}</li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
 
                   {/* MẮT TRÁI */}
@@ -890,13 +863,13 @@ export default function LensSelectionModal({
                     }}
                   >
                     <h5 style={{ color: "#2563eb", margin: "0 0 10px 0" }}>
-                      Mắt Trái (OS)
+                      Left Eye (OS)
                     </h5>
                     <div style={{ display: "flex", gap: "5px" }}>
                       <div style={{ flex: 1 }}>
                         <label
                           style={{ fontSize: "11px", cursor: "help" }}
-                          title="Sphere (SPH) – Độ cận/viễn. Giá trị (-) là cận thị, (+) là viễn thị. Đơn vị: Diopters."
+                          title="Sphere (SPH) – Near/Far power. (-) is nearsighted, (+) is farsighted."
                         >
                           SPH ℹ️
                         </label>
@@ -925,7 +898,7 @@ export default function LensSelectionModal({
                       <div style={{ flex: 1 }}>
                         <label
                           style={{ fontSize: "11px", cursor: "help" }}
-                          title="Cylinder (CYL) – Độ loạn thị. Nếu = 0 nghĩa là không có loạn. Giá trị (-) phổ biến nhất."
+                          title="Cylinder (CYL) – Astigmatism power. Leave 0.00 if none."
                         >
                           CYL ℹ️
                         </label>
@@ -954,7 +927,7 @@ export default function LensSelectionModal({
                       <div style={{ flex: 1 }}>
                         <label
                           style={{ fontSize: "11px", cursor: "help" }}
-                          title="Axis (AXIS) – Trục loạn thị, từ 1° đến 180°. Chỉ cần chọn khi CYL khác 0. Xác định hướng điều chỉnh độ loạn."
+                          title="Axis (AXIS) – Orientation of astigmatism, 1° to 180°."
                         >
                           AXIS ℹ️
                         </label>
@@ -971,7 +944,7 @@ export default function LensSelectionModal({
                         >
                           {axisOptions.map((v) =>
                             Number(prescriptionForm.cylinderLeft) !== 0 &&
-                            v === 0 ? null : (
+                              v === 0 ? null : (
                               <option key={v} value={v}>
                                 {v}
                               </option>
@@ -980,25 +953,9 @@ export default function LensSelectionModal({
                         </select>
                       </div>
                     </div>
-                    {validationErrors.left?.length > 0 && (
-                      <ul
-                        style={{
-                          margin: "8px 0 0 0",
-                          paddingLeft: "15px",
-                          color: "#be123c",
-                          fontSize: "11px",
-                          listStyleType: "circle",
-                        }}
-                      >
-                        {validationErrors.left.map((err, i) => (
-                          <li key={i}>{err}</li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
                 </div>
 
-                {/* PD + nút lưu */}
                 <div
                   style={{ display: "flex", gap: "15px", alignItems: "center" }}
                 >
@@ -1009,7 +966,7 @@ export default function LensSelectionModal({
                         fontWeight: "bold",
                         cursor: "help",
                       }}
-                      title="Pupillary Distance (PD) – Khoảng cách đồng tử, đo bằng mm. Là khoảng cách giữa tâm 2 đồng tử mắt, thường từ 54-74mm cho người lớn. Quan trọng để căn chỉnh tâm tròng kính chính xác."
+                      title="Pupillary Distance (PD) – Distance between the centers of your pupils in mm."
                     >
                       PD (mm) ℹ️:
                     </label>
@@ -1053,11 +1010,10 @@ export default function LensSelectionModal({
                       fontWeight: "bold",
                     }}
                   >
-                    {isSavingNew ? "Đang lưu..." : "Lưu & Chọn Toa Này"}
+                    {isSavingNew ? "Saving..." : "Save & Select Prescription"}
                   </button>
                 </div>
 
-                {/* Lỗi chung */}
                 {validationErrors.other?.length > 0 && (
                   <div
                     style={{
@@ -1076,7 +1032,7 @@ export default function LensSelectionModal({
           </div>
         )}
 
-        {/* ── CẢNH BÁO RANGE KÍNH (hiện ngay sau khung toa thuốc) ── */}
+        {/* ── CẢNH BÁO RANGE KÍNH ── */}
         {requiresPrescription && rxOutOfRange && (
           <div
             style={{
@@ -1088,13 +1044,9 @@ export default function LensSelectionModal({
               color: "#b91c1c",
               fontSize: "13px",
               fontWeight: "500",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
             }}
           >
-            Kính không hỗ trợ thông số đơn thuốc này (SPH hoặc PD ngoài giới hạn
-            của gọng kính).
+            The selected frame does not support this prescription (SPH or PD is out of range).
           </div>
         )}
 
@@ -1115,7 +1067,7 @@ export default function LensSelectionModal({
               marginBottom: "5px",
             }}
           >
-            <span>Giá Gọng Kính:</span>
+            <span>Frame Price:</span>
             <strong>${basePrice}</strong>
           </div>
           {(selectedLensType || selectedLensFeature) && (
@@ -1128,7 +1080,7 @@ export default function LensSelectionModal({
                   color: "#6b7280",
                 }}
               >
-                <span>Phụ phí Loại Tròng:</span>
+                <span>Lens Type Surcharge:</span>
                 <span>+${lensTypeExtraPrice}</span>
               </div>
               <div
@@ -1141,7 +1093,7 @@ export default function LensSelectionModal({
                   paddingBottom: "10px",
                 }}
               >
-                <span>Phụ phí Tính năng Tròng:</span>
+                <span>Lens Feature Surcharge:</span>
                 <span>+${featureExtraPrice}</span>
               </div>
             </>
@@ -1155,10 +1107,9 @@ export default function LensSelectionModal({
               marginTop: "10px",
             }}
           >
-            <strong>Tổng Tiền:</strong>
+            <strong>Total Amount:</strong>
             <strong style={{ color: "#10b981" }}>
-              ${currentTotalPrice} ({formatVND(currentTotalPrice, exchangeRate)}
-              )
+              ${currentTotalPrice}
             </strong>
           </div>
         </div>
@@ -1170,7 +1121,7 @@ export default function LensSelectionModal({
             onClick={() => handleAddToCart(false)}
             style={{ flex: 1, padding: "12px" }}
           >
-            Chỉ Mua Gọng
+            Buy Frame Only
           </button>
           <button
             className="modal-btn modal-btn--primary"
@@ -1182,7 +1133,7 @@ export default function LensSelectionModal({
               backgroundColor: isAddToCartDisabled ? "#9ca3af" : "#111827",
             }}
           >
-            Thêm Vào Giỏ Hàng
+            Add with Lenses
           </button>
         </div>
       </div>

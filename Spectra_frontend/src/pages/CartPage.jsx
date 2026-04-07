@@ -3,7 +3,6 @@ import "./CartPage.css";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useExchangeRate } from "../api";
-import { formatVNDNumber, roundVND } from "../utils/validation";
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -19,10 +18,6 @@ export default function CartPage() {
       style: "currency",
       currency: "USD",
     }).format(n);
-  const formatVND = (usd) => {
-    const vnd = usd * exchangeRate;
-    return `${formatVNDNumber(vnd)} VND`;
-  };
 
   const goCheckout = () => {
     if (cartItems.length === 0) return;
@@ -33,7 +28,7 @@ export default function CartPage() {
 
     if (hasPreorder && hasNormal) {
       alert(
-        "Giỏ hàng của bạn đang chứa cả Hàng có sẵn và Hàng đặt trước. Vui lòng thanh toán riêng từng loại bằng cách xóa bớt 1 loại khỏi giỏ hàng!",
+        "Your cart contains both available and pre-order items. Please checkout each type separately by removing one type from the cart!",
       );
       return;
     }
@@ -54,7 +49,7 @@ export default function CartPage() {
         style={{ maxWidth: "1200px", margin: "0 auto" }}
       >
         <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>
-          Giỏ hàng của bạn
+          Your shopping cart
         </h1>
         <div
           style={{
@@ -74,12 +69,12 @@ export default function CartPage() {
                   borderRadius: "10px",
                 }}
               >
-                <p>Giỏ hàng đang trống.</p>
+                <p>Your cart is empty.</p>
                 <Link
                   to="/"
                   style={{ color: "#2563eb", textDecoration: "underline" }}
                 >
-                  Tiếp tục mua sắm
+                  Continue Shopping
                 </Link>
               </div>
             ) : (
@@ -133,16 +128,16 @@ export default function CartPage() {
                         }}
                       >
                         <p style={{ margin: 0 }}>
-                          - <strong>Màu sắc:</strong> {item.color}
+                          - <strong>Color:</strong> {item.color}
                         </p>
                         {item.lensInfo ? (
                           <>
                             <p style={{ margin: 0 }}>
-                              - <strong>Loại tròng:</strong>{" "}
+                              - <strong>Lens type:</strong>{" "}
                               {item.lensInfo.type}{" "}
                             </p>
                             <p style={{ margin: 0 }}>
-                              - <strong>Tính năng tròng:</strong>{" "}
+                              - <strong>Features:</strong>{" "}
                               {item.lensInfo.feature}{" "}
                             </p>
                           </>
@@ -154,7 +149,7 @@ export default function CartPage() {
                               fontStyle: "italic",
                             }}
                           >
-                            Chỉ mua gọng kính
+                            Frame only.
                           </p>
                         )}
                         {item.isPreorder && item.estimatedDeliveryDate && (
@@ -166,10 +161,10 @@ export default function CartPage() {
                               fontWeight: "bold",
                             }}
                           >
-                            Dự kiến giao:{" "}
+                            Expected delivery:{" "}
                             {new Date(
                               item.estimatedDeliveryDate,
-                            ).toLocaleDateString("vi-VN")}
+                            ).toLocaleDateString("en-US")}
                           </p>
                         )}
                       </div>
@@ -188,30 +183,32 @@ export default function CartPage() {
                             Math.max(1, item.quantity - 1),
                           )
                         }
-                        style={{ padding: "5px 10px" }}
+                        style={{ padding: "5px 10px", cursor: "pointer" }}
                       >
                         -
                       </button>
-                      <span>{item.quantity}</span>
+                      <span style={{ minWidth: "20px", textAlign: "center" }}>
+                        {item.quantity}
+                      </span>
                       <button
-                        onClick={() =>
-                          updateQty(item.cartKey, item.quantity + 1)
-                        }
-                        style={{ padding: "5px 10px" }}
+                        onClick={() => updateQty(item.cartKey, item.quantity + 1)}
+                        style={{ padding: "5px 10px", cursor: "pointer" }}
                       >
                         +
                       </button>
                       <button
                         onClick={() => removeItem(item.cartKey)}
                         style={{
-                          color: "red",
+                          color: "#ef4444",
                           border: "none",
                           background: "none",
                           cursor: "pointer",
                           fontSize: "18px",
+                          marginLeft: "10px",
                         }}
+                        title="Remove item"
                       >
-                        X
+                        ✕
                       </button>
                     </div>
                   </div>
@@ -240,7 +237,7 @@ export default function CartPage() {
                   paddingBottom: "10px",
                 }}
               >
-                Tóm tắt đơn hàng
+                Order summary
               </h2>
               <div
                 style={{
@@ -281,9 +278,6 @@ export default function CartPage() {
                           >
                             {formatUSD(item.price * item.quantity)}
                           </div>
-                          <div style={{ fontSize: "11px", color: "#6b7280" }}>
-                            ({formatVND(item.price * item.quantity)})
-                          </div>
                         </div>
                       </div>
                       <div
@@ -295,42 +289,31 @@ export default function CartPage() {
                           borderLeft: "2px solid #e5e7eb",
                         }}
                       >
-                        <p style={{ margin: "2px 0" }}>- Màu: {item.color}</p>
+                        <p style={{ margin: "2px 0" }}>- Color: {item.color}</p>
                         {item.lensInfo && (
                           <>
                             <p style={{ margin: "2px 0" }}>
-                              - Tròng: {item.lensInfo.type}{" "}
+                              - Lens: {item.lensInfo.type}{" "}
                               {item.lensInfo.typePrice > 0 &&
                                 `(+${formatUSD(item.lensInfo.typePrice)})`}
                             </p>
                             <p style={{ margin: "2px 0" }}>
-                              - Tính năng: {item.lensInfo.feature}{" "}
+                              - Features: {item.lensInfo.feature}{" "}
                               {item.lensInfo.featurePrice > 0 &&
                                 `(+${formatUSD(item.lensInfo.featurePrice)})`}
                             </p>
                           </>
                         )}
                       </div>
-                      <div style={{ marginTop: "12px" }}>
+                      <div style={{ marginTop: "8px" }}>
                         <div
                           style={{
                             fontWeight: "bold",
                             color: "#10b981",
-                            fontSize: "18px",
-                            display: "block",
+                            fontSize: "16px",
                           }}
                         >
                           {formatUSD(item.price)}
-                        </div>
-                        <div
-                          style={{
-                            color: "#6b7280",
-                            fontSize: "14px",
-                            display: "block",
-                            marginTop: "2px",
-                          }}
-                        >
-                          ({formatVND(item.price)})
                         </div>
                       </div>
                     </div>
@@ -346,36 +329,28 @@ export default function CartPage() {
                   fontWeight: "bold",
                 }}
               >
-                <span>Tổng cộng:</span>
+                <span>Total:</span>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ color: "#10b981" }}>{formatUSD(subtotal)}</div>
-                  <div
-                    style={{
-                      fontSize: "14px",
-                      color: "#666",
-                      fontWeight: "normal",
-                    }}
-                  >
-                    ({formatVND(subtotal)})
-                  </div>
                 </div>
               </div>
               <button
                 onClick={goCheckout}
+                disabled={cartItems.length === 0}
                 style={{
                   width: "100%",
                   padding: "15px",
-                  background: "#111827",
+                  background: cartItems.length === 0 ? "#9ca3af" : "#111827",
                   color: "#fff",
                   border: "none",
                   borderRadius: "8px",
                   fontWeight: "bold",
-                  cursor: "pointer",
+                  cursor: cartItems.length === 0 ? "not-allowed" : "pointer",
                   marginTop: "10px",
                   transition: "0.2s",
                 }}
               >
-                TIẾN HÀNH THANH TOÁN
+                PROCEED TO CHECKOUT
               </button>
             </div>
           </div>

@@ -1,13 +1,10 @@
 import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./CheckoutSuccess.css";
-import { useExchangeRate } from "../api";
-import { formatPrice } from "../utils/validation";
 
 export default function CheckoutSuccess() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { rate: exchangeRate } = useExchangeRate();
 
   const orderId = useMemo(() => {
     return (
@@ -22,7 +19,13 @@ export default function CheckoutSuccess() {
   // Use centralized formatter to apply VND rounding policy
   const formatCurrency = (amountInUSD) => {
     if (typeof amountInUSD !== "number") return null;
-    return formatPrice(amountInUSD, exchangeRate);
+    // Chỉ hiển thị định dạng USD
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amountInUSD);
   };
 
   return (
@@ -30,13 +33,13 @@ export default function CheckoutSuccess() {
       <div className="success__box">
         <div className="success__icon">✓</div>
 
-        <h1 className="success__title">Đặt hàng thành công!</h1>
+        <h1 className="success__title">Order Successful!</h1>
         <p className="success__desc">
-          Cảm ơn bạn đã đặt hàng. Đơn hàng đã được ghi nhận.
+          Thank you for your order. Your order has been successfully recorded.
         </p>
 
         <div className="success__order">
-          <span>Mã đơn:</span>
+          <span>Order ID:</span>
           <strong>{orderId}</strong>
         </div>
 
@@ -44,21 +47,21 @@ export default function CheckoutSuccess() {
           <div className="success__info">
             {customer?.fullName && (
               <div className="info-row">
-                <span>Khách hàng</span>
+                <span>Customer</span>
                 <span>{customer.fullName}</span>
               </div>
             )}
 
             {customer?.phone && (
               <div className="info-row">
-                <span>Số điện thoại</span>
+                <span>Phone Number</span>
                 <span>{customer.phone}</span>
               </div>
             )}
 
             {customer?.address && (
               <div className="info-row">
-                <span>Địa chỉ</span>
+                <span>Address</span>
                 <span className="info-row__right">{customer.address}</span>
               </div>
             )}
@@ -66,7 +69,7 @@ export default function CheckoutSuccess() {
             {/* Đã sửa dòng này để gọi hàm formatCurrency mới */}
             {typeof total === "number" && (
               <div className="info-row info-row--total">
-                <span>Tổng tiền</span>
+                <span>Total Amount</span>
                 <span>{formatCurrency(total)}</span>
               </div>
             )}
@@ -75,10 +78,10 @@ export default function CheckoutSuccess() {
 
         <div className="success__actions">
           <button className="btn" onClick={() => navigate("/orders")}>
-            Xem đơn hàng
+            View Orders
           </button>
           <button className="btn btn--ghost" onClick={() => navigate("/")}>
-            Về trang chủ
+            Back to Home
           </button>
         </div>
       </div>
