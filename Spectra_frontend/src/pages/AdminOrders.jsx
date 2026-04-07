@@ -4,8 +4,8 @@ import { getAddressDisplayString } from "../utils/vietnamAddress";
 import "./AdminOrders.css";
 
 // =============================================================================
-// HELPER: Bóc tách thông tin khách hàng từ shippingAddress
-// CheckoutPage nhét theo format: "[Tên - SĐT - Email] Địa chỉ"
+// HELPER: Extract customer info from shippingAddress
+// CheckoutPage format: "[Name - Phone - Email] Address"
 // =============================================================================
 function parseShippingInfo(shippingAddress) {
   if (!shippingAddress)
@@ -38,7 +38,7 @@ function parseShippingInfo(shippingAddress) {
 }
 
 // =============================================================================
-// HELPER: Format số liệu đơn kính
+// HELPER: Format prescription values
 // =============================================================================
 function fmtRx(val) {
   if (val === null || val === undefined) return "—";
@@ -48,17 +48,17 @@ function fmtRx(val) {
 }
 
 // =============================================================================
-// HELPER: Format trạng thái thanh toán
+// HELPER: Format payment status
 // =============================================================================
 function formatPaymentStatus(status) {
   if (!status) return null;
   const map = {
-    pending: { label: "Chờ thanh toán", color: "#d97706", bg: "#fef3c7" },
-    processing: { label: "Đang xử lý", color: "#2563eb", bg: "#eff6ff" },
-    completed: { label: "Đã thanh toán ✓", color: "#15803d", bg: "#f0fdf4" },
-    failed: { label: "Thất bại", color: "#dc2626", bg: "#fee2e2" },
-    cancelled: { label: "Đã huỷ", color: "#6b7280", bg: "#f3f4f6" },
-    refunded: { label: "Đã hoàn tiền", color: "#7e22ce", bg: "#faf5ff" },
+    pending: { label: "Pending Payment", color: "#d97706", bg: "#fef3c7" },
+    processing: { label: "Processing", color: "#2563eb", bg: "#eff6ff" },
+    completed: { label: "Paid ✓", color: "#15803d", bg: "#f0fdf4" },
+    failed: { label: "Failed", color: "#dc2626", bg: "#fee2e2" },
+    cancelled: { label: "Cancelled", color: "#6b7280", bg: "#f3f4f6" },
+    refunded: { label: "Refunded", color: "#7e22ce", bg: "#faf5ff" },
   };
   return (
     map[status.toLowerCase()] || {
@@ -146,21 +146,21 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
           color: "#92400e",
         }}
       >
-        <span>Đơn kính đính kèm</span>
+        <span>Attached Prescription</span>
         <span style={{ fontSize: "11px", color: "#b45309" }}>
-          {isExpanded ? "▲ Thu gọn" : "▼ Xem chi tiết"}
+          {isExpanded ? "▲ Collapse" : "▼ View Details"}
         </span>
       </button>
       {isExpanded && (
         <div style={{ padding: "10px 12px", borderTop: "1px solid #fde68a" }}>
           {isLoading && (
             <p style={{ fontSize: "13px", color: "#92400e", margin: 0 }}>
-              Đang tải...
+              Loading...
             </p>
           )}
           {fetchError && (
             <p style={{ fontSize: "13px", color: "#dc2626", margin: 0 }}>
-              Không thể tải đơn kính. Có thể đơn đã bị xóa.
+              Cannot load prescription. It might have been deleted.
             </p>
           )}
           {rxData && !isLoading && (
@@ -173,8 +173,8 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
                     margin: "0 0 8px 0",
                   }}
                 >
-                  <b>Bác sĩ:</b> {rxData.doctorName || "—"} &nbsp;|&nbsp;{" "}
-                  <b>Phòng khám:</b> {rxData.clinicName || "—"}
+                  <b>Doctor:</b> {rxData.doctorName || "—"} &nbsp;|&nbsp;{" "}
+                  <b>Clinic:</b> {rxData.clinicName || "—"}
                 </p>
               )}
               <table
@@ -187,10 +187,10 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
               >
                 <thead>
                   <tr style={{ backgroundColor: "#fde68a" }}>
-                    <th style={thStyle}>Mắt</th>
-                    <th style={thStyle}>SPH (độ cầu)</th>
-                    <th style={thStyle}>CYL (loạn)</th>
-                    <th style={thStyle}>AXIS (trục)</th>
+                    <th style={thStyle}>Eye</th>
+                    <th style={thStyle}>SPH (Sphere)</th>
+                    <th style={thStyle}>CYL (Cylinder)</th>
+                    <th style={thStyle}>AXIS</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -202,7 +202,7 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
                         color: "#dc2626",
                       }}
                     >
-                      Mắt Phải (OD)
+                      Right Eye (OD)
                     </td>
                     <td style={tdStyle}>{fmtRx(rxData.sphereRight)}</td>
                     <td style={tdStyle}>{fmtRx(rxData.cylinderRight)}</td>
@@ -216,7 +216,7 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
                         color: "#2563eb",
                       }}
                     >
-                      Mắt Trái (OS)
+                      Left Eye (OS)
                     </td>
                     <td style={tdStyle}>{fmtRx(rxData.sphereLeft)}</td>
                     <td style={tdStyle}>{fmtRx(rxData.cylinderLeft)}</td>
@@ -240,9 +240,9 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
                 )}
                 {rxData.expirationDate && (
                   <span>
-                    <b>Hết hạn:</b>{" "}
+                    <b>Expiration:</b>{" "}
                     {new Date(rxData.expirationDate).toLocaleDateString(
-                      "vi-VN",
+                      "en-US",
                     )}
                     {rxData.isExpired && (
                       <span
@@ -256,7 +256,7 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
                           fontSize: "11px",
                         }}
                       >
-                        Đã hết hạn
+                        Expired
                       </span>
                     )}
                   </span>
@@ -273,8 +273,7 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
                   marginBottom: 0,
                 }}
               >
-                Đây là dữ liệu số khách nhập khi đặt hàng. API hiện chưa hỗ trợ
-                upload ảnh scan toa thuốc.
+                This is the numerical data entered by the customer during checkout. The API currently does not support uploading prescription scans.
               </p>
             </>
           )}
@@ -289,7 +288,7 @@ function PrescriptionCard({ prescription, prescriptionId, headers }) {
 // =============================================================================
 function PaymentInfoBlock({ paymentList }) {
   const COD = {
-    label: "Tiền mặt (COD)",
+    label: "Cash on Delivery (COD)",
     icon: "",
     color: "#15803d",
     bg: "#f0fdf4",
@@ -298,7 +297,7 @@ function PaymentInfoBlock({ paymentList }) {
   if (!paymentList || paymentList.length === 0) {
     return (
       <p style={{ margin: "4px 0", fontSize: "14px" }}>
-        <b>Phương thức:</b>{" "}
+        <b>Method:</b>{" "}
         <span
           style={{
             display: "inline-flex",
@@ -330,7 +329,7 @@ function PaymentInfoBlock({ paymentList }) {
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
       {method && (
         <p style={{ margin: 0, fontSize: "14px" }}>
-          <b>Phương thức:</b>{" "}
+          <b>Method:</b>{" "}
           <span
             style={{
               display: "inline-flex",
@@ -350,7 +349,7 @@ function PaymentInfoBlock({ paymentList }) {
       )}
       {pStatus && (
         <p style={{ margin: 0, fontSize: "14px" }}>
-          <b>Trạng thái TT:</b>{" "}
+          <b>Payment Status:</b>{" "}
           <span
             style={{
               display: "inline-block",
@@ -368,8 +367,8 @@ function PaymentInfoBlock({ paymentList }) {
       )}
       {latest.paidAt && (
         <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
-          <b>Thanh toán lúc:</b>{" "}
-          {new Date(latest.paidAt).toLocaleString("vi-VN")}
+          <b>Paid at:</b>{" "}
+          {new Date(latest.paidAt).toLocaleString("en-US")}
         </p>
       )}
       {paymentList.length > 1 && (
@@ -381,7 +380,7 @@ function PaymentInfoBlock({ paymentList }) {
             fontStyle: "italic",
           }}
         >
-          ({paymentList.length} lần thanh toán được ghi nhận)
+          ({paymentList.length} payment(s) recorded)
         </p>
       )}
     </div>
@@ -472,7 +471,7 @@ export default function AdminOrders() {
         setPreorders(d.items || d || []);
       }
     } catch (err) {
-      console.error("Lỗi mạng:", err);
+      console.error("Network error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -507,7 +506,7 @@ export default function AdminOrders() {
       if (orderRes.ok) {
         setSelectedOrder({ ...(await orderRes.json()), isPreorder });
       } else {
-        alert("Không thể tải chi tiết đơn hàng!");
+        alert("Cannot load order details!");
         setIsModalOpen(false);
         return;
       }
@@ -517,7 +516,7 @@ export default function AdminOrders() {
         setPaymentList(Array.isArray(pData) ? pData : pData ? [pData] : []);
       }
     } catch {
-      alert("Lỗi kết nối khi tải chi tiết.");
+      alert("Connection error when loading details.");
       setIsModalOpen(false);
     } finally {
       setIsLoadingDetail(false);
@@ -530,14 +529,14 @@ export default function AdminOrders() {
   const handleUpdateStatus = async (id, isPreorder, newStatus) => {
     if (
       !window.confirm(
-        `Bạn có chắc chắn muốn đổi trạng thái thành "${newStatus}"?`,
+        `Are you sure you want to change the status to "${newStatus}"?`,
       )
     )
       return;
 
     if (isPreorder && newStatus === "converted") {
       try {
-        // Bước 1: Lấy địa chỉ — ưu tiên từ list state, fallback fetch detail
+        // Step 1: Get address — priority from list state, fallback fetch detail
         let addr =
           preorders.find((p) => (p.id || p.preorderId) === id)
             ?.shippingAddress || "";
@@ -555,19 +554,19 @@ export default function AdminOrders() {
 
         if (!addr) {
           alert(
-            "Không tìm thấy địa chỉ giao hàng trong đơn pre-order. Vui lòng kiểm tra lại.",
+            "Shipping address not found in pre-order. Please check again.",
           );
           return;
         }
 
         if (
           !window.confirm(
-            `Xác nhận chuyển sang Processing?\nĐịa chỉ giao hàng: ${addr}`,
+            `Confirm change to Processing?\nShipping address: ${addr}`,
           )
         )
           return;
 
-        // Bước 2: Convert preorder → tạo Order mới (status: pending)
+        // Step 2: Convert preorder → create new Order (status: pending)
         const convertRes = await fetch(
           `https://myspectra.runasp.net/api/Preorders/${id}/convert`,
           {
@@ -580,17 +579,16 @@ export default function AdminOrders() {
         if (!convertRes.ok) {
           const err = await convertRes.json();
           alert(
-            "Lỗi chuyển đổi: " +
+            "Conversion error: " +
               (err.message ||
-                "Kiểm tra lại trạng thái đơn (cần Paid hoặc Confirmed)"),
+                "Please check order status (must be Paid or Confirmed)"),
           );
           return;
         }
 
         const newOrder = await convertRes.json();
 
-        // Bước 3: Đổi sang processing để hiện trong ShippingPage
-        // (Convert trả về status "confirmed", ShippingPage chỉ hiện "processing")
+        // Step 3: Change to processing to show in ShippingPage
         const newOrderId = newOrder.orderId || newOrder.id;
         if (newOrderId) {
           await fetch(
@@ -603,7 +601,6 @@ export default function AdminOrders() {
           );
         }
 
-        // Log để debug — xác nhận convertedFromPreorderId khớp với preorder gốc
         console.log(
           "Converted order:",
           newOrderId,
@@ -612,12 +609,12 @@ export default function AdminOrders() {
         );
 
         alert(
-          "Chuyển đổi thành công! Đơn hàng đã được tạo và chuyển sang Processing → có thể thấy trong Quản lý Vận chuyển.",
+          "Conversion successful! Order has been created and moved to Processing → visible in Shipping Management.",
         );
         fetchOrdersData();
         if (isModalOpen) setIsModalOpen(false);
       } catch {
-        alert("Lỗi mạng!");
+        alert("Network error!");
       }
       return;
     }
@@ -632,7 +629,7 @@ export default function AdminOrders() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
-        alert("Cập nhật trạng thái thành công!");
+        alert("Status updated successfully!");
         fetchOrdersData();
         if (
           selectedOrder &&
@@ -643,15 +640,15 @@ export default function AdminOrders() {
           setSelectedOrder((prev) => ({ ...prev, status: newStatus }));
       } else {
         const err = await res.json();
-        alert("Lỗi cập nhật: " + (err.message || res.status));
+        alert("Update error: " + (err.message || res.status));
       }
     } catch {
-      alert("Lỗi mạng!");
+      alert("Network error!");
     }
   };
 
   // ---------------------------------------------------------------------------
-  // getStatusBadge — 'converted' hiển thị badge "Processing"
+  // getStatusBadge
   // ---------------------------------------------------------------------------
   const getStatusBadge = (status) => {
     const s = status?.toLowerCase() || "";
@@ -676,7 +673,7 @@ export default function AdminOrders() {
         className="status-badge"
         style={{ background: "#eee", color: "#333" }}
       >
-        {status || "Chưa rõ"}
+        {status || "Unknown"}
       </span>
     );
   };
@@ -701,13 +698,13 @@ export default function AdminOrders() {
     if (isLoadingDetail)
       return (
         <div style={{ textAlign: "center", padding: "50px" }}>
-          Đang tải thông tin chi tiết...
+          Loading details...
         </div>
       );
     if (!selectedOrder)
       return (
         <div style={{ textAlign: "center", color: "red" }}>
-          Không thể tải thông tin.
+          Cannot load details.
         </div>
       );
 
@@ -751,12 +748,12 @@ export default function AdminOrders() {
       <>
         <div className="info-grid">
           <div className="info-card">
-            <h4>Thông tin khách hàng</h4>
+            <h4>Customer Information</h4>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Họ Tên:</b> {displayName}
+              <b>Full Name:</b> {displayName}
             </p>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>SĐT:</b> {displayPhone}
+              <b>Phone:</b> {displayPhone}
             </p>
             {displayEmail && (
               <p style={{ margin: "6px 0", fontSize: "14px" }}>
@@ -764,30 +761,30 @@ export default function AdminOrders() {
               </p>
             )}
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Địa chỉ:</b> {displayAddress}
+              <b>Address:</b> {displayAddress}
             </p>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Ghi chú:</b> {selectedOrder.note || "Không có"}
+              <b>Note:</b> {selectedOrder.note || "None"}
             </p>
           </div>
 
           <div className="info-card">
-            <h4>Thông tin đơn</h4>
+            <h4>Order Information</h4>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Ngày đặt:</b>{" "}
+              <b>Order Date:</b>{" "}
               {new Date(
                 selectedOrder.orderDate || selectedOrder.createdAt,
-              ).toLocaleString("vi-VN")}
+              ).toLocaleString("en-US")}
             </p>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Trạng thái đơn:</b> {getStatusBadge(selectedOrder.status)}
+              <b>Order Status:</b> {getStatusBadge(selectedOrder.status)}
             </p>
             {selectedOrder.isPreorder && selectedOrder.expectedDate && (
               <p
                 style={{ margin: "6px 0", fontSize: "14px", color: "#2563eb" }}
               >
-                <b>Ngày mong muốn:</b>{" "}
-                {new Date(selectedOrder.expectedDate).toLocaleString("vi-VN")}
+                <b>Expected Date:</b>{" "}
+                {new Date(selectedOrder.expectedDate).toLocaleString("en-US")}
               </p>
             )}
             <div
@@ -805,14 +802,14 @@ export default function AdminOrders() {
                   color: "#374151",
                 }}
               >
-                Thanh toán:
+                Payment:
               </p>
               <PaymentInfoBlock paymentList={paymentList} />
             </div>
           </div>
         </div>
 
-        <h4>Sản phẩm đã mua</h4>
+        <h4>Purchased Items</h4>
         {itemsList.length === 0 ? (
           <p
             style={{
@@ -822,7 +819,7 @@ export default function AdminOrders() {
               padding: "16px 0",
             }}
           >
-            Không có thông tin sản phẩm.
+            No item information.
           </p>
         ) : (
           <div className="item-list">
@@ -831,7 +828,7 @@ export default function AdminOrders() {
                 item.frame?.frameName ||
                 item.frameName ||
                 item.productName ||
-                "Gọng kính";
+                "Glasses frame";
               const unitPrice =
                 item.orderPrice ||
                 item.preorderPrice ||
@@ -859,7 +856,7 @@ export default function AdminOrders() {
                   <div className="item-details">
                     <p className="item-name">{frameName}</p>
                     <p className="item-meta">
-                      SL: <b>{item.quantity || 1}</b> | Giá:{" "}
+                      Qty: <b>{item.quantity || 1}</b> | Price:{" "}
                       <b>{formatUSD(unitPrice)}</b>
                     </p>
                     {lensType || lensFeature ? (
@@ -867,7 +864,7 @@ export default function AdminOrders() {
                         className="item-meta"
                         style={{ color: "#4338ca", marginTop: "4px" }}
                       >
-                        Tròng: {lensType || "Không chọn"}
+                        Lens: {lensType || "Not selected"}
                         {lensFeature ? ` – ${lensFeature}` : ""}
                         {requiresRx && (
                           <span
@@ -881,7 +878,7 @@ export default function AdminOrders() {
                               fontWeight: "bold",
                             }}
                           >
-                            Cần đơn kính
+                            Prescription required
                           </span>
                         )}
                       </p>
@@ -894,7 +891,7 @@ export default function AdminOrders() {
                           fontWeight: "600",
                         }}
                       >
-                        🔧 Chỉ mua gọng (Không kèm tròng kính)
+                        🔧 Frame only (No lenses included)
                       </p>
                     )}
                     {(prescriptionId || embeddedRx) && (
@@ -913,8 +910,7 @@ export default function AdminOrders() {
                           fontStyle: "italic",
                         }}
                       >
-                        Tròng này yêu cầu đơn kính nhưng không tìm thấy dữ liệu
-                        đơn kính.
+                        This lens requires a prescription but no prescription data was found.
                       </p>
                     )}
                   </div>
@@ -936,9 +932,9 @@ export default function AdminOrders() {
   return (
     <div className="admin-orders-container">
       <div className="admin-orders-header">
-        <h2 className="admin-orders-title">Quản Lý Đơn Hàng</h2>
+        <h2 className="admin-orders-title">Order Management</h2>
         <button className="btn-view" onClick={fetchOrdersData}>
-          Làm mới
+          Refresh
         </button>
       </div>
 
@@ -950,7 +946,7 @@ export default function AdminOrders() {
             setCurrentPage(1);
           }}
         >
-          Đơn Hàng Thường ({orders.length})
+          Regular Orders ({orders.length})
         </button>
         <button
           className={`tab-btn ${activeTab === "preorders" ? "active" : ""}`}
@@ -959,7 +955,7 @@ export default function AdminOrders() {
             setCurrentPage(1);
           }}
         >
-          Đơn Đặt Trước (Pre-order) ({preorders.length})
+          Pre-orders ({preorders.length})
         </button>
       </div>
 
@@ -967,25 +963,25 @@ export default function AdminOrders() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Mã Đơn</th>
-              <th>Khách Hàng</th>
-              <th>Ngày Đặt</th>
-              <th>Tổng Tiền</th>
-              <th>Trạng Thái</th>
-              <th className="col-action">Hành Động</th>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Order Date</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+              <th className="col-action">Action</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: "center" }}>
-                  ⏳ Đang tải dữ liệu...
+                  ⏳ Loading data...
                 </td>
               </tr>
             ) : displayList.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: "center" }}>
-                  Chưa có đơn hàng nào trong mục này.
+                  No orders found in this section.
                 </td>
               </tr>
             ) : (
@@ -1000,7 +996,7 @@ export default function AdminOrders() {
                     order.receiverName ||
                     order.customerName ||
                     shippingInfo.name ||
-                    "Khách Vãng Lai";
+                    "Guest Customer";
                   const customerPhone =
                     order.user?.phone ||
                     order.phoneNumber ||
@@ -1021,7 +1017,7 @@ export default function AdminOrders() {
                       <td className="col-date">
                         {new Date(
                           order.orderDate || order.createdAt,
-                        ).toLocaleString("vi-VN")}
+                        ).toLocaleString("en-US")}
                       </td>
                       <td className="col-price">
                         {isPreorder ? (
@@ -1051,7 +1047,7 @@ export default function AdminOrders() {
                             }
                           >
                             <option value="" disabled>
-                              Đổi trạng thái
+                              Change status
                             </option>
                             {isPreorder
                               ? (() => {
@@ -1098,7 +1094,7 @@ export default function AdminOrders() {
                           onClick={() => handleViewDetails(id, isPreorder)}
                           className="btn-view"
                         >
-                          Xem chi tiết
+                          View Details
                         </button>
                       </td>
                     </tr>
@@ -1133,10 +1129,10 @@ export default function AdminOrders() {
                   fontWeight: "bold",
                 }}
               >
-                ← Trước
+                ← Prev
               </button>
               <span style={{ fontWeight: "bold", color: "#374151" }}>
-                Trang {currentPage} / {totalPages}
+                Page {currentPage} of {totalPages}
               </span>
               <button
                 disabled={currentPage >= totalPages}
@@ -1150,7 +1146,7 @@ export default function AdminOrders() {
                   fontWeight: "bold",
                 }}
               >
-                Sau →
+                Next →
               </button>
             </div>
           ) : null;
@@ -1170,8 +1166,8 @@ export default function AdminOrders() {
             <div className="order-modal-header">
               <h3>
                 {selectedOrder?.isPreorder
-                  ? "Chi Tiết Pre-Order"
-                  : "Chi Tiết Đơn Hàng"}{" "}
+                  ? "Pre-Order Details"
+                  : "Order Details"}{" "}
                 {selectedOrder &&
                   `#${selectedOrder.id || selectedOrder.orderId || selectedOrder.preorderId}`}
               </h3>
@@ -1184,7 +1180,7 @@ export default function AdminOrders() {
             </div>
             <div className="order-modal-body">{renderModalBody()}</div>
             <div className="modal-footer">
-              <span>Tổng hóa đơn:</span>
+              <span>Total Bill:</span>
               <span className="total-price">
                 {selectedOrder
                   ? (() => {
