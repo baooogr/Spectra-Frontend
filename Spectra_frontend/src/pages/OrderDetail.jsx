@@ -19,10 +19,10 @@ export default function OrderDetail() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const { rate: exchangeRate } = useExchangeRate();
 
-  // ⚡ Đã tạo hàm format riêng để chỉ hiển thị USD
+  // ⚡ Created a custom format function to only display USD
   const formatCurrency = (amount) => {
     let val = Number(amount) || 0;
-    // Nếu số tiền > 10.000, khả năng cao là VND -> chia tỷ giá để ra USD
+    // If amount > 10000, it's likely VND -> convert to USD using exchange rate
     if (val > 10000) {
       val = val / (exchangeRate || 25400);
     }
@@ -130,7 +130,7 @@ export default function OrderDetail() {
     );
   };
 
-  // Bóc tách thông tin người nhận từ shippingAddress
+  // Extract receiver info from shippingAddress
   let receiverName = order.user?.fullName || "—";
   let receiverPhone = order.user?.phone || "—";
   let receiverEmail = order.user?.email || "—";
@@ -162,7 +162,7 @@ export default function OrderDetail() {
 
   const itemsList = order.items || order.orderItems || [];
 
-  // Thông tin vận chuyển — được gán sau khi staff nhập mã hoặc dùng Ahamove
+  // Shipping info — assigned after staff enters code or uses Ahamove
   const trackingNumber = order.trackingNumber || null;
   const shippingCarrier = order.shippingCarrier || null;
   const shippedAt = order.shippedAt || null;
@@ -337,7 +337,7 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {/* ── XÁC NHẬN HUỶ ĐƠN HÀNG — hiển thị khi bấm nút huỷ ── */}
+        {/* ── CONFIRM ORDER CANCELLATION — displayed when cancel button is clicked ── */}
         {showCancelConfirm && (
           <div
             style={{
@@ -409,7 +409,7 @@ export default function OrderDetail() {
           </div>
         )}
 
-        {/* ── XÁC NHẬN NHẬN HÀNG — hiển thị khi đơn delivered và chưa confirm ── */}
+        {/* ── CONFIRM DELIVERY — displayed when order is delivered and not yet confirmed ── */}
         {isDelivered && !deliveryConfirmed && (
           <div
             style={{
@@ -508,7 +508,7 @@ export default function OrderDetail() {
           </div>
         )}
 
-        {/* 2 cột thông tin */}
+        {/* 2 info columns */}
         <div
           style={{
             display: "grid",
@@ -517,7 +517,7 @@ export default function OrderDetail() {
             marginBottom: "20px",
           }}
         >
-          {/* Thông tin đơn hàng */}
+          {/* Order info */}
           <div
             style={{
               backgroundColor: "#f9fafb",
@@ -555,7 +555,7 @@ export default function OrderDetail() {
             </p>
           </div>
 
-          {/* Thông tin giao hàng */}
+          {/* Shipping info */}
           <div
             style={{
               backgroundColor: "#f0fdf4",
@@ -593,7 +593,7 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {/* ── TRACKING TIMELINE — Lộ trình vận chuyển ── */}
+        {/* ── TRACKING TIMELINE ── */}
         {(() => {
           const status = (order.status || "").toLowerCase();
           const isCancelled = status === "cancelled";
@@ -1027,7 +1027,7 @@ export default function OrderDetail() {
           );
         })()}
 
-        {/* Danh sách sản phẩm */}
+        {/* Product list */}
         <h3
           style={{
             borderBottom: "1px solid #f3f4f6",
@@ -1337,7 +1337,7 @@ export default function OrderDetail() {
           </div>
         )}
 
-        {/* Tổng cộng */}
+        {/* Total */}
         <div
           style={{
             textAlign: "right",
