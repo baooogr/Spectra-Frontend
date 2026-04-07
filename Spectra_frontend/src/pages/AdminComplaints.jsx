@@ -401,9 +401,9 @@ const handleAhamoveEstimate = async () => {
 
       {/* Table */}
       {loading ? (
-        <div className="ac-loading">Đang tải...</div>
+        <div className="ac-loading">Loading...</div>
       ) : complaints.length === 0 ? (
-        <div className="ac-empty">Không có khiếu nại nào.</div>
+        <div className="ac-empty">No complaints.</div>
       ) : (
         <>
           <div className="ac-table-wrapper">

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { roundVND, formatVNDNumber } from "../utils/validation";
-import { useExchangeRate } from "../api";
+import { useExchangeRate } from "../api"; // Đã xóa import roundVND, formatVNDNumber vì không còn dùng
 
 export default function VNPayReturnPage() {
   const [searchParams] = useSearchParams();
@@ -82,20 +81,15 @@ export default function VNPayReturnPage() {
       amountUSD = amountVND / EXCHANGE_RATE;
     }
 
-    // Định dạng USD (ví dụ: $180)
+    // Định dạng USD (ví dụ: $180 hoặc $372.09)
     const formattedUSD = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
     }).format(amountUSD);
 
-    // Round VND to 500 and format (e.g. 4.725.000 VND)
-    const roundedVND = roundVND(amountVND);
-    const formattedVND = formatVNDNumber(roundedVND) + " VND";
-
-    // Return: $180 (4.725.000 VND)
-    return `${formattedUSD} (${formattedVND})`;
-
+    // Chỉ trả về USD
+    return formattedUSD;
   };
 
   return (
@@ -115,7 +109,7 @@ export default function VNPayReturnPage() {
         <div>
           <div style={{ fontSize: "50px", marginBottom: "16px" }}></div>
           <h2 style={{ color: "#6b7280" }}>
-            Đang kiểm tra kết quả thanh toán...
+            Checking payment status...
           </h2>
         </div>
       )}
@@ -136,10 +130,10 @@ export default function VNPayReturnPage() {
         >
           <div style={{ fontSize: "64px" }}></div>
           <h2 style={{ color: "#059669", marginTop: "12px", fontSize: "24px" }}>
-            Thanh Toán VNPay Thành Công!
+            VNPay Payment Successful!
           </h2>
           <p style={{ color: "#374151", marginTop: "8px" }}>
-            Cảm ơn bạn! Đơn hàng của bạn đã được ghi nhận.
+            Thank you! Your order has been successfully recorded.
           </p>
 
           <div
@@ -156,7 +150,7 @@ export default function VNPayReturnPage() {
               <p
                 style={{ margin: "6px 0", color: "#374151", fontSize: "14px" }}
               >
-                <b>Mã giao dịch:</b> {transactionNo}
+                <b>Transaction ID:</b> {transactionNo}
               </p>
             )}
             {paymentId && (
@@ -170,7 +164,7 @@ export default function VNPayReturnPage() {
               <p
                 style={{ margin: "6px 0", color: "#374151", fontSize: "14px" }}
               >
-                <b>Số tiền:</b> {formatAmount(amount)}
+                <b>Amount:</b> {formatAmount(amount)}
               </p>
             )}
           </div>
@@ -196,7 +190,7 @@ export default function VNPayReturnPage() {
                 fontSize: "15px",
               }}
             >
-              Xem đơn hàng
+              View Orders
             </Link>
             <Link
               to="/"
@@ -211,7 +205,7 @@ export default function VNPayReturnPage() {
                 fontSize: "15px",
               }}
             >
-              Về trang chủ
+              Back to Home
             </Link>
           </div>
         </div>
@@ -233,11 +227,10 @@ export default function VNPayReturnPage() {
         >
           <div style={{ fontSize: "64px" }}></div>
           <h2 style={{ color: "#dc2626", marginTop: "12px", fontSize: "24px" }}>
-            Thanh Toán Thất Bại
+            Payment Failed
           </h2>
           <p style={{ color: "#374151", marginTop: "8px" }}>
-            Giao dịch chưa được hoàn tất. Đơn hàng vẫn được lưu — bạn có thể thử
-            thanh toán lại.
+            The transaction was not completed. Your order is saved — you can try paying again.
           </p>
 
           {/* Hiển thị lý do thất bại nếu có */}
@@ -260,7 +253,7 @@ export default function VNPayReturnPage() {
                     color: "#6b7280",
                   }}
                 >
-                  <b>Mã lỗi VNPay:</b> {responseCode}
+                  <b>VNPay Error Code:</b> {responseCode}
                 </p>
               )}
               {message && (
@@ -271,7 +264,7 @@ export default function VNPayReturnPage() {
                     color: "#6b7280",
                   }}
                 >
-                  <b>Chi tiết:</b> {decodeURIComponent(message)}
+                  <b>Details:</b> {decodeURIComponent(message)}
                 </p>
               )}
             </div>
@@ -298,7 +291,7 @@ export default function VNPayReturnPage() {
                 fontSize: "15px",
               }}
             >
-              Xem đơn hàng
+              View Orders
             </Link>
             <Link
               to="/"
@@ -313,7 +306,7 @@ export default function VNPayReturnPage() {
                 fontSize: "15px",
               }}
             >
-              Về trang chủ
+              Back to Home
             </Link>
           </div>
         </div>

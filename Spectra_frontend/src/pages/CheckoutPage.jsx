@@ -16,10 +16,8 @@ import VIETNAM_PROVINCES, {
 } from "../utils/vietnamAddress";
 import {
   isValidVNPhone,
-  formatPrice,
-  formatVNDNumber,
   roundVND,
-} from "../utils/validation";
+} from "../utils/validation"; // Đã xóa import formatPrice cũ
 import "./CheckoutPage.css";
 
 export default function CheckoutPage() {
@@ -34,7 +32,16 @@ export default function CheckoutPage() {
   // Use cached user data
   const { user: apiUser } = useCurrentUser();
   const { rate: exchangeRate } = useExchangeRate();
-  const fmtPrice = (n) => formatPrice(n, exchangeRate);
+
+  // ⚡ Đã cập nhật hàm fmtPrice để chỉ hiển thị dạng $USD
+  const fmtPrice = (n) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0, // Không hiện .00 nếu là số chẵn (VD: $150)
+      maximumFractionDigits: 2, // Tối đa 2 chữ số thập phân (VD: $150.55)
+    }).format(n);
+  };
 
   const [form, setForm] = useState({
     fullName: currentUser.fullName || "",
@@ -97,7 +104,7 @@ export default function CheckoutPage() {
           setBusinessRules(data || {});
         }
       } catch (err) {
-        console.error("Không thể tải quy tắc vận chuyển:", err);
+        console.error("Cannot load shipping rules:", err);
       }
     };
     fetchBusinessRules();
@@ -252,22 +259,22 @@ export default function CheckoutPage() {
   const shippingFee = isFreeShipping
     ? 0
     : Math.round((roundVND(shippingFeeVND) / (exchangeRate || 25400)) * 100) /
-      100;
+    100;
   const total = subtotal + shippingFee;
 
   const SHIPPING_METHODS = [
     {
       key: "standard",
-      label: "Giao hàng tiêu chuẩn",
+      label: "Standard Delivery",
       feeVND: isFreeShipping ? 0 : calcShippingFeeVND(currentZone, "standard"),
-      days: "5-7 ngày",
+      days: "5-7 days",
       icon: "📦",
     },
     {
       key: "express",
-      label: "Giao hàng nhanh",
+      label: "Express Delivery",
       feeVND: isFreeShipping ? 0 : calcShippingFeeVND(currentZone, "express"),
-      days: "2-3 ngày",
+      days: "2-3 days",
       icon: "⚡",
     },
   ];
@@ -295,14 +302,14 @@ export default function CheckoutPage() {
 
     const token = currentUser.token;
     if (!token) {
-      alert("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
+      alert("You are not logged in. Please log in to continue.");
       navigate("/login");
       return;
     }
 
     if (!form.phone) {
       alert(
-        "Số điện thoại không được để trống. Vui lòng cập nhật SĐT trong phần hồ sơ cá nhân.",
+        "Phone number cannot be empty. Please update your phone number in your profile.",
       );
       setIsSubmitting(false);
       return;
@@ -310,7 +317,7 @@ export default function CheckoutPage() {
 
     if (!isValidVNPhone(form.phone)) {
       setPhoneError(
-        "Số điện thoại không hợp lệ. Vui lòng nhập đúng SĐT Việt Nam.",
+        "Invalid phone number. Please enter a valid Vietnamese phone number.",
       );
       setIsSubmitting(false);
       return;
@@ -323,7 +330,7 @@ export default function CheckoutPage() {
       !form.addressDetail.trim()
     ) {
       alert(
-        "Vui lòng điền đầy đủ địa chỉ giao hàng (Tỉnh/Thành phố, Quận/Huyện, Phường/Xã, Địa chỉ chi tiết).",
+        "Please provide full shipping address (Province/City, District, Ward, Detailed Address).",
       );
       setIsSubmitting(false);
       return;
@@ -379,7 +386,7 @@ export default function CheckoutPage() {
 
       if (composedAddress.length > ORDER_SHIPPING_ADDRESS_LIMIT) {
         setErrorMsg(
-          "Địa chỉ giao hàng quá dài. Vui lòng rút gọn địa chỉ chi tiết hoặc bỏ bớt thông tin không cần thiết.",
+          "Shipping address is too long. Please shorten your detailed address or remove unnecessary information.",
         );
         setIsSubmitting(false);
         return;
@@ -435,13 +442,13 @@ export default function CheckoutPage() {
                 window.location.href = paymentData.paymentUrl;
                 return;
               } else {
-                alert("Lỗi: Backend không trả về Link VNPay!");
+                alert("Error: Backend did not return VNPay Link!");
               }
             } else {
-              alert("Lỗi kết nối tạo VNPay!");
+              alert("Connection error while creating VNPay!");
             }
           } catch (err) {
-            alert("Lỗi mạng khi tạo thanh toán VNPay");
+            alert("Network error while creating VNPay payment");
           }
         } else {
 
@@ -470,11 +477,11 @@ export default function CheckoutPage() {
         const detailedError = errData.errors
           ? JSON.stringify(errData.errors)
           : errData.message;
+        setErrorMsg(detailedError || "Error creating order from Server.");
 
-        setErrorMsg(detailedError || "Lỗi tạo đơn hàng từ Server.");
       }
     } catch (err) {
-      setErrorMsg("Lỗi mạng! Không thể kết nối tới Server.");
+      setErrorMsg("Network error! Cannot connect to Server.");
     } finally {
       setIsSubmitting(false);
     }
@@ -483,7 +490,7 @@ export default function CheckoutPage() {
   if (items.length === 0)
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
-        Giỏ hàng trống. Không thể thanh toán.
+        Your cart is empty. Cannot proceed to checkout.
       </div>
     );
 
@@ -491,11 +498,11 @@ export default function CheckoutPage() {
   return (
     <div className="checkout">
       <div className="checkout__container">
-        <h1 className="checkout__title">Thanh Toán</h1>
+        <h1 className="checkout__title">CHECKOUT</h1>
 
         <form className="checkout__grid" onSubmit={placeOrder}>
           <div className="checkout__form">
-            <h2>Thông tin giao hàng</h2>
+            <h2>Shipping Information</h2>
 
             {errorMsg && (
               <div
@@ -514,7 +521,7 @@ export default function CheckoutPage() {
             <div className="form-row">
               <div className="form-group">
                 <label>
-                  Họ và tên <span className="req">*</span>
+                  Full Name <span className="req">*</span>
                 </label>
                 <input
                   type="text"
@@ -527,8 +534,8 @@ export default function CheckoutPage() {
               <div className="form-group">
                 <label>
                   {phoneManualMode
-                    ? "Số điện thoại"
-                    : "Số điện thoại (Cố định)"}
+                    ? "Phone Number"
+                    : "Phone Number (Fixed)"}
                 </label>
                 <input
                   type="tel"
@@ -540,24 +547,24 @@ export default function CheckoutPage() {
                     phoneManualMode
                       ? {}
                       : {
-                          backgroundColor: "#e5e7eb",
-                          color: "#6b7280",
-                          cursor: "not-allowed",
-                          outline: "none",
-                        }
+                        backgroundColor: "#e5e7eb",
+                        color: "#6b7280",
+                        cursor: "not-allowed",
+                        outline: "none",
+                      }
                   }
                   required
                   title={
                     phoneManualMode
-                      ? "Nhập số điện thoại của bạn"
-                      : "Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
+                      ? "Enter your phone number"
+                      : "Please update your phone number in your profile"
                   }
                   placeholder={
                     phoneManualMode
-                      ? "Nhập số điện thoại..."
+                      ? "Enter phone number..."
                       : form.phone
                         ? ""
-                        : "Đang tải SĐT..."
+                        : "Loading phone number..."
                   }
                 />
                 {phoneManualMode && !form.phone && (
@@ -568,7 +575,7 @@ export default function CheckoutPage() {
                       display: "block",
                     }}
                   >
-                    Không tìm thấy SĐT trong hồ sơ. Vui lòng nhập thủ công.
+                    Phone number not found in profile. Please enter manually.
                   </small>
                 )}
                 {phoneError && (
@@ -586,7 +593,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="form-group">
-              <label>Email liên hệ</label>
+              <label>Contact Email</label>
               <input
                 type="email"
                 name="email"
@@ -597,7 +604,7 @@ export default function CheckoutPage() {
 
             <div className="form-group">
               <label>
-                Tỉnh/Thành phố <span className="req">*</span>
+                Province/City <span className="req">*</span>
               </label>
               <select
                 name="province"
@@ -618,7 +625,7 @@ export default function CheckoutPage() {
                   border: "1px solid #d1d5db",
                 }}
               >
-                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                <option value="">-- Select Province/City --</option>
                 {VIETNAM_PROVINCES.map((p) => (
                   <option key={p.name} value={p.name}>
                     {p.name}
@@ -630,7 +637,7 @@ export default function CheckoutPage() {
             <div className="form-row">
               <div className="form-group">
                 <label>
-                  Quận/Huyện <span className="req">*</span>
+                  District <span className="req">*</span>
                 </label>
                 <select
                   name="district"
@@ -647,7 +654,7 @@ export default function CheckoutPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  <option value="">-- Chọn Quận/Huyện --</option>
+                  <option value="">-- Select District --</option>
                   {(
                     VIETNAM_PROVINCES.find((p) => p.name === form.province)
                       ?.districts || []
@@ -660,7 +667,7 @@ export default function CheckoutPage() {
               </div>
               <div className="form-group">
                 <label>
-                  Phường/Xã <span className="req">*</span>
+                  Ward <span className="req">*</span>
                 </label>
                 <select
                   name="ward"
@@ -675,7 +682,7 @@ export default function CheckoutPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  <option value="">-- Chọn Phường/Xã --</option>
+                  <option value="">-- Select Ward --</option>
                   {(
                     VIETNAM_PROVINCES.find(
                       (p) => p.name === form.province,
@@ -692,7 +699,7 @@ export default function CheckoutPage() {
 
             <div className="form-group">
               <label>
-                Địa chỉ chi tiết (Số nhà, đường) <span className="req">*</span>
+                Detailed Address (House number, street) <span className="req">*</span>
               </label>
               <input
                 type="text"
@@ -700,17 +707,17 @@ export default function CheckoutPage() {
                 value={form.addressDetail}
                 onChange={onChange}
                 required
-                placeholder="Số nhà, tên đường..."
+                placeholder="House number, street name..."
               />
             </div>
 
             <div className="form-group">
-              <label>Ghi chú đơn hàng (Tùy chọn)</label>
+              <label>Order Notes (Optional)</label>
               <textarea
                 name="note"
                 value={form.note}
                 onChange={onChange}
-                placeholder="Giao giờ hành chính, gọi trước khi giao..."
+                placeholder="Deliver during office hours, call before delivery..."
                 style={{
                   width: "95%",
                   minHeight: "110px",
@@ -736,7 +743,7 @@ export default function CheckoutPage() {
                   display: "block",
                 }}
               >
-                Phương thức vận chuyển <span className="req">*</span>
+                Shipping Method <span className="req">*</span>
               </label>
 
               {isFreeShipping && (
@@ -752,7 +759,7 @@ export default function CheckoutPage() {
                     fontWeight: 600,
                   }}
                 >
-                  🎉 Đơn hàng trên 1.500.000₫ — Miễn phí vận chuyển!
+                  🎉 Orders over {fmtPrice(shippingRules.FREE_THRESHOLD_VND / (exchangeRate || 25400))} — Free Shipping!
                 </div>
               )}
 
@@ -765,7 +772,6 @@ export default function CheckoutPage() {
               >
                 {SHIPPING_METHODS.map((m) => {
                   const isSelected = form.shippingMethod === m.key;
-                  const fmtVND = (v) => formatVNDNumber(v) + "₫";
                   return (
                     <label
                       key={m.key}
@@ -813,7 +819,7 @@ export default function CheckoutPage() {
                             marginTop: "2px",
                           }}
                         >
-                          Dự kiến nhận hàng trong {m.days}
+                          Estimated delivery in {m.days}
                         </div>
                       </div>
                       <div
@@ -823,7 +829,7 @@ export default function CheckoutPage() {
                           color: m.feeVND === 0 ? "#059669" : "#dc2626",
                         }}
                       >
-                        {m.feeVND === 0 ? "Miễn phí" : fmtVND(m.feeVND)}
+                        {m.feeVND === 0 ? "Free" : fmtPrice(m.feeVND / (exchangeRate || 25400))}
                       </div>
                     </label>
                   );
@@ -842,7 +848,7 @@ export default function CheckoutPage() {
                   color: "#92400e",
                 }}
               >
-                Dự kiến nhận hàng: <strong>{getEstimatedDelivery()}</strong>
+                Estimated delivery: <strong>{getEstimatedDelivery()}</strong>
               </div>
             </div>
 
@@ -855,7 +861,7 @@ export default function CheckoutPage() {
                   display: "block",
                 }}
               >
-                Phương thức thanh toán <span className="req">*</span>
+                Payment Method <span className="req">*</span>
               </label>
               <select
                 name="paymentMethod"
@@ -871,16 +877,16 @@ export default function CheckoutPage() {
                   fontSize: "15px",
                 }}
               >
-                <option value="COD">Thanh toán tiền mặt (COD)</option>
+                <option value="COD">Cash on Delivery (COD)</option>
                 <option value="VNPAY">
-                  Thanh toán qua VNPay (Quét mã QR / Thẻ ATM)
+                  Pay via VNPay (QR Code / ATM Card)
                 </option>
               </select>
             </div>
           </div>
 
           <div className="checkout__summary">
-            <h2>Đơn hàng của bạn</h2>
+            <h2>Your Order</h2>
             <div className="summary__items">
               {items.map((item, idx) => (
 
@@ -905,7 +911,7 @@ export default function CheckoutPage() {
                       </div>
                     )}
                     <div className="item__qty" style={{ fontSize: "13px" }}>
-                      SL: {item.quantity} | Màu: {item.color || "Mặc định"}
+                      Qty: {item.quantity} | Color: {item.color || "Default"}
                     </div>
                   </div>
                   <div
@@ -921,12 +927,12 @@ export default function CheckoutPage() {
             </div>
 
             <div className="summary__row">
-              <span>Tạm tính</span>
+              <span>Subtotal</span>
               <span>{fmtPrice(subtotal)}</span>
             </div>
             <div className="summary__row">
               <span>
-                Phí giao hàng (
+                Shipping Fee (
                 {
                   (
                     SHIPPING_METHODS.find(
@@ -939,7 +945,7 @@ export default function CheckoutPage() {
               <span
                 style={{ color: shippingFee === 0 ? "#059669" : undefined }}
               >
-                {shippingFee === 0 ? "Miễn phí" : fmtPrice(shippingFee)}
+                {shippingFee === 0 ? "Free" : fmtPrice(shippingFee)}
               </span>
             </div>
             <div
@@ -951,7 +957,7 @@ export default function CheckoutPage() {
                 borderTop: "2px solid #ccc",
               }}
             >
-              <span>Tổng thanh toán</span>
+              <span>Total Payment</span>
               <span style={{ color: "#10b981" }}>{fmtPrice(total)}</span>
             </div>
 
@@ -973,9 +979,9 @@ export default function CheckoutPage() {
               }}
             >
               {isSubmitting
-                ? "Đang xử lý..."
 
-                : `Xác Nhận Đặt Hàng - ${fmtPrice(total)}`}
+                ? "Processing..."
+                : `Confirm Order - ${fmtPrice(total)}`}
 
             </button>
           </div>

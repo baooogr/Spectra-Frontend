@@ -80,7 +80,7 @@ export default function ProductReviews({ frameId }) {
         .then((d) =>
           setIsVerified(d.isVerifiedPurchase || d.IsVerifiedPurchase),
         )
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [token, frameId]);
 
@@ -103,11 +103,11 @@ export default function ProductReviews({ frameId }) {
       const body = editingId
         ? { rating: formRating, title: formTitle, comment: formComment }
         : {
-            frameId,
-            rating: formRating,
-            title: formTitle,
-            comment: formComment,
-          };
+          frameId,
+          rating: formRating,
+          title: formTitle,
+          comment: formComment,
+        };
 
       const res = await fetch(url, {
         method,
@@ -119,10 +119,10 @@ export default function ProductReviews({ frameId }) {
         fetchReviews(1);
       } else {
         const err = await res.json();
-        setFormError(err.message || err.Message || "Không thể gửi đánh giá");
+        setFormError(err.message || err.Message || "Unable to submit review");
       }
     } catch {
-      setFormError("Lỗi kết nối");
+      setFormError("Connection error");
     }
     setSubmitting(false);
   };
@@ -136,7 +136,7 @@ export default function ProductReviews({ frameId }) {
   };
 
   const handleDelete = async (reviewId) => {
-    if (!window.confirm("Bạn có chắc muốn xoá đánh giá này?")) return;
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
     try {
       const res = await fetch(`${API}/${reviewId}`, {
         method: "DELETE",
@@ -163,7 +163,7 @@ export default function ProductReviews({ frameId }) {
           paddingBottom: "10px",
         }}
       >
-        Đánh giá sản phẩm
+        Product Reviews
       </h3>
 
       {/* Summary */}
@@ -189,7 +189,7 @@ export default function ProductReviews({ frameId }) {
             <div
               style={{ fontSize: "13px", color: "#6b7280", marginTop: "4px" }}
             >
-              {total} đánh giá
+              {total} Reviews
             </div>
           </div>
           <div style={{ flex: 1 }}>
@@ -267,7 +267,7 @@ export default function ProductReviews({ frameId }) {
             fontWeight: "600",
           }}
         >
-          Viết đánh giá (Đã mua hàng)
+          Write a review (Verified Purchase)
         </button>
       )}
       {token && !showForm && !isVerified && (
@@ -282,7 +282,7 @@ export default function ProductReviews({ frameId }) {
             fontSize: "14px",
           }}
         >
-          Bạn cần mua sản phẩm này trước khi có thể viết đánh giá.
+          You need to purchase this product before you can write a review.
         </div>
       )}
 
@@ -299,7 +299,7 @@ export default function ProductReviews({ frameId }) {
           }}
         >
           <h4 style={{ marginTop: 0 }}>
-            {editingId ? "Sửa đánh giá" : "Viết đánh giá"}
+            {editingId ? "Edit Review" : "Write a Review"}
           </h4>
           <div style={{ marginBottom: "12px" }}>
             <label
@@ -310,7 +310,7 @@ export default function ProductReviews({ frameId }) {
                 fontSize: "14px",
               }}
             >
-              Đánh giá:
+              Rating:
             </label>
             <StarRating
               rating={formRating}
@@ -327,10 +327,11 @@ export default function ProductReviews({ frameId }) {
                 fontSize: "14px",
               }}
             >
-              Tiêu đề:
+              Title:
             </label>
             <input
               value={formTitle}
+              placeholder="Give your review a title..."
               onChange={(e) => setFormTitle(e.target.value)}
               style={{
                 width: "100%",
@@ -350,10 +351,11 @@ export default function ProductReviews({ frameId }) {
                 fontSize: "14px",
               }}
             >
-              Nhận xét:
+              Comment:
             </label>
             <textarea
               value={formComment}
+              placeholder="What did you like or dislike about the product?"
               onChange={(e) => setFormComment(e.target.value)}
               rows={3}
               style={{
@@ -384,10 +386,10 @@ export default function ProductReviews({ frameId }) {
               }}
             >
               {submitting
-                ? "Đang gửi..."
+                ? "Submitting..."
                 : editingId
-                  ? "Cập nhật"
-                  : "Gửi đánh giá"}
+                  ? "Update Review"
+                  : "Submit Review"}
             </button>
             <button
               type="button"
@@ -401,7 +403,7 @@ export default function ProductReviews({ frameId }) {
                 cursor: "pointer",
               }}
             >
-              Huỷ
+              Cancel
             </button>
           </div>
         </form>
@@ -409,10 +411,10 @@ export default function ProductReviews({ frameId }) {
 
       {/* Review list */}
       {loading ? (
-        <p style={{ color: "#6b7280" }}>Đang tải đánh giá...</p>
+        <p style={{ color: "#6b7280" }}>Loading reviews...</p>
       ) : reviews.length === 0 ? (
         <p style={{ color: "#6b7280", fontStyle: "italic" }}>
-          Chưa có đánh giá nào cho sản phẩm này.
+          There are no reviews for this product yet.
         </p>
       ) : (
         <div>
@@ -423,7 +425,7 @@ export default function ProductReviews({ frameId }) {
               r.user?.fullName ||
               r.user?.userName ||
               r.User?.FullName ||
-              "Ẩn danh";
+              "Anonymous";
             const rating = r.rating || r.Rating || 0;
             const title = r.title || r.Title || "";
             const comment = r.comment || r.Comment || "";
@@ -460,7 +462,7 @@ export default function ProductReviews({ frameId }) {
                         color: "#9ca3af",
                       }}
                     >
-                      {date ? new Date(date).toLocaleDateString("vi-VN") : ""}
+                      {date ? new Date(date).toLocaleDateString("en-US") : ""}
                     </span>
                   </div>
                   {isOwn && (
@@ -475,7 +477,7 @@ export default function ProductReviews({ frameId }) {
                           cursor: "pointer",
                         }}
                       >
-                        Sửa
+                        Edit
                       </button>
                       <button
                         onClick={() => handleDelete(rid)}
@@ -487,7 +489,7 @@ export default function ProductReviews({ frameId }) {
                           cursor: "pointer",
                         }}
                       >
-                        Xoá
+                        Delete
                       </button>
                     </div>
                   )}
@@ -542,7 +544,7 @@ export default function ProductReviews({ frameId }) {
                 ←
               </button>
               <span style={{ padding: "6px 10px", fontSize: "14px" }}>
-                Trang {page}/{totalPages}
+                Page {page} of {totalPages}
               </span>
               <button
                 disabled={page >= totalPages}

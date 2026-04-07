@@ -17,7 +17,16 @@ export default function CheckoutPreorderPage() {
   const { cartItems, clearCart } = useCart();
   const location = useLocation();
   const { rate: exchangeRate } = useExchangeRate();
-  const fmtPrice = (n) => formatPrice(n, exchangeRate);
+
+  // ⚡ Cập nhật hàm format để chỉ hiện USD
+  const fmtPrice = (n) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(n);
+  };
 
   // Lấy items từ state hoặc cartItems, sau đó lọc CHỈ lấy hàng Pre-order
   const allItems = location.state?.cartItems || cartItems;
@@ -109,14 +118,14 @@ export default function CheckoutPreorderPage() {
 
     const token = currentUser.token;
     if (!token) {
-      alert("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.");
+      alert("You are not logged in. Please log in to continue.");
       navigate("/login");
       return;
     }
 
     if (!form.phone) {
       alert(
-        "Số điện thoại không được để trống. Vui lòng cập nhật SĐT trong phần hồ sơ cá nhân.",
+        "Phone number cannot be empty. Please update your phone number in your profile.",
       );
       setIsSubmitting(false);
       return;
@@ -124,7 +133,7 @@ export default function CheckoutPreorderPage() {
 
     if (!isValidVNPhone(form.phone)) {
       setPhoneError(
-        "Số điện thoại không hợp lệ (VD: 0912345678 hoặc +84912345678)",
+        "Invalid phone number (Ex: 0912345678 or +84912345678)",
       );
       setIsSubmitting(false);
       return;
@@ -132,7 +141,7 @@ export default function CheckoutPreorderPage() {
     setPhoneError("");
 
     if (!form.province || !form.district || !form.ward) {
-      alert("Vui lòng chọn đầy đủ Tỉnh/Thành phố, Quận/Huyện và Phường/Xã.");
+      alert("Please select Province/City, District, and Ward.");
       setIsSubmitting(false);
       return;
     }
@@ -228,23 +237,23 @@ export default function CheckoutPreorderPage() {
               window.location.href = paymentData.paymentUrl;
               return;
             } else {
-              alert("Lỗi: Backend không trả về Link VNPay!");
+              alert("Error: Backend did not return VNPay Link!");
             }
           } else {
-            alert("Lỗi kết nối tạo VNPay!");
+            alert("Connection error while creating VNPay payment!");
           }
         } catch (err) {
-          alert("Lỗi mạng khi tạo thanh toán VNPay");
+          alert("Network error while creating VNPay payment");
         }
       } else {
         const errData = await res.json();
         const detailedError = errData.errors
           ? JSON.stringify(errData.errors)
           : errData.message;
-        setErrorMsg(detailedError || "Lỗi tạo đơn đặt trước từ Server.");
+        setErrorMsg(detailedError || "Error creating pre-order from server.");
       }
     } catch (err) {
-      setErrorMsg("Lỗi mạng! Không thể kết nối tới Server.");
+      setErrorMsg("Network error! Cannot connect to server.");
     } finally {
       setIsSubmitting(false);
     }
@@ -253,18 +262,18 @@ export default function CheckoutPreorderPage() {
   if (items.length === 0)
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
-        Chưa có sản phẩm đặt trước nào.
+        No pre-order items found.
       </div>
     );
 
   return (
     <div className="checkout">
       <div className="checkout__container">
-        <h1 className="checkout__title">Thanh Toán Đặt Trước</h1>
+        <h1 className="checkout__title">Pre-order Checkout</h1>
 
         <form className="checkout__grid" onSubmit={placeOrder}>
           <div className="checkout__form">
-            <h2>Thông tin liên hệ & Giao hàng</h2>
+            <h2>Contact & Shipping Information</h2>
 
             {/* Thông báo đặc biệt cho đơn Pre-order */}
 
@@ -285,7 +294,7 @@ export default function CheckoutPreorderPage() {
             <div className="form-row">
               <div className="form-group">
                 <label>
-                  Họ và tên <span className="req">*</span>
+                  Full Name <span className="req">*</span>
                 </label>
                 <input
                   type="text"
@@ -298,8 +307,8 @@ export default function CheckoutPreorderPage() {
               <div className="form-group">
                 <label>
                   {phoneManualMode
-                    ? "Số điện thoại"
-                    : "Số điện thoại (Cố định)"}
+                    ? "Phone Number"
+                    : "Phone Number (Fixed)"}
                 </label>
                 <input
                   type="tel"
@@ -311,24 +320,24 @@ export default function CheckoutPreorderPage() {
                     phoneManualMode
                       ? {}
                       : {
-                          backgroundColor: "#e5e7eb",
-                          color: "#6b7280",
-                          cursor: "not-allowed",
-                          outline: "none",
-                        }
+                        backgroundColor: "#e5e7eb",
+                        color: "#6b7280",
+                        cursor: "not-allowed",
+                        outline: "none",
+                      }
                   }
                   required
                   title={
                     phoneManualMode
-                      ? "Nhập số điện thoại của bạn"
-                      : "Vui lòng cập nhật số điện thoại ở phần hồ sơ cá nhân"
+                      ? "Enter your phone number"
+                      : "Please update your phone number in your profile"
                   }
                   placeholder={
                     phoneManualMode
-                      ? "Nhập số điện thoại..."
+                      ? "Enter phone number..."
                       : form.phone
                         ? ""
-                        : "Đang tải SĐT..."
+                        : "Loading phone number..."
                   }
                 />
                 {phoneManualMode && !form.phone && (
@@ -339,7 +348,7 @@ export default function CheckoutPreorderPage() {
                       display: "block",
                     }}
                   >
-                    Không tìm thấy SĐT trong hồ sơ. Vui lòng nhập thủ công.
+                    Phone number not found in profile. Please enter manually.
                   </small>
                 )}
                 {phoneError && (
@@ -357,7 +366,7 @@ export default function CheckoutPreorderPage() {
             </div>
 
             <div className="form-group">
-              <label>Email liên hệ</label>
+              <label>Contact Email</label>
               <input
                 type="email"
                 name="email"
@@ -368,7 +377,7 @@ export default function CheckoutPreorderPage() {
 
             <div className="form-group">
               <label>
-                Tỉnh / Thành phố <span className="req">*</span>
+                Province / City <span className="req">*</span>
               </label>
               <select
                 name="province"
@@ -389,7 +398,7 @@ export default function CheckoutPreorderPage() {
                   border: "1px solid #d1d5db",
                 }}
               >
-                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                <option value="">-- Select Province/City --</option>
                 {VIETNAM_PROVINCES.map((p) => (
                   <option key={p.name} value={p.name}>
                     {p.name}
@@ -401,7 +410,7 @@ export default function CheckoutPreorderPage() {
             <div className="form-row">
               <div className="form-group">
                 <label>
-                  Quận / Huyện <span className="req">*</span>
+                  District <span className="req">*</span>
                 </label>
                 <select
                   name="district"
@@ -418,7 +427,7 @@ export default function CheckoutPreorderPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  <option value="">-- Chọn Quận/Huyện --</option>
+                  <option value="">-- Select District --</option>
                   {(
                     VIETNAM_PROVINCES.find((p) => p.name === form.province)
                       ?.districts || []
@@ -431,7 +440,7 @@ export default function CheckoutPreorderPage() {
               </div>
               <div className="form-group">
                 <label>
-                  Phường / Xã <span className="req">*</span>
+                  Ward <span className="req">*</span>
                 </label>
                 <select
                   name="ward"
@@ -446,7 +455,7 @@ export default function CheckoutPreorderPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  <option value="">-- Chọn Phường/Xã --</option>
+                  <option value="">-- Select Ward --</option>
                   {(
                     VIETNAM_PROVINCES.find(
                       (p) => p.name === form.province,
@@ -462,23 +471,23 @@ export default function CheckoutPreorderPage() {
             </div>
 
             <div className="form-group">
-              <label>Địa chỉ chi tiết (Số nhà, đường...)</label>
+              <label>Detailed Address (House number, street...)</label>
               <input
                 type="text"
                 name="addressDetail"
                 value={form.addressDetail}
                 onChange={onChange}
-                placeholder="VD: Số 12, Đường Nguyễn Huệ"
+                placeholder="Ex: No. 12, Nguyen Hue St."
               />
             </div>
 
             <div className="form-group">
-              <label>Ghi chú đơn hàng (Tùy chọn)</label>
+              <label>Order Notes (Optional)</label>
               <textarea
                 name="note"
                 value={form.note}
                 onChange={onChange}
-                placeholder="Ghi chú thêm cho chúng tôi về đơn đặt trước..."
+                placeholder="Add notes about your pre-order..."
                 style={{
                   width: "95%",
                   minHeight: "110px",
@@ -503,7 +512,7 @@ export default function CheckoutPreorderPage() {
                   display: "block",
                 }}
               >
-                Phương thức thanh toán <span className="req">*</span>
+                Payment Method <span className="req">*</span>
               </label>
               <select
                 name="paymentMethod"
@@ -522,14 +531,14 @@ export default function CheckoutPreorderPage() {
                 }}
               >
                 <option value="VNPAY">
-                  💳 Thanh toán trước 100% qua VNPay
+                  💳 Pay 100% upfront via VNPay
                 </option>
               </select>
             </div>
           </div>
 
           <div className="checkout__summary">
-            <h2>Sản phẩm đặt trước</h2>
+            <h2>Pre-order Items</h2>
             <div className="summary__items">
               {items.map((item, idx) => (
                 <div
@@ -553,7 +562,7 @@ export default function CheckoutPreorderPage() {
                       </div>
                     )}
                     <div className="item__qty" style={{ fontSize: "13px" }}>
-                      SL: {item.quantity} | Màu: {item.color || "Mặc định"}
+                      Qty: {item.quantity} | Color: {item.color || "Default"}
                     </div>
                     <div
                       style={{
@@ -566,9 +575,9 @@ export default function CheckoutPreorderPage() {
                         marginTop: "5px",
                       }}
                     >
-                      Giao dự kiến:{" "}
+                      Est. delivery:{" "}
                       {new Date(item.estimatedDeliveryDate).toLocaleDateString(
-                        "vi-VN",
+                        "en-US",
                       )}
                     </div>
                   </div>
@@ -587,11 +596,11 @@ export default function CheckoutPreorderPage() {
             </div>
 
             <div className="summary__row">
-              <span>Tạm tính</span>
+              <span>Subtotal</span>
               <span>{fmtPrice(subtotal)}</span>
             </div>
             <div className="summary__row">
-              <span>Phí giao hàng</span>
+              <span>Shipping Fee</span>
               <span
                 style={{
                   fontStyle: "italic",
@@ -599,7 +608,7 @@ export default function CheckoutPreorderPage() {
                   color: "#6b7280",
                 }}
               >
-                Tính sau khi hàng về
+                Calculated upon arrival
               </span>
             </div>
             <div
@@ -611,7 +620,7 @@ export default function CheckoutPreorderPage() {
                 borderTop: "2px solid #ccc",
               }}
             >
-              <span>Tổng thanh toán</span>
+              <span>Total Amount</span>
               <span style={{ color: "#10b981" }}>{fmtPrice(total)}</span>
             </div>
 
@@ -633,7 +642,7 @@ export default function CheckoutPreorderPage() {
                 transition: "0.2s",
               }}
             >
-              {isSubmitting ? "Đang chuyển hướng VNPay..." : `Thanh Toán VNPay`}
+              {isSubmitting ? "Redirecting to VNPay..." : `Pay via VNPay`}
             </button>
           </div>
         </form>

@@ -55,12 +55,12 @@ export default function AdminDashboard() {
 
     if (startDate || endDate) {
       if (!startDate || !endDate) {
-        setError("Vui long chon day du ca 'Tu ngay' va 'Den ngay'.");
+        setError("Please select both 'From date' and 'To date'.");
         setIsLoading(false);
         return;
       }
       if (new Date(startDate) > new Date(endDate)) {
-        setError("'Tu ngay' khong duoc lon hon 'Den ngay'. Vui long chon lai!");
+        setError("'From date' cannot be greater than 'Until date'. Please choose again.!");
         setIsLoading(false);
         return;
       }
@@ -70,7 +70,7 @@ export default function AdminDashboard() {
       const token =
         user?.token || JSON.parse(localStorage.getItem("user"))?.token;
       if (!token) {
-        setError("Bạn chưa đăng nhập hoặc không có quyền Admin!");
+        setError("You are not logged in or do not have administrator privileges.!");
         setIsLoading(false);
         return;
       }
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
         const mData = await monthlyRes.json();
         setMonthlyRevenue(
           mData.map((m) => ({
-            month: `Tháng ${new Date(m.date).getMonth() + 1}`,
+            month: `Month ${new Date(m.date).getMonth() + 1}`,
             revenue: m.revenue,
           })),
         );
@@ -168,7 +168,7 @@ export default function AdminDashboard() {
         setGlassesSoldBreakdown({ regularSold, preorderSold });
       }
     } catch (err) {
-      setError("Không thể kết nối đến máy chủ.");
+      setError("Unable to connect to the server.");
     } finally {
       setIsLoading(false);
     }
@@ -191,12 +191,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-dashboard-container">
-      <h2 className="admin-dashboard-title">Tong Quan Kinh Doanh</h2>
+      <h2 className="admin-dashboard-title">Business Overview</h2>
 
       <div className="dashboard-filters">
         <div className="filter-group">
           <div className="filter-item">
-            <label>Từ ngày:</label>
+            <label>From date:</label>
             <input
               type="date"
               value={startDate}
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
             />
           </div>
           <div className="filter-item">
-            <label>Đến ngày:</label>
+            <label>To date:</label>
             <input
               type="date"
               value={endDate}
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
         </div>
 
         <div className="filter-item" style={{ paddingLeft: "15px" }}>
-          <label>Năm (Cho BĐ Tháng):</label>
+          <label>Year (For Monthly chart):</label>
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
@@ -227,14 +227,14 @@ export default function AdminDashboard() {
         </div>
 
         <button onClick={handleFilter} className="btn-filter">
-          Lọc Dữ Liệu
+          Filtering Data
         </button>
       </div>
 
       {error && <div className="dashboard-msg msg-error">{error}</div>}
       {isLoading && (
         <div className="dashboard-msg msg-loading">
-          Đang tải dữ liệu báo cáo...
+          Loading report data...
         </div>
       )}
 
@@ -242,37 +242,37 @@ export default function AdminDashboard() {
         <>
           <div className="summary-grid">
             <div className="summary-card">
-              <h3 className="card-title">Doanh Thu</h3>
+              <h3 className="card-title">Revenue</h3>
               <p className="card-value">{formatVND(stats.totalRevenue)}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">Đơn Hàng Thường</h3>
+              <h3 className="card-title">Regular Orders</h3>
               <p className="card-value">{stats.totalOrders ?? 0}</p>
             </div>
             <div className="summary-card card-preorder">
-              <h3 className="card-title">Đơn Đặt Trước (Preorder)</h3>
+              <h3 className="card-title">Preorder</h3>
               <p className="card-value">{stats.totalPreorders ?? 0}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">Kính Đã Bán</h3>
+              <h3 className="card-title">Glasses Sold</h3>
               <p className="card-value">{stats.totalFramesSold ?? 0}</p>
               <div className="card-breakdown">
                 <span className="breakdown-item">
                   <span className="breakdown-dot dot-order"></span>
-                  Đơn thường: {glassesSoldBreakdown.regularSold}
+                  Regular application: {glassesSoldBreakdown.regularSold}
                 </span>
                 <span className="breakdown-item">
                   <span className="breakdown-dot dot-preorder"></span>
-                  Đặt trước: {glassesSoldBreakdown.preorderSold}
+                  Preorder: {glassesSoldBreakdown.preorderSold}
                 </span>
               </div>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">Khách Mới (30 ngày)</h3>
+              <h3 className="card-title">New customers (30 days)</h3>
               <p className="card-value">{stats.newCustomers ?? 0}</p>
             </div>
             <div className="summary-card">
-              <h3 className="card-title">Sản Phẩm</h3>
+              <h3 className="card-title">Products</h3>
               <p className="card-value highlight">{stats.totalProducts ?? 0}</p>
             </div>
           </div>
@@ -281,7 +281,7 @@ export default function AdminDashboard() {
             {/* CỘT TRÁI - BIỂU ĐỒ LỚN */}
             <div className="main-left-column">
               <div className="chart-card">
-                <h3 className="chart-title">Doanh Thu Theo Ngày</h3>
+                <h3 className="chart-title">Revenue By Day</h3>
                 {dailyRevenue.length > 0 ? (
                   <div className="chart-wrapper">
                     <ResponsiveContainer width="100%" height="100%">
@@ -300,7 +300,7 @@ export default function AdminDashboard() {
                         <Line
                           type="monotone"
                           dataKey="revenue"
-                          name="Doanh thu"
+                          name="Revenue"
                           stroke="#3b82f6"
                           strokeWidth={3}
                           activeDot={{ r: 8 }}
@@ -309,13 +309,13 @@ export default function AdminDashboard() {
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <p className="empty-data-msg">Không có dữ liệu.</p>
+                  <p className="empty-data-msg">No data available.</p>
                 )}
               </div>
 
               <div className="chart-card">
                 <h3 className="chart-title">
-                  Doanh Thu Theo Tháng (Năm {selectedYear})
+                  Revenue By Month (Year {selectedYear})
                 </h3>
                 {monthlyRevenue.length > 0 ? (
                   <div className="chart-wrapper">
@@ -345,7 +345,7 @@ export default function AdminDashboard() {
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <p className="empty-data-msg">Không có dữ liệu.</p>
+                  <p className="empty-data-msg">No data available.</p>
                 )}
               </div>
             </div>
@@ -353,7 +353,7 @@ export default function AdminDashboard() {
             {/* CỘT PHẢI - THÔNG TIN CHI TIẾT */}
             <div className="main-right-column">
               <div className="chart-card">
-                <h3 className="chart-title">Top 10 Bán Chạy</h3>
+                <h3 className="chart-title">Top 10 Bestselling</h3>
                 {popularFrames.length > 0 ? (
                   <div className="top-list">
                     {popularFrames.map((frame, index) => (
@@ -368,33 +368,33 @@ export default function AdminDashboard() {
                             {frame.name || frame.frameName || "Tên kính"}
                           </p>
                           <p className="top-item-sold">
-                            Đã bán: <span>{frame.totalSold ?? 0}</span>
+                            Sold: <span>{frame.totalSold ?? 0}</span>
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="empty-data-msg">Không có dữ liệu.</p>
+                  <p className="empty-data-msg">No data available.</p>
                 )}
               </div>
 
               <div className="chart-card">
-                <h3 className="chart-title">Trạng Thái Đơn Hàng</h3>
+                <h3 className="chart-title">Order Status</h3>
                 {(() => {
                   const statusData = [
-                    { status: "Chờ xác nhận", count: stats.pendingOrders ?? 0 },
+                    { status: "Wait for confirmation", count: stats.pendingOrders ?? 0 },
                     {
-                      status: "Đã xác nhận",
+                      status: "Confirmed",
                       count: stats.confirmedOrders ?? 0,
                     },
                     {
-                      status: "Đang xử lý",
+                      status: "Processing",
                       count: stats.processingOrders ?? 0,
                     },
-                    { status: "Đang giao", count: stats.shippedOrders ?? 0 },
-                    { status: "Đã giao", count: stats.deliveredOrders ?? 0 },
-                    { status: "Đã huỷ", count: stats.cancelledOrders ?? 0 },
+                    { status: "Shipped", count: stats.shippedOrders ?? 0 },
+                    { status: "Delivered", count: stats.deliveredOrders ?? 0 },
+                    { status: "Cancelled", count: stats.cancelledOrders ?? 0 },
                   ].filter((d) => d.count > 0);
                   return statusData.length > 0 ? (
                     <div className="pie-wrapper">
@@ -423,7 +423,7 @@ export default function AdminDashboard() {
                       </ResponsiveContainer>
                     </div>
                   ) : (
-                    <p className="empty-data-msg">Không có dữ liệu.</p>
+                    <p className="empty-data-msg">No data available.</p>
                   );
                 })()}
               </div>

@@ -19,7 +19,7 @@ export default function RegisterPage() {
     setErrorMsg(""); setSuccessMsg("");
     
     if (formData.password !== formData.confirmPassword) { 
-      setErrorMsg("Mật khẩu xác nhận không khớp!"); 
+      setErrorMsg("The verification password does not match.!"); 
       return; 
     }
     
@@ -46,13 +46,13 @@ export default function RegisterPage() {
           fullName: data.fullName, 
           role: data.role 
         });
-        setSuccessMsg("Đăng ký thành công! Đang chuyển hướng...");
+        setSuccessMsg("Registration successful! Redirecting...");
         setTimeout(() => navigate("/"), 2000);
       } else { 
-        setErrorMsg(data.message || "Đăng ký thất bại!"); 
+        setErrorMsg(data.message || "Registration failed!"); 
       }
     } catch (error) { 
-      setErrorMsg("Không thể kết nối đến Server."); 
+      setErrorMsg("Unable to connect to the server."); 
     } finally { 
       setIsLoading(false); 
     }
@@ -78,10 +78,10 @@ export default function RegisterPage() {
         });
         navigate("/");
       } else { 
-        setErrorMsg("Xác thực Google thất bại!"); 
+        setErrorMsg("Google authentication failed!"); 
       }
     } catch (error) { 
-      setErrorMsg("Lỗi kết nối API Google."); 
+      setErrorMsg("Google API connection error."); 
     } finally { 
       setIsLoading(false); 
     }
@@ -90,7 +90,7 @@ export default function RegisterPage() {
 
   return (
     <div className="auth-container register-container">
-      <h2 className="auth-title">Đăng Ký Tài Khoản</h2>
+      <h2 className="auth-title">Register an Account</h2>
       
       {errorMsg && <div className="auth-msg error">{errorMsg}</div>}
       {successMsg && <div className="auth-msg success">{successMsg}</div>}
@@ -98,7 +98,7 @@ export default function RegisterPage() {
       <form onSubmit={handleRegister} className="auth-form">
 
         <div className="form-group">
-          <label>Họ và Tên:</label>
+          <label>Full name:</label>
           <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required placeholder="Nhập họ và tên" />
         </div>
         <div className="form-group">
@@ -106,25 +106,25 @@ export default function RegisterPage() {
           <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="Nhập email" />
         </div>
         <div className="form-group">
-          <label>Số điện thoại:</label>
+          <label>Phone number:</label>
           <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder="Nhập số điện thoại" />
         </div>
         <div className="form-group">
-          <label>Mật khẩu:</label>
+          <label>Password:</label>
           <input type="password" name="password" value={formData.password} onChange={handleChange} required placeholder="Nhập mật khẩu" />
         </div>
         <div className="form-group">
-          <label>Xác nhận mật khẩu:</label>
+          <label>Confirm password:</label>
           <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required placeholder="Nhập lại mật khẩu" />
         </div>
 
         <button type="submit" disabled={isLoading} className="btn-submit">
-          {isLoading ? "Đang xử lý..." : "Đăng Ký"}
+          {isLoading ? "Processing..." : "Register"}
         </button>
       </form>
 
       <div className="auth-divider">
-        <div className="line"></div><span className="text">HOẶC</span><div className="line"></div>
+        <div className="line"></div><span className="text">OR</span><div className="line"></div>
       </div>
 
       <div className="auth-google-btn">
@@ -132,7 +132,7 @@ export default function RegisterPage() {
       </div>
 
       <div className="auth-footer">
-        Đã có tài khoản? <Link to="/login" className="auth-link">Đăng nhập ngay</Link>
+        Already have an account? <Link to="/login" className="auth-link">Login</Link>
       </div>
     </div>
   );

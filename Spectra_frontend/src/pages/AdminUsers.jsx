@@ -29,10 +29,10 @@ export default function AdminUsers() {
         const data = await res.json();
         setUsers(data.items || data || []);
       } else {
-        console.error("Lỗi lấy danh sách user");
+        console.error("Error retrieving user list");
       }
     } catch (err) {
-      console.error("Lỗi mạng:", err);
+      console.error("Network error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -49,9 +49,9 @@ export default function AdminUsers() {
   if (myRole !== "admin" && myRole !== "manager") {
     return (
       <div style={{ textAlign: "center", padding: "50px", color: "#dc2626" }}>
-        <h2>⛔ Bạn không có quyền truy cập chức năng này!</h2>
+        <h2>⛔ You do not have permission to access this function!</h2>
         <p>
-          Chức năng phân quyền và quản lý tài khoản chỉ dành riêng cho
+          The account permission and management functions are exclusively for
           Admin/Manager.
         </p>
 
@@ -62,7 +62,7 @@ export default function AdminUsers() {
   const handleRoleChange = async (userId, newRole) => {
     if (
       !window.confirm(
-        `Bạn có chắc chắn muốn đổi quyền của người dùng này thành ${newRole}?`,
+        `Are you sure you want to change this user's permissions to ${newRole}?`,
       )
     )
       return;
@@ -76,32 +76,32 @@ export default function AdminUsers() {
         },
       );
       if (res.ok) {
-        alert("Cập nhật quyền thành công!");
+        alert("Permissions updated successfully.!");
         fetchUsers();
       } else if (res.status === 403) {
         alert(
-          "Lỗi 403: Tài khoản của bạn không đủ quyền trên Server (Backend chặn)!",
+          "Error 403: Your account does not have sufficient permissions on the server (Backend is blocking it)!",
         );
       } else {
         try {
           const errorData = await res.json();
           alert(
-            "Lỗi khi cập nhật quyền: " +
-              (errorData.message || "Kiểm tra lại Backend"),
+            "Error updating permissions: " +
+              (errorData.message || "Check the backend."),
           );
         } catch {
-          alert("Lỗi khi cập nhật quyền: Server trả về lỗi " + res.status);
+          alert("Error updating permissions: Server returned an error " + res.status);
         }
       }
     } catch (err) {
-      alert("Lỗi kết nối mạng: Không thể chạm tới Server.");
+      alert("Network connection error: Unable to reach the server.");
     }
   };
 
   const handleStatusChange = async (userId, newStatus) => {
     if (
       !window.confirm(
-        `Bạn có chắc chắn muốn đổi trạng thái thành ${newStatus}?`,
+        `Are you sure you want to change the status to ${newStatus}?`,
       )
     )
       return;
@@ -115,26 +115,26 @@ export default function AdminUsers() {
         },
       );
       if (res.ok) {
-        alert("Cập nhật trạng thái thành công!");
+        alert("Status update successful!");
         fetchUsers();
       } else if (res.status === 403) {
 
-        alert("Lỗi 403: Backend từ chối đổi trạng thái!");
+        alert("Error 403: Backend refused to change state!");
 
       } else {
         try {
           const errorData = await res.json();
           alert(
-            "Lỗi khi cập nhật trạng thái: " +
-              (errorData.message || "Kiểm tra lại Backend"),
+            "Error updating status: " +
+              (errorData.message || "Check the backend."),
           );
         } catch {
-          alert("Lỗi khi cập nhật trạng thái: Server trả về lỗi " + res.status);
+          alert("Error updating status: Server returned an error " + res.status);
         }
       }
 
     } catch (err) {
-      alert("Lỗi kết nối mạng.");
+      alert("Network connection error.");
     }
   };
 
@@ -157,16 +157,16 @@ export default function AdminUsers() {
         }}
       >
         <h2 style={{ marginTop: 0 }}>
-          Quản Lý Người Dùng & Phân Quyền (Chế độ Demo)
+          User Management & Permissions (Demo Mode)
         </h2>
         <p style={{ color: "#6b7280", margin: 0 }}>
-          Quản lý chi tiết thông tin và cấp quyền cho hệ thống.
+          Manage detailed information and grant permissions to the system.
         </p>
       </div>
 
       {isLoading ? (
         <div style={{ textAlign: "center", padding: "50px" }}>
-          Đang tải dữ liệu...
+          Loading data...
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>
@@ -185,21 +185,21 @@ export default function AdminUsers() {
                   borderBottom: "2px solid #e5e7eb",
                 }}
               >
-                <th style={{ padding: "12px", color: "#374151" }}>Họ và Tên</th>
+                <th style={{ padding: "12px", color: "#374151" }}>Full name</th>
                 <th style={{ padding: "12px", color: "#374151" }}>Email</th>
                 {/* ⚡ THÊM CỘT SĐT VÀ ĐỊA CHỈ */}
                 <th style={{ padding: "12px", color: "#374151" }}>
-                  Số điện thoại
+                  Phone number
                 </th>
-                <th style={{ padding: "12px", color: "#374151" }}>Địa chỉ</th>
+                <th style={{ padding: "12px", color: "#374151" }}>Address</th>
                 <th style={{ padding: "12px", color: "#374151" }}>
-                  Ngày tham gia
-                </th>
-                <th style={{ padding: "12px", color: "#374151" }}>
-                  Vai trò (Role)
+                  Joining date
                 </th>
                 <th style={{ padding: "12px", color: "#374151" }}>
-                  Trạng thái
+                  Role
+                </th>
+                <th style={{ padding: "12px", color: "#374151" }}>
+                  Status
                 </th>
               </tr>
             </thead>
@@ -212,7 +212,7 @@ export default function AdminUsers() {
                     style={{ borderBottom: "1px solid #f3f4f6" }}
                   >
                     <td style={{ padding: "12px", fontWeight: "bold" }}>
-                      {u.fullName || "Chưa cập nhật"}
+                      {u.fullName || "Not updated yet"}
                     </td>
                     <td style={{ padding: "12px" }}>{u.email}</td>
 
@@ -220,7 +220,7 @@ export default function AdminUsers() {
                     <td style={{ padding: "12px" }}>
                       {u.phone || (
                         <span style={{ color: "#9ca3af", fontStyle: "italic" }}>
-                          Chưa có
+                          Not yet
                         </span>
                       )}
                     </td>
@@ -236,7 +236,7 @@ export default function AdminUsers() {
                     >
                       {u.address || (
                         <span style={{ color: "#9ca3af", fontStyle: "italic" }}>
-                          Chưa có
+                          Not yet
                         </span>
                       )}
                     </td>
@@ -278,10 +278,10 @@ export default function AdminUsers() {
                           fontWeight: "bold",
                         }}
                       >
-                        <option value="customer">Khách hàng (Customer)</option>
-                        <option value="staff">Nhân viên (Staff)</option>
-                        <option value="manager">Quản lý (Manager)</option>
-                        <option value="admin">Quản trị tối cao (Admin)</option>
+                        <option value="customer">Customer</option>
+                        <option value="staff">Staff</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
                       </select>
                     </td>
 
@@ -314,13 +314,13 @@ export default function AdminUsers() {
                           fontWeight: "bold",
                         }}
                       >
-                        <option value="active">Hoạt động (Active)</option>
-                        <option value="pending">Chờ duyệt (Pending)</option>
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
                         <option value="inactive">
-                          ⚪ Vô hiệu hóa (Inactive)
+                          ⚪ Inactive
                         </option>
                         <option value="suspended">
-                          Bị đình chỉ (Suspended)
+                          Suspended
                         </option>
                       </select>
                     </td>
@@ -354,10 +354,10 @@ export default function AdminUsers() {
                     fontWeight: "bold",
                   }}
                 >
-                  ← Trước
+                  ← Previous
                 </button>
                 <span style={{ fontWeight: "bold", color: "#374151" }}>
-                  Trang {currentPage} / {totalPages}
+                  Page {currentPage} / {totalPages}
                 </span>
                 <button
                   disabled={currentPage >= totalPages}
@@ -372,7 +372,7 @@ export default function AdminUsers() {
                     fontWeight: "bold",
                   }}
                 >
-                  Sau →
+                  Next →
                 </button>
               </div>
             ) : null;

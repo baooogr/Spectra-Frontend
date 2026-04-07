@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import LensSelectionModal from "../ui/LensSelectionModal";
 import Modal from "../ui/Modal";
@@ -75,7 +75,7 @@ export default function ProductDetail() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   const isLoading = productLoading;
-  const error = productError ? "Không thể tải thông tin sản phẩm" : "";
+  const error = productError ? "Unable to load product information" : "";
 
   // Process media when product loads
   useEffect(() => {
@@ -122,7 +122,7 @@ export default function ProductDetail() {
   };
 
   if (isLoading)
-    return <p className="center-msg">Đang tải thông tin sản phẩm...</p>;
+    return <p className="center-msg">Loading product information...</p>;
   if (error || !product)
     return (
       <div className="center-msg">
@@ -151,7 +151,7 @@ export default function ProductDetail() {
       name: product.frameName,
       price: cartDataOptions.finalPrice,
       image: images[0],
-      color: colorObj.colorName || "Mặc định",
+      color: colorObj.colorName || "Default",
       colorId: colorObj.id || colorObj.colorId || null,
       quantity: quantity,
       maxStock: maxAllowedQuantity,
@@ -162,23 +162,23 @@ export default function ProductDetail() {
         : null,
       lensInfo: cartDataOptions.lensIncluded
         ? {
-            typeId: cartDataOptions.lensDetails.typeId,
-            lensIndexId: cartDataOptions.lensDetails.lensIndexId || null,
-            featureId: cartDataOptions.lensDetails.featureId,
-            prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
-            type:
-              cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
-            lensIndex:
-              cartDataOptions.lensDetails.lensIndex?.indexValue || null,
-            feature:
-              cartDataOptions.lensDetails.lensFeature?.featureSpecification ||
-              "Không có",
-            typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0,
-            indexPrice:
-              cartDataOptions.lensDetails.lensIndex?.additionalPrice || 0,
-            featurePrice:
-              cartDataOptions.lensDetails.lensFeature?.extraPrice || 0,
-          }
+          typeId: cartDataOptions.lensDetails.typeId,
+          lensIndexId: cartDataOptions.lensDetails.lensIndexId || null,
+          featureId: cartDataOptions.lensDetails.featureId,
+          prescriptionId: cartDataOptions.lensDetails?.prescriptionId || null,
+          type:
+            cartDataOptions.lensDetails.lensType?.lensSpecification || "N/A",
+          lensIndex:
+            cartDataOptions.lensDetails.lensIndex?.indexValue || null,
+          feature:
+            cartDataOptions.lensDetails.lensFeature?.featureSpecification ||
+            "None",
+          typePrice: cartDataOptions.lensDetails.lensType?.basePrice || 0,
+          indexPrice:
+            cartDataOptions.lensDetails.lensIndex?.additionalPrice || 0,
+          featurePrice:
+            cartDataOptions.lensDetails.lensFeature?.extraPrice || 0,
+        }
         : null,
     };
     addToCart(itemData, quantity);
@@ -214,7 +214,7 @@ export default function ProductDetail() {
           <div className="product-info-col">
             <h2 className="product-title">{product.frameName}</h2>
             <p className="product-brand">
-              Thương hiệu: <strong>{product.brand?.brandName || "N/A"}</strong>
+              Brand: <strong>{product.brand?.brandName || "N/A"}</strong>
             </p>
 
             <p
@@ -232,7 +232,7 @@ export default function ProductDetail() {
                   margin: "-8px 0 10px",
                 }}
               >
-                (Giá gốc: ${product.basePrice} + Phụ phí màu: ${colorExtraCost})
+                (Base Price: ${product.basePrice} + Color Surcharge: ${colorExtraCost})
               </p>
             )}
 
@@ -249,7 +249,7 @@ export default function ProductDetail() {
                   marginBottom: "15px",
                 }}
               >
-                Ưu đãi đặt trước
+                Pre-order Benefit
               </div>
             )}
 
@@ -259,7 +259,7 @@ export default function ProductDetail() {
               style={{ margin: "15px 0" }}
             >
               <h4 style={{ marginBottom: "10px", fontSize: "15px" }}>
-                Màu sắc có sẵn:
+                Colors available:
               </h4>
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 {product.frameColors?.map((fc) => {
@@ -310,7 +310,7 @@ export default function ProductDetail() {
                             color: "#10b981",
                             marginLeft: "2px",
                           }}
-                          title="Có ảnh riêng cho màu này"
+                          title="Unique images available for this color"
                         ></span>
                       )}
                     </button>
@@ -321,7 +321,7 @@ export default function ProductDetail() {
 
             {/* Trạng thái */}
             <div className="product-status">
-              Trạng thái:
+              Status:
               {isPreorder ? (
                 <span
                   style={{
@@ -330,7 +330,7 @@ export default function ProductDetail() {
                     marginLeft: "8px",
                   }}
                 >
-                  Đang mở đặt trước (Tối đa {maxAllowedQuantity} cái/đơn)
+                  Pre-orders open (Max {maxAllowedQuantity} items/order)
                   <div
                     style={{
                       fontSize: "13px",
@@ -338,10 +338,10 @@ export default function ProductDetail() {
                       color: "#4b5563",
                     }}
                   >
-                    Dự kiến giao hàng:{" "}
+                    Estimated delivery date:{" "}
                     {new Date(
                       preorderInfo.estimatedDeliveryDate,
-                    ).toLocaleDateString("vi-VN")}
+                    ).toLocaleDateString("en-US")}
                   </div>
                 </span>
               ) : (
@@ -349,7 +349,7 @@ export default function ProductDetail() {
                   className={inStock ? "status-in-stock" : "status-out-stock"}
                   style={{ marginLeft: "8px" }}
                 >
-                  {inStock ? `Còn hàng (${currentStock})` : "Hết hàng"}
+                  {inStock ? `In stock (${currentStock})` : "Out of stock"}
                 </span>
               )}
             </div>
@@ -381,21 +381,21 @@ export default function ProductDetail() {
               style={
                 !canBuy
                   ? {
-                      backgroundColor: "#e5e7eb",
-                      color: "#9ca3af",
-                      cursor: "not-allowed",
-                      boxShadow: "none",
-                      border: "1px solid #d1d5db",
-                    }
+                    backgroundColor: "#e5e7eb",
+                    color: "#9ca3af",
+                    cursor: "not-allowed",
+                    boxShadow: "none",
+                    border: "1px solid #d1d5db",
+                  }
                   : isPreorder
                     ? { backgroundColor: "#2563eb" }
                     : {}
               }
             >
               {isPreorder
-                ? "Đặt trước ngay (Pre-order)"
+                ? "Pre-order now"
                 : inStock
-                  ? "Thêm vào giỏ hàng"
+                  ? "Add to cart"
                   : "Out of stock"}
             </button>
 
@@ -404,23 +404,23 @@ export default function ProductDetail() {
               {/* Thẻ 1: Chi tiết sản phẩm */}
               <div className="info-card">
                 <div className="info-card-header">
-                  <h3>Chi tiết sản phẩm</h3>
+                  <h3>Product details</h3>
                 </div>
                 <div className="info-card-body">
                   <div className="info-row">
-                    <span className="info-label">Chất liệu:</span>
+                    <span className="info-label">Material:</span>
                     <span className="info-value">
                       {product.material?.materialName}
                     </span>
                   </div>
                   <div className="info-row">
-                    <span className="info-label">Kiểu dáng:</span>
+                    <span className="info-label">Style:</span>
                     <span className="info-value">
                       {product.shape?.shapeName}
                     </span>
                   </div>
                   <div className="info-row">
-                    <span className="info-label">Kích cỡ (Size):</span>
+                    <span className="info-label">Size:</span>
                     <span className="info-value text-capitalize">
                       {product.size}
                     </span>
@@ -443,7 +443,7 @@ export default function ProductDetail() {
                           fontWeight: "700",
                         }}
                       >
-                        LOẠI TRÒNG KÍNH HỖ TRỢ:
+                        SUPPORTED LENS TYPES:
                       </h4>
                       {supportedLensTypes.map((lt) => (
                         <div
@@ -471,31 +471,31 @@ export default function ProductDetail() {
               {/* Thẻ 2: Thông số kỹ thuật + Yêu cầu đơn thuốc */}
               <div className="info-card">
                 <div className="info-card-header">
-                  <h3>Thông số kỹ thuật</h3>
+                  <h3>Specifications</h3>
                 </div>
                 <div className="info-card-body">
                   <div className="info-row">
-                    <span className="info-label">Kích cỡ (Size):</span>
+                    <span className="info-label">Size:</span>
                     <span className="info-value text-capitalize">
                       {product.size}
                     </span>
                   </div>
                   <div className="info-row">
-                    <span className="info-label">Rộng tròng:</span>
+                    <span className="info-label">Lens Width:</span>
                     <span className="info-value">{product.lensWidth} mm</span>
                   </div>
                   <div className="info-row">
-                    <span className="info-label">Cầu kính:</span>
+                    <span className="info-label">Bridge Width:</span>
                     <span className="info-value">{product.bridgeWidth} mm</span>
                   </div>
                   <div className="info-row">
-                    <span className="info-label">Càng kính:</span>
+                    <span className="info-label">Temple Length:</span>
                     <span className="info-value">
                       {product.templeLength} mm
                     </span>
                   </div>
                   <div className="info-row">
-                    <span className="info-label">Rộng khung:</span>
+                    <span className="info-label">Frame Width:</span>
                     <span className="info-value">{product.frameWidth} mm</span>
                   </div>
 
@@ -516,7 +516,7 @@ export default function ProductDetail() {
                           fontWeight: "700",
                         }}
                       >
-                        ĐƠN THUỐC HỖ TRỢ:
+                        SUPPORTED Rx RANGE:
                       </h4>
 
                       {(product.minRx != null || product.maxRx != null) && (

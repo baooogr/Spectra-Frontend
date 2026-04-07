@@ -76,12 +76,12 @@ function findGhnWardByName(wards, name) {
 
 function StatusBadge({ status }) {
   const map = {
-    pending: { label: "Chờ xác nhận", color: "#d97706", bg: "#fef3c7" },
-    confirmed: { label: "Đã xác nhận", color: "#2563eb", bg: "#dbeafe" },
-    processing: { label: "Đang xử lý", color: "#7c3aed", bg: "#ede9fe" },
-    shipped: { label: "Đang giao", color: "#0891b2", bg: "#cffafe" },
-    delivered: { label: "Đã giao", color: "#059669", bg: "#d1fae5" },
-    cancelled: { label: "Đã huỷ", color: "#dc2626", bg: "#fee2e2" },
+    pending: { label: "Pending", color: "#d97706", bg: "#fef3c7" },
+    confirmed: { label: "Confirmed", color: "#2563eb", bg: "#dbeafe" },
+    processing: { label: "Processing", color: "#7c3aed", bg: "#ede9fe" },
+    shipped: { label: "Shipped", color: "#0891b2", bg: "#cffafe" },
+    delivered: { label: "Delivered", color: "#059669", bg: "#d1fae5" },
+    cancelled: { label: "Cancelled", color: "#dc2626", bg: "#fee2e2" },
   };
   const s = map[status?.toLowerCase()] || {
     label: status || "N/A",
@@ -105,7 +105,7 @@ function StatusBadge({ status }) {
   );
 }
 
-const CARRIERS = ["GHN", "Khác"];
+const CARRIERS = ["GHN", "Other"];
 
 function ShippingMethodBadge({ method }) {
   const isExpress = method?.toLowerCase() === "express";
@@ -121,7 +121,7 @@ function ShippingMethodBadge({ method }) {
         whiteSpace: "nowrap",
       }}
     >
-      {isExpress ? "Nhanh" : "Tiêu chuẩn"}
+      {isExpress ? "Fast" : "Standard"}
     </span>
   );
 }
@@ -130,19 +130,19 @@ const API_BASE = "https://myspectra.runasp.net/api";
 
 // GHN Status mapping
 const GHN_STATUS_MAP = {
-  ready_to_pick: { label: "Chờ lấy hàng", color: "#6b7280" },
-  picking: { label: "Đang lấy hàng", color: "#d97706" },
-  cancel: { label: "Đã huỷ", color: "#dc2626" },
-  picked: { label: "Đã lấy hàng", color: "#2563eb" },
-  storing: { label: "Hàng ở kho", color: "#7c3aed" },
-  transporting: { label: "Đang vận chuyển", color: "#0891b2" },
-  sorting: { label: "Đang phân loại", color: "#7c3aed" },
-  delivering: { label: "Đang giao hàng", color: "#0891b2" },
-  delivered: { label: "Giao thành công", color: "#059669" },
-  delivery_fail: { label: "Giao thất bại", color: "#dc2626" },
-  waiting_to_return: { label: "Chờ trả hàng", color: "#d97706" },
-  return: { label: "Trả hàng", color: "#9333ea" },
-  returned: { label: "Đã trả hàng", color: "#9333ea" },
+  ready_to_pick: { label: "Ready to pick", color: "#6b7280" },
+  picking: { label: "Picking", color: "#d97706" },
+  cancel: { label: "Cancel", color: "#dc2626" },
+  picked: { label: "Picked", color: "#2563eb" },
+  storing: { label: "Storing", color: "#7c3aed" },
+  transporting: { label: "Transporting", color: "#0891b2" },
+  sorting: { label: "Sorting", color: "#7c3aed" },
+  delivering: { label: "Delivering", color: "#0891b2" },
+  delivered: { label: "Delivered", color: "#059669" },
+  delivery_fail: { label: "Delivery fail", color: "#dc2626" },
+  waiting_to_return: { label: "Waiting to return", color: "#d97706" },
+  return: { label: "Return", color: "#9333ea" },
+  returned: { label: "Returned", color: "#9333ea" },
 };
 
 // --- MAIN COMPONENT ---
@@ -220,10 +220,10 @@ export default function ShippingPage() {
         const data = await res.json();
         setOrders(data.items || data || []);
       } else {
-        setErrorMsg("Không thể tải dữ liệu đơn hàng.");
+        setErrorMsg("Unable to load order data.");
       }
     } catch {
-      setErrorMsg("Lỗi kết nối mạng.");
+      setErrorMsg("Network connection error.");
     } finally {
       setIsLoading(false);
     }
@@ -255,7 +255,7 @@ export default function ShippingPage() {
         .catch(() => {});
     } else {
       setIsLoading(false);
-      setErrorMsg("Bạn chưa đăng nhập hoặc không có quyền.");
+      setErrorMsg("You are not logged in or do not have permission.");
     }
   }, [token]);
 
@@ -294,7 +294,7 @@ export default function ShippingPage() {
     const id = order.orderId || order.id;
     if (
       !window.confirm(
-        `Xác nhận đơn #${String(id).substring(0, 8)} đã giao thành công?`,
+        `Confirmation that the order #${String(id).substring(0, 8)} has been successfully delivered?`,
       )
     )
       return;
@@ -305,14 +305,14 @@ export default function ShippingPage() {
         body: JSON.stringify({ status: "delivered" }),
       });
       if (res.ok) {
-        alert("Đã cập nhật trạng thái: Đã giao hàng ✓");
+        alert("Status updated: Delivered ✓");
         fetchOrders();
       } else {
         const err = await res.json();
-        alert("Lỗi: " + (err.message || "Cập nhật thất bại"));
+        alert("Error: " + (err.message || "Update failed."));
       }
     } catch {
-      alert("Lỗi mạng.");
+      alert("Network error.");
     }
   };
 
@@ -330,7 +330,7 @@ export default function ShippingPage() {
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     if (!manualForm.trackingNumber.trim() || !manualForm.carrier) {
-      alert("Vui lòng chọn hãng vận chuyển và điền mã vận đơn.");
+      alert("Please select a shipping carrier and enter the tracking number.");
       return;
     }
     const id = selectedForManual.orderId || selectedForManual.id;
@@ -349,7 +349,7 @@ export default function ShippingPage() {
       );
       if (!trackRes.ok) {
         const err = await trackRes.json();
-        alert("Lỗi: " + (err.message || "Cập nhật thất bại."));
+        alert("Error: " + (err.message || "Update failed."));
         return;
       }
 
@@ -362,11 +362,11 @@ export default function ShippingPage() {
         });
       }
 
-      alert("Cập nhật mã vận đơn thành công! Trạng thái đơn → Shipped ✓");
+      alert("Tracking number updated successfully! Order status → Shipped ✓");
       setShowManualModal(false);
       fetchOrders();
     } catch {
-      alert("Lỗi mạng.");
+      alert("Network error.");
     } finally {
       setIsSubmittingManual(false);
     }
@@ -392,7 +392,7 @@ export default function ShippingPage() {
 
     // Pre-fill from order address
     const addr = parseAddress(order.shippingAddress);
-    setRecipientName(addr.name || "Khách hàng");
+    setRecipientName(addr.name || "Customer");
     setRecipientPhone(addr.phone || "0900000000");
     setDestAddress(addr.street || order.shippingAddress || "");
 
@@ -472,11 +472,11 @@ export default function ShippingPage() {
 
   const handleGhnGetServices = async () => {
     if (!selectedDistrictId || !selectedWardCode) {
-      setGhnError("Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện và Phường/Xã.");
+      setGhnError("Please select the full Province/City, District/County, and Ward/Commune.");
       return;
     }
     if (!recipientName.trim() || !recipientPhone.trim()) {
-      setGhnError("Vui lòng nhập tên và số điện thoại người nhận.");
+      setGhnError("Please enter the recipient's name and phone number.");
       return;
     }
 
@@ -494,17 +494,17 @@ export default function ShippingPage() {
       if (res.ok) {
         const data = await res.json();
         if (!data || data.length === 0) {
-          setGhnError("Không có dịch vụ vận chuyển khả dụng cho địa chỉ này.");
+          setGhnError("No shipping services are available to this address.");
         } else {
           setGhnServices(data);
           setGhnStep(2);
         }
       } else {
         const err = await res.json().catch(() => ({}));
-        setGhnError(err.message || "Không thể lấy danh sách dịch vụ.");
+        setGhnError(err.message || "Unable to retrieve the list of services.");
       }
     } catch {
-      setGhnError("Lỗi kết nối.");
+      setGhnError("Network error.");
     } finally {
       setGhnLoading(false);
     }
@@ -582,22 +582,22 @@ export default function ShippingPage() {
           length: 15,
           width: 10,
           height: 10,
-          content: "Kính mắt Spectra",
+          content: "Spectra eyeglasses",
           requiredNote: "CHOTHUHANG",
         }),
       });
 
       if (res.ok) {
-        alert("Tạo vận đơn GHN thành công! ✓");
+        alert("GHN shipping order created successfully! ✓");
         setShowGhnModal(false);
         fetchOrders();
       } else {
         const err = await res.json().catch(() => ({}));
-        setGhnError(err.message || "Không thể tạo vận đơn.");
+        setGhnError(err.message || "Unable to generate bill of lading.");
         setGhnStep(2);
       }
     } catch {
-      setGhnError("Lỗi kết nối khi tạo vận đơn.");
+      setGhnError("Connection error while creating bill of lading.");
       setGhnStep(2);
     } finally {
       setGhnLoading(false);
@@ -625,10 +625,10 @@ export default function ShippingPage() {
         const data = await res.json();
         setTrackingDetail({ ...data, isGhn });
       } else {
-        setTrackingDetail({ error: "Không tìm thấy thông tin vận đơn." });
+        setTrackingDetail({ error: "No shipping information found." });
       }
     } catch {
-      setTrackingDetail({ error: "Lỗi kết nối." });
+      setTrackingDetail({ error: "Network error." });
     } finally {
       setTrackingLoading(false);
     }
@@ -673,7 +673,7 @@ export default function ShippingPage() {
   return (
     <div className="shipping-page-container">
       <h2 className="shipping-header">
-        Quản Lý Vận Chuyển & Giao Hàng
+        Shipping & Delivery Management
         {ghnSandbox && (
           <span
             style={{
@@ -702,25 +702,25 @@ export default function ShippingPage() {
       >
         {[
           {
-            label: "Chờ giao",
+            label: "Waiting for delivery",
             count: activeCount,
             color: "#7c3aed",
             bg: "#ede9fe",
           },
           {
-            label: "Đang giao",
+            label: "Delivering",
             count: shippedCount,
             color: "#0891b2",
             bg: "#cffafe",
           },
           {
-            label: "Đã giao",
+            label: "Delivered",
             count: deliveredCount,
             color: "#059669",
             bg: "#d1fae5",
           },
           {
-            label: "Tổng đơn",
+            label: "Total order",
             count: orders.length,
             color: "#6b7280",
             bg: "#f3f4f6",
@@ -768,7 +768,7 @@ export default function ShippingPage() {
             setCurrentPage(1);
           }}
         >
-          Chờ giao ({activeCount})
+          Waiting for delivery ({activeCount})
         </button>
         <button
           style={tabStyle("shipped")}
@@ -777,7 +777,7 @@ export default function ShippingPage() {
             setCurrentPage(1);
           }}
         >
-          Đang vận chuyển ({shippedCount})
+          Shipping ({shippedCount})
         </button>
         <button
           style={tabStyle("delivered")}
@@ -786,7 +786,7 @@ export default function ShippingPage() {
             setCurrentPage(1);
           }}
         >
-          Đã giao ({deliveredCount})
+          Delivered ({deliveredCount})
         </button>
         <button
           style={tabStyle("all")}
@@ -795,7 +795,7 @@ export default function ShippingPage() {
             setCurrentPage(1);
           }}
         >
-          Tất cả ({orders.length})
+          All ({orders.length})
         </button>
       </div>
 
@@ -812,20 +812,20 @@ export default function ShippingPage() {
         {errorMsg ? (
           <div style={{ color: "#dc2626", padding: "24px" }}>{errorMsg}</div>
         ) : isLoading ? (
-          <p style={{ padding: "24px", color: "#6b7280" }}>⏳ Đang tải...</p>
+          <p style={{ padding: "24px", color: "#6b7280" }}>⏳ Loading...</p>
         ) : (
           <>
             <table className="shipping-table">
               <thead>
                 <tr>
-                  <th>Mã Đơn</th>
-                  <th>Khách Hàng</th>
-                  <th>Địa Chỉ Giao</th>
-                  <th>Vận Chuyển</th>
-                  <th>Trạng Thái</th>
-                  <th>Mã Vận Đơn</th>
-                  <th>Dự Kiến Giao</th>
-                  <th>Thao Tác</th>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Delivery Address</th>
+                  <th>Shipping</th>
+                  <th>Status</th>
+                  <th>Tracking Number</th>
+                  <th>Expected Delivery</th>
+                  <th>Operation</th>
                 </tr>
               </thead>
               <tbody>
@@ -839,7 +839,7 @@ export default function ShippingPage() {
                         color: "#9ca3af",
                       }}
                     >
-                      Không có đơn nào trong mục này.
+                      There are no applications in this section.
                     </td>
                   </tr>
                 ) : (
@@ -902,7 +902,7 @@ export default function ShippingPage() {
                             <div style={{ fontWeight: "bold" }}>
                               {addr.name ||
                                 order.user?.fullName ||
-                                "Khách hàng"}
+                                "Customer"}
                             </div>
                             <div style={{ fontSize: "12px", color: "#6b7280" }}>
                               {addr.phone || order.user?.phone || "—"}
@@ -970,7 +970,7 @@ export default function ShippingPage() {
                                         textDecoration: "underline",
                                       }}
                                     >
-                                      Theo dõi {isGhn ? "GHN" : "vận đơn"}
+                                      Tracking {isGhn ? "GHN" : "Bill of Lading"}
                                     </button>
                                   </div>
                                 )}
@@ -979,7 +979,7 @@ export default function ShippingPage() {
                               <span
                                 style={{ color: "#9ca3af", fontSize: "13px" }}
                               >
-                                Chưa có
+                                Not yet
                               </span>
                             )}
                           </td>
@@ -1032,22 +1032,22 @@ export default function ShippingPage() {
                                 <button
                                   className="btn-confirm"
                                   onClick={() => openGhnModal(order)}
-                                  title="Tạo vận đơn qua GHN"
+                                  title="Create an order via GHN."
                                   style={{
                                     padding: "8px 14px",
                                     fontSize: "13px",
                                   }}
                                 >
-                                  Gửi GHN
+                                  Send GHN
                                 </button>
                               )}
                               {canManual && (
                                 <button
                                   className="btn-manual"
                                   onClick={() => openManualModal(order)}
-                                  title="Gán mã vận đơn thủ công → Shipped"
+                                  title="Assign tracking numbers manually. → Shipped"
                                 >
-                                  Nhập mã
+                                  Enter a code
                                 </button>
                               )}
                               {canDeliver && (
@@ -1058,9 +1058,9 @@ export default function ShippingPage() {
                                     padding: "8px 14px",
                                     fontSize: "13px",
                                   }}
-                                  title="Xác nhận khách đã nhận hàng → Delivered"
+                                  title="Confirm that the customer has received the order. → Delivered"
                                 >
-                                  Đã giao
+                                  Delivered
                                 </button>
                               )}
                             </div>
@@ -1097,10 +1097,10 @@ export default function ShippingPage() {
                       fontWeight: "bold",
                     }}
                   >
-                    ← Trước
+                    ← Previous
                   </button>
                   <span style={{ fontWeight: "bold", color: "#374151" }}>
-                    Trang {currentPage} / {totalPages}
+                    Page {currentPage} / {totalPages}
                   </span>
                   <button
                     disabled={currentPage >= totalPages}
@@ -1116,7 +1116,7 @@ export default function ShippingPage() {
                       fontWeight: "bold",
                     }}
                   >
-                    Sau →
+                    Next →
                   </button>
                 </div>
               ) : null;
@@ -1129,7 +1129,7 @@ export default function ShippingPage() {
       {showManualModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: "440px" }}>
-            <h3 className="modal-title">Nhập Mã Vận Đơn Thủ Công</h3>
+            <h3 className="modal-title">Manual Tracking Number Entry</h3>
             <p
               style={{
                 fontSize: "13px",
@@ -1138,18 +1138,18 @@ export default function ShippingPage() {
                 marginBottom: "16px",
               }}
             >
-              Đơn:{" "}
+              Order:{" "}
               <b>
                 #
                 {String(
                   selectedForManual?.orderId || selectedForManual?.id,
                 ).substring(0, 8)}
               </b>
-              &nbsp;·&nbsp; Trạng thái sẽ chuyển thành <b>Shipped</b>
+              &nbsp;·&nbsp; The state will change to <b>Shipped</b>
             </p>
             <form onSubmit={handleManualSubmit}>
               <div className="form-group">
-                <label>Hãng vận chuyển:</label>
+                <label>Shipping company:</label>
                 <select
                   value={manualForm.carrier}
                   onChange={(e) =>
@@ -1157,7 +1157,7 @@ export default function ShippingPage() {
                   }
                   required
                 >
-                  <option value="">-- Chọn hãng ship --</option>
+                  <option value="">-- Choose a ship company --</option>
                   {CARRIERS.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -1166,7 +1166,7 @@ export default function ShippingPage() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Mã vận đơn (Tracking Number):</label>
+                <label>Tracking Number (Tracking Number):</label>
                 <input
                   type="text"
                   value={manualForm.trackingNumber}
@@ -1186,7 +1186,7 @@ export default function ShippingPage() {
                   className="btn-cancel"
                   onClick={() => setShowManualModal(false)}
                 >
-                  Huỷ
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -1205,7 +1205,7 @@ export default function ShippingPage() {
       {showGhnModal && ghnOrder && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: "560px" }}>
-            <h3 className="modal-title">Tạo Vận Đơn GHN</h3>
+            <h3 className="modal-title">Create Bill of Lading GHN</h3>
 
             <p
               style={{
@@ -1215,9 +1215,9 @@ export default function ShippingPage() {
                 marginBottom: "16px",
               }}
             >
-              Đơn:{" "}
+              Order:{" "}
               <b>#{String(ghnOrder.orderId || ghnOrder.id).substring(0, 8)}</b>
-              &nbsp;·&nbsp;Giao đến:{" "}
+              &nbsp;·&nbsp;Deliver to:{" "}
               <b>{parseAddress(ghnOrder.shippingAddress).street || "N/A"}</b>
             </p>
 
@@ -1246,7 +1246,7 @@ export default function ShippingPage() {
                     fontSize: "14px",
                   }}
                 >
-                  Thông tin người nhận
+                  Recipient information
                 </p>
                 <div
                   style={{
@@ -1257,7 +1257,7 @@ export default function ShippingPage() {
                   }}
                 >
                   <div className="form-group">
-                    <label>Tên người nhận:</label>
+                    <label>Recipient name:</label>
                     <input
                       type="text"
                       value={recipientName}
@@ -1265,7 +1265,7 @@ export default function ShippingPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Số điện thoại:</label>
+                    <label>Phone number:</label>
                     <input
                       type="text"
                       value={recipientPhone}
@@ -1281,7 +1281,7 @@ export default function ShippingPage() {
                     fontSize: "14px",
                   }}
                 >
-                  Địa chỉ giao hàng <span style={{ color: "red" }}>*</span>
+                  Delivery address <span style={{ color: "red" }}>*</span>
                 </p>
                 <div
                   style={{
@@ -1292,7 +1292,7 @@ export default function ShippingPage() {
                   }}
                 >
                   <div className="form-group">
-                    <label>Tỉnh/Thành:</label>
+                    <label>Province/City:</label>
                     <select
                       value={selectedProvinceId}
                       onChange={(e) => {
@@ -1304,7 +1304,7 @@ export default function ShippingPage() {
                       }}
                       style={{ width: "100%", padding: "8px" }}
                     >
-                      <option value="">-- Chọn --</option>
+                      <option value="">-- Choose --</option>
                       {provinces.map((p) => (
                         <option key={p.ProvinceID} value={p.ProvinceID}>
                           {p.ProvinceName}
@@ -1313,7 +1313,7 @@ export default function ShippingPage() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Quận/Huyện:</label>
+                    <label>District/County:</label>
                     <select
                       value={selectedDistrictId}
                       onChange={(e) => {
@@ -1324,7 +1324,7 @@ export default function ShippingPage() {
                       disabled={!selectedProvinceId}
                       style={{ width: "100%", padding: "8px" }}
                     >
-                      <option value="">-- Chọn --</option>
+                      <option value="">-- Choose --</option>
                       {districts.map((d) => (
                         <option key={d.DistrictID} value={d.DistrictID}>
                           {d.DistrictName}
@@ -1333,14 +1333,14 @@ export default function ShippingPage() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Phường/Xã:</label>
+                    <label>Ward/Commune:</label>
                     <select
                       value={selectedWardCode}
                       onChange={(e) => setSelectedWardCode(e.target.value)}
                       disabled={!selectedDistrictId}
                       style={{ width: "100%", padding: "8px" }}
                     >
-                      <option value="">-- Chọn --</option>
+                      <option value="">-- Choose --</option>
                       {wards.map((w) => (
                         <option key={w.WardCode} value={w.WardCode}>
                           {w.WardName}
@@ -1350,7 +1350,7 @@ export default function ShippingPage() {
                   </div>
                 </div>
                 <div className="form-group" style={{ marginBottom: "14px" }}>
-                  <label>Địa chỉ chi tiết (số nhà, đường...):</label>
+                  <label>Detailed address (number, street...):</label>
                   <input
                     type="text"
                     value={destAddress}
@@ -1366,7 +1366,7 @@ export default function ShippingPage() {
                     fontSize: "14px",
                   }}
                 >
-                  Thông tin kiện hàng
+                  Package information
                 </p>
                 <div
                   style={{
@@ -1376,7 +1376,7 @@ export default function ShippingPage() {
                   }}
                 >
                   <div className="form-group">
-                    <label>Cân nặng (gram):</label>
+                    <label>Weight (gram):</label>
                     <input
                       type="number"
                       value={packageWeight}
@@ -1386,7 +1386,7 @@ export default function ShippingPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>COD thu hộ (VND):</label>
+                    <label>COD (VND):</label>
                     <input
                       type="number"
                       value={codAmount}
@@ -1395,7 +1395,7 @@ export default function ShippingPage() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Giá trị bảo hiểm:</label>
+                    <label>Insurance value:</label>
                     <input
                       type="number"
                       value={insuranceValue}
@@ -1413,7 +1413,7 @@ export default function ShippingPage() {
                     className="btn-cancel"
                     onClick={() => setShowGhnModal(false)}
                   >
-                    Huỷ
+                    Cancel
                   </button>
                   <button
                     type="button"
@@ -1437,7 +1437,7 @@ export default function ShippingPage() {
                     fontSize: "14px",
                   }}
                 >
-                  Chọn dịch vụ vận chuyển GHN
+                  Choose GHN shipping service.
                 </p>
                 <div
                   style={{
@@ -1485,7 +1485,7 @@ export default function ShippingPage() {
                             {svc.shortName || svc.serviceId}
                           </div>
                           <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                            Mã: {svc.serviceTypeId}
+                            ID: {svc.serviceTypeId}
                           </div>
                         </div>
                         {isSelected && calculatedFee && (
@@ -1517,7 +1517,7 @@ export default function ShippingPage() {
                     }}
                   >
                     <div style={{ fontWeight: 600, marginBottom: "6px" }}>
-                      Chi tiết phí:
+                      Fee details:
                     </div>
                     <div
                       style={{
@@ -1526,15 +1526,15 @@ export default function ShippingPage() {
                         gap: "4px",
                       }}
                     >
-                      <span>Phí vận chuyển:</span>
+                      <span>Shipping fee:</span>
                       <span style={{ textAlign: "right" }}>
                         {formatVNDNumber(calculatedFee.mainService || 0)} đ
                       </span>
-                      <span>Phí bảo hiểm:</span>
+                      <span>Insurance fee:</span>
                       <span style={{ textAlign: "right" }}>
                         {formatVNDNumber(calculatedFee.insurance || 0)} đ
                       </span>
-                      <span style={{ fontWeight: 600 }}>Tổng cộng:</span>
+                      <span style={{ fontWeight: 600 }}>Total:</span>
                       <span style={{ textAlign: "right", fontWeight: 600 }}>
                         {formatVNDNumber(calculatedFee.total || 0)} đ
                       </span>
@@ -1547,7 +1547,7 @@ export default function ShippingPage() {
                     className="btn-cancel"
                     onClick={() => setGhnStep(1)}
                   >
-                    ← Quay lại
+                    ← Back
                   </button>
                   <button
                     type="button"
@@ -1555,7 +1555,7 @@ export default function ShippingPage() {
                     onClick={handleGhnCreateOrder}
                     disabled={!selectedService || ghnLoading}
                   >
-                    {ghnLoading ? "Đang tạo..." : "Tạo vận đơn →"}
+                    {ghnLoading ? "Creating..." : "Create bill of lading →"}
                   </button>
                 </div>
               </div>
@@ -1566,10 +1566,10 @@ export default function ShippingPage() {
               <div style={{ textAlign: "center", padding: "30px 0" }}>
                 <div style={{ fontSize: "32px", marginBottom: "12px" }}>⏳</div>
                 <p style={{ fontWeight: 600, color: "#6b7280" }}>
-                  Đang tạo vận đơn GHN...
+                  Creating a GHN shipping label...
                 </p>
                 <p style={{ fontSize: "13px", color: "#9ca3af" }}>
-                  Vui lòng chờ, hệ thống đang liên hệ GHN.
+                  Please wait, the system is contacting you. GHN.
                 </p>
               </div>
             )}
@@ -1582,11 +1582,11 @@ export default function ShippingPage() {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: "480px" }}>
             <h3 className="modal-title">
-              Chi Tiết Vận Đơn {trackingDetail?.isGhn ? "GHN" : ""}
+              Tracking Detail {trackingDetail?.isGhn ? "GHN" : ""}
             </h3>
             {trackingLoading ? (
               <div style={{ textAlign: "center", padding: "30px 0" }}>
-                <p style={{ color: "#6b7280" }}>Đang tải thông tin...</p>
+                <p style={{ color: "#6b7280" }}>Loading information...</p>
               </div>
             ) : trackingDetail?.error ? (
               <div style={{ color: "#dc2626", padding: "16px 0" }}>
@@ -1603,7 +1603,7 @@ export default function ShippingPage() {
                   }}
                 >
                   <div>
-                    <strong>Mã vận đơn:</strong>{" "}
+                    <strong>Tracking ID:</strong>{" "}
                     <span style={{ fontFamily: "monospace" }}>
                       {trackingDetail.orderCode ||
                         trackingDetail._id ||
@@ -1611,7 +1611,7 @@ export default function ShippingPage() {
                     </span>
                   </div>
                   <div>
-                    <strong>Trạng thái:</strong>{" "}
+                    <strong>Status:</strong>{" "}
                     <span
                       style={{
                         color:
@@ -1626,17 +1626,17 @@ export default function ShippingPage() {
                   </div>
                   {trackingDetail.toName && (
                     <div>
-                      <strong>Người nhận:</strong> {trackingDetail.toName}
+                      <strong>Recipient:</strong> {trackingDetail.toName}
                     </div>
                   )}
                   {trackingDetail.toPhone && (
                     <div>
-                      <strong>SĐT:</strong> {trackingDetail.toPhone}
+                      <strong>Phone number:</strong> {trackingDetail.toPhone}
                     </div>
                   )}
                   {trackingDetail.toAddress && (
                     <div style={{ gridColumn: "1 / -1" }}>
-                      <strong>Địa chỉ:</strong> {trackingDetail.toAddress}
+                      <strong>Address:</strong> {trackingDetail.toAddress}
                     </div>
                   )}
                   {trackingDetail.codAmount !== undefined && (
@@ -1647,13 +1647,13 @@ export default function ShippingPage() {
                   )}
                   {trackingDetail.totalFee !== undefined && (
                     <div>
-                      <strong>Phí vận chuyển:</strong>{" "}
+                      <strong>Shipping fee:</strong>{" "}
                       {formatVNDNumber(trackingDetail.totalFee || 0)} đ
                     </div>
                   )}
                   {trackingDetail.leadtime && (
                     <div style={{ gridColumn: "1 / -1" }}>
-                      <strong>Dự kiến giao:</strong>{" "}
+                      <strong>Expected delivery:</strong>{" "}
                       {new Date(
                         trackingDetail.leadtime * 1000,
                       ).toLocaleDateString("vi-VN")}
@@ -1680,7 +1680,7 @@ export default function ShippingPage() {
                         marginBottom: "6px",
                       }}
                     >
-                      ✅ Đơn hàng đã được tạo thành công trên GHN
+                      ✅ The order has been successfully created on GHN
                     </div>
                     <p
                       style={{
@@ -1690,8 +1690,8 @@ export default function ShippingPage() {
                         lineHeight: 1.5,
                       }}
                     >
-                      Mã vận đơn <b>{trackingDetail.orderCode}</b> đã xuất hiện
-                      trên{" "}
+                      Tracking ID <b>{trackingDetail.orderCode}</b> has appeared
+                      on{" "}
                       <a
                         href="https://5sao.ghn.dev"
                         target="_blank"
@@ -1711,7 +1711,7 @@ export default function ShippingPage() {
                 className="btn-cancel"
                 onClick={() => setShowTrackingModal(false)}
               >
-                Đóng
+                Close
               </button>
             </div>
           </div>
