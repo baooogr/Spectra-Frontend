@@ -47,6 +47,11 @@ const categories = [
     title: "Prescription Lenses",
     desc: "Crystal clear vision",
   },
+  {
+    image: "/Images/T01762118h.jpg",
+    title: "SPORTS EYEWEAR",
+    desc: "Performance & protection",
+  },
 ];
 
 export default function MainPage() {
