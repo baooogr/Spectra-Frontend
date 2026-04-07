@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useExchangeRate } from "../api";
-import { formatPrice } from "../utils/validation";
 import { getAddressDisplayString } from "../utils/vietnamAddress";
 import DeliveryMap from "../components/DeliveryMap";
 import "./OrderDetail.css";
@@ -19,6 +18,21 @@ export default function OrderDetail() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const { rate: exchangeRate } = useExchangeRate();
+
+  // ⚡ Đã tạo hàm format riêng để chỉ hiển thị USD
+  const formatCurrency = (amount) => {
+    let val = Number(amount) || 0;
+    // Nếu số tiền > 10.000, khả năng cao là VND -> chia tỷ giá để ra USD
+    if (val > 10000) {
+      val = val / (exchangeRate || 25400);
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(val);
+  };
 
   useEffect(() => {
     const token =
@@ -50,12 +64,12 @@ export default function OrderDetail() {
             setDeliveryConfirmed(true);
           }
         } else if (res.status === 404) {
-          setError("Không tìm thấy đơn hàng này.");
+          setError("Order not found.");
         } else {
-          setError(`Lỗi ${res.status} khi tải chi tiết đơn hàng.`);
+          setError(`Error ${res.status} when loading order details.`);
         }
       } catch {
-        setError("Lỗi kết nối. Vui lòng thử lại.");
+        setError("Connection error. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -67,7 +81,7 @@ export default function OrderDetail() {
   if (isLoading)
     return (
       <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
-        Đang tải chi tiết đơn hàng...
+        Loading order details...
       </div>
     );
 
@@ -75,10 +89,10 @@ export default function OrderDetail() {
     return (
       <div style={{ textAlign: "center", padding: "60px" }}>
         <h2 style={{ color: "#dc2626" }}>
-          {error || "Không tìm thấy đơn hàng"}
+          {error || "Order not found"}
         </h2>
         <Link to="/orders" style={{ color: "#3b82f6" }}>
-          ← Quay lại lịch sử mua hàng
+          ← Back to order history
         </Link>
       </div>
     );
@@ -86,17 +100,17 @@ export default function OrderDetail() {
   const getStatusBadge = (status) => {
     const s = status?.toLowerCase() || "";
     const map = {
-      pending: { text: "Chờ xác nhận", color: "#d97706", bg: "#fef3c7" },
-      confirmed: { text: "Đã xác nhận", color: "#059669", bg: "#d1fae5" },
-      processing: { text: "Đang xử lý", color: "#4338ca", bg: "#ede9fe" },
-      shipped: { text: "Đang giao hàng", color: "#7e22ce", bg: "#f3e8ff" },
-      delivering: { text: "Đang giao hàng", color: "#7e22ce", bg: "#f3e8ff" },
-      delivered: { text: "Hoàn thành", color: "#059669", bg: "#d1fae5" },
-      completed: { text: "Hoàn thành", color: "#059669", bg: "#d1fae5" },
-      cancelled: { text: "Đã huỷ", color: "#dc2626", bg: "#fee2e2" },
+      pending: { text: "Pending", color: "#d97706", bg: "#fef3c7" },
+      confirmed: { text: "Confirmed", color: "#059669", bg: "#d1fae5" },
+      processing: { text: "Processing", color: "#4338ca", bg: "#ede9fe" },
+      shipped: { text: "Delivering", color: "#7e22ce", bg: "#f3e8ff" },
+      delivering: { text: "Delivering", color: "#7e22ce", bg: "#f3e8ff" },
+      delivered: { text: "Completed", color: "#059669", bg: "#d1fae5" },
+      completed: { text: "Completed", color: "#059669", bg: "#d1fae5" },
+      cancelled: { text: "Cancelled", color: "#dc2626", bg: "#fee2e2" },
     };
     const s2 = map[s] || {
-      text: status || "Không rõ",
+      text: status || "Unknown",
       color: "#6b7280",
       bg: "#f3f4f6",
     };
@@ -121,7 +135,7 @@ export default function OrderDetail() {
   let receiverPhone = order.user?.phone || "—";
   let receiverEmail = order.user?.email || "—";
   let shippingAddress = order.shippingAddress || "—";
-  const orderNote = order.note || "Không có";
+  const orderNote = order.note || "None";
 
   const matchNew = shippingAddress.match(/^\[(.*?) - (.*?) - (.*?)\] (.*)$/);
   const matchError = shippingAddress.match(/^\[(.*?) - (.*?)\] (.*?)] (.*)$/);
@@ -203,13 +217,13 @@ export default function OrderDetail() {
       if (res.ok) {
         setOrder((prev) => ({ ...prev, status: "cancelled" }));
         setShowCancelConfirm(false);
-        alert("Đã huỷ đơn hàng thành công!");
+        alert("Order cancelled successfully!");
       } else {
         const data = await res.json();
-        alert(data.message || "Không thể huỷ đơn hàng. Vui lòng thử lại.");
+        alert(data.message || "Could not cancel the order. Please try again.");
       }
     } catch {
-      alert("Lỗi kết nối. Vui lòng thử lại.");
+      alert("Connection error. Please try again.");
     } finally {
       setIsCancelling(false);
     }
@@ -236,7 +250,7 @@ export default function OrderDetail() {
           marginBottom: "20px",
         }}
       >
-        ← Lịch sử mua hàng
+        ← Order History
       </Link>
 
       <div
@@ -261,11 +275,11 @@ export default function OrderDetail() {
           }}
         >
           <div>
-            <h2 style={{ margin: 0, fontSize: "22px" }}>Chi Tiết Đơn Hàng</h2>
+            <h2 style={{ margin: 0, fontSize: "22px" }}>Order Details</h2>
             <p
               style={{ margin: "6px 0 0", color: "#6b7280", fontSize: "14px" }}
             >
-              Mã đơn: <b style={{ color: "#111827" }}>#{order.orderId}</b>
+              Order ID: <b style={{ color: "#111827" }}>#{order.orderId}</b>
             </p>
             {order.convertedFromPreorderId && (
               <p
@@ -286,7 +300,7 @@ export default function OrderDetail() {
                     marginRight: "6px",
                   }}
                 >
-                  Từ Pre-order
+                  From Pre-order
                 </span>
                 #{String(order.convertedFromPreorderId).slice(0, 8)}
               </p>
@@ -317,7 +331,7 @@ export default function OrderDetail() {
                   opacity: isCancelling ? 0.6 : 1,
                 }}
               >
-                {isCancelling ? "Đang huỷ..." : "Huỷ đơn hàng"}
+                {isCancelling ? "Cancelling..." : "Cancel Order"}
               </button>
             )}
           </div>
@@ -343,13 +357,12 @@ export default function OrderDetail() {
                 color: "#991b1b",
               }}
             >
-              Bạn có chắc chắn muốn huỷ đơn hàng này?
+              Are you sure you want to cancel this order?
             </p>
             <p
               style={{ margin: "0 0 14px", fontSize: "14px", color: "#7f1d1d" }}
             >
-              Sau khi huỷ, bạn sẽ cần đặt lại đơn hàng nếu muốn mua sản phẩm
-              này.
+              Once cancelled, you will need to place a new order if you wish to purchase these items.
             </p>
             <div
               style={{
@@ -374,7 +387,7 @@ export default function OrderDetail() {
                   opacity: isCancelling ? 0.6 : 1,
                 }}
               >
-                {isCancelling ? "Đang xử lý..." : "Xác nhận huỷ"}
+                {isCancelling ? "Processing..." : "Confirm Cancellation"}
               </button>
               <button
                 onClick={() => setShowCancelConfirm(false)}
@@ -390,7 +403,7 @@ export default function OrderDetail() {
                   cursor: "pointer",
                 }}
               >
-                Không, giữ đơn hàng
+                No, keep order
               </button>
             </div>
           </div>
@@ -416,7 +429,7 @@ export default function OrderDetail() {
                 color: "#1e40af",
               }}
             >
-              Bạn đã nhận được đơn hàng chưa?
+              Have you received your order?
             </p>
             <div
               style={{
@@ -439,7 +452,7 @@ export default function OrderDetail() {
                   cursor: "pointer",
                 }}
               >
-                Đã nhận
+                Received
               </button>
               <button
                 onClick={() => setShowNotReceivedInfo(true)}
@@ -454,7 +467,7 @@ export default function OrderDetail() {
                   cursor: "pointer",
                 }}
               >
-                Chưa nhận
+                Not Received
               </button>
             </div>
 
@@ -469,7 +482,7 @@ export default function OrderDetail() {
                 }}
               >
                 <p style={{ margin: 0, fontSize: "14px", color: "#991b1b" }}>
-                  Nếu bạn chưa nhận được hàng, vui lòng liên hệ tổng đài hỗ trợ:
+                  If you haven't received your package, please contact support:
                 </p>
                 <p
                   style={{
@@ -488,7 +501,7 @@ export default function OrderDetail() {
                     color: "#78716c",
                   }}
                 >
-                  Thời gian hỗ trợ: 8:00 – 21:00 hàng ngày
+                  Support hours: 8:00 AM – 9:00 PM daily
                 </p>
               </div>
             )}
@@ -523,22 +536,22 @@ export default function OrderDetail() {
                 paddingBottom: "8px",
               }}
             >
-              Thông tin đơn hàng
+              Order Information
             </h4>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Ngày đặt:</b>{" "}
+              <b>Order Date:</b>{" "}
               {order.createdAt
-                ? new Date(order.createdAt).toLocaleString("vi-VN")
+                ? new Date(order.createdAt).toLocaleString("en-US")
                 : "—"}
             </p>
             {order.arrivalDate && (
               <p style={{ margin: "6px 0", fontSize: "14px" }}>
-                <b>Ngày nhận hàng:</b>{" "}
-                {new Date(order.arrivalDate).toLocaleString("vi-VN")}
+                <b>Received Date:</b>{" "}
+                {new Date(order.arrivalDate).toLocaleString("en-US")}
               </p>
             )}
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Ghi chú:</b> {orderNote}
+              <b>Notes:</b> {orderNote}
             </p>
           </div>
 
@@ -561,13 +574,13 @@ export default function OrderDetail() {
                 paddingBottom: "8px",
               }}
             >
-              Thông tin giao hàng
+              Shipping Information
             </h4>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Người nhận:</b> {receiverName}
+              <b>Receiver:</b> {receiverName}
             </p>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Số điện thoại:</b> {receiverPhone}
+              <b>Phone:</b> {receiverPhone}
             </p>
             {receiverEmail !== "—" && (
               <p style={{ margin: "6px 0", fontSize: "14px" }}>
@@ -575,7 +588,7 @@ export default function OrderDetail() {
               </p>
             )}
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Địa chỉ giao hàng:</b> {shippingAddress}
+              <b>Address:</b> {shippingAddress}
             </p>
           </div>
         </div>
@@ -640,16 +653,16 @@ export default function OrderDetail() {
           const steps = [
             {
               icon: "",
-              label: "Đơn hàng đã đặt",
-              desc: "Đơn hàng đang chờ xác nhận từ cửa hàng",
+              label: "Order Placed",
+              desc: "Waiting for store confirmation",
               time: createdAt,
               done: statusIdx >= 0,
               active: statusIdx === 0,
             },
             {
               icon: "",
-              label: "Đã xác nhận",
-              desc: "Cửa hàng đã xác nhận đơn hàng",
+              label: "Confirmed",
+              desc: "Store has confirmed the order",
               time: createdAt
                 ? new Date(createdAt.getTime() + 2 * 3600000)
                 : null,
@@ -658,8 +671,8 @@ export default function OrderDetail() {
             },
             {
               icon: "",
-              label: "Đang chuẩn bị hàng",
-              desc: "Sản phẩm đang được đóng gói và chuẩn bị giao",
+              label: "Preparing",
+              desc: "Items are being packed and prepared for shipping",
               time: null,
               done: statusIdx >= 2,
               active: statusIdx === 2,
@@ -667,11 +680,11 @@ export default function OrderDetail() {
             {
               icon: "",
               label: shipped
-                ? `Đã giao cho ${shippingCarrier || "hãng vận chuyển"}`
-                : "Chờ giao cho hãng vận chuyển",
+                ? `Handed over to ${shippingCarrier || "carrier"}`
+                : "Waiting for carrier pickup",
               desc: hasTracking
-                ? `Mã vận đơn: ${trackingNumber}`
-                : "Đơn hàng sẽ được bàn giao cho đơn vị vận chuyển",
+                ? `Tracking number: ${trackingNumber}`
+                : "Order will be handed over to the shipping provider",
               time: shipped,
               done: statusIdx >= 3,
               active:
@@ -680,8 +693,8 @@ export default function OrderDetail() {
             },
             {
               icon: "",
-              label: "Đang vận chuyển",
-              desc: "Đang trên đường đến địa chỉ của bạn",
+              label: "In Transit",
+              desc: "On the way to your address",
               time:
                 inTransitTime && now >= inTransitTime ? inTransitTime : null,
               done:
@@ -695,8 +708,8 @@ export default function OrderDetail() {
             },
             {
               icon: "",
-              label: "Đang giao hàng",
-              desc: "Shipper đang trên đường giao đến bạn",
+              label: "Out for Delivery",
+              desc: "Driver is on the way to deliver your package",
               time:
                 outForDeliveryTime && now >= outForDeliveryTime
                   ? outForDeliveryTime
@@ -713,10 +726,10 @@ export default function OrderDetail() {
             },
             {
               icon: "",
-              label: "Giao hàng thành công",
+              label: "Delivered",
               desc: confirmedAt
-                ? "Người nhận đã xác nhận"
-                : "Đơn hàng đã được giao",
+                ? "Receiver has confirmed delivery"
+                : "Package has been delivered",
               time: deliveredDate,
               done: statusIdx >= 4,
               active: statusIdx === 4 && !confirmedAt,
@@ -727,8 +740,8 @@ export default function OrderDetail() {
           if (confirmedAt || statusIdx >= 4) {
             steps.push({
               icon: "",
-              label: "Đã xác nhận nhận hàng",
-              desc: "Bạn đã xác nhận nhận được đơn hàng",
+              label: "Delivery Confirmed",
+              desc: "You have confirmed receiving the order",
               time: confirmedAt,
               done: !!confirmedAt,
               active: false,
@@ -742,13 +755,13 @@ export default function OrderDetail() {
 
           const formatTime = (d) =>
             d
-              ? new Date(d).toLocaleString("vi-VN", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+              ? new Date(d).toLocaleString("en-US", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
               : null;
 
           return (
@@ -772,7 +785,7 @@ export default function OrderDetail() {
                 }}
               >
                 <h4 style={{ margin: 0, fontSize: "17px", color: "#1e293b" }}>
-                  Lộ trình đơn hàng
+                  Delivery Timeline
                 </h4>
                 {estimated && statusIdx < 4 && (
                   <span
@@ -786,8 +799,8 @@ export default function OrderDetail() {
                       fontWeight: 600,
                     }}
                   >
-                    Dự kiến:{" "}
-                    {new Date(estimated).toLocaleDateString("vi-VN", {
+                    Expected:{" "}
+                    {new Date(estimated).toLocaleDateString("en-US", {
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
@@ -856,7 +869,7 @@ export default function OrderDetail() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      Theo dõi trên {shippingCarrier || "website"}
+                      Track on {shippingCarrier || "website"}
                     </a>
                   )}
                 </div>
@@ -996,15 +1009,15 @@ export default function OrderDetail() {
                 >
                   <span>
                     {order.shippingMethod === "express"
-                      ? "Giao hàng nhanh"
-                      : "Giao hàng tiêu chuẩn"}
+                      ? "Express Delivery"
+                      : "Standard Delivery"}
                   </span>
                   {order.shippingFee !== null &&
                     order.shippingFee !== undefined && (
                       <span>
-                        Phí ship:{" "}
+                        Shipping Fee:{" "}
                         {order.shippingFee === 0
-                          ? "Miễn phí"
+                          ? "Free"
                           : `$${order.shippingFee}`}
                       </span>
                     )}
@@ -1023,7 +1036,7 @@ export default function OrderDetail() {
             fontSize: "17px",
           }}
         >
-          Sản phẩm đã mua
+          Purchased Items
         </h3>
 
         {itemsList.length === 0 ? (
@@ -1035,12 +1048,12 @@ export default function OrderDetail() {
               padding: "20px 0",
             }}
           >
-            Không có thông tin sản phẩm.
+            No product information available.
           </p>
         ) : (
           <div style={{ marginBottom: "24px" }}>
             {itemsList.map((item, index) => {
-              const frameName = item.frame?.frameName || "Gọng kính";
+              const frameName = item.frame?.frameName || "Eyeglass Frame";
               const frameColor =
                 item.selectedColor || item.frame?.color || null;
               const qty = item.quantity || 1;
@@ -1097,7 +1110,7 @@ export default function OrderDetail() {
                               fontWeight: "normal",
                             }}
                           >
-                            - Màu: {frameColor}
+                            - Color: {frameColor}
                           </span>
                         )}
                       </p>
@@ -1108,7 +1121,7 @@ export default function OrderDetail() {
                           color: "#374151",
                         }}
                       >
-                        Số lượng: <b>x{qty}</b>
+                        Quantity: <b>x{qty}</b>
                       </p>
                     </div>
                     <div
@@ -1120,7 +1133,7 @@ export default function OrderDetail() {
                         textAlign: "right",
                       }}
                     >
-                      {formatPrice(calculatedFramePrice)}
+                      {formatCurrency(calculatedFramePrice)}
                     </div>
                   </div>
 
@@ -1146,7 +1159,7 @@ export default function OrderDetail() {
                             fontWeight: "500",
                           }}
                         >
-                          Tròng kính: {lensType || "Không có"}
+                          Lens: {lensType || "None"}
                           {lensFeature ? ` — ${lensFeature}` : ""}
                         </p>
                         {prescriptionUrl && (
@@ -1163,7 +1176,7 @@ export default function OrderDetail() {
                               textDecoration: "underline",
                             }}
                           >
-                            Xem Toa thuốc / Đơn kính
+                            View Prescription
                           </a>
                         )}
                       </div>
@@ -1177,8 +1190,8 @@ export default function OrderDetail() {
                         }}
                       >
                         {totalLensPrice > 0
-                          ? `+ ${formatPrice(totalLensPrice)}`
-                          : "Đang cập nhật"}
+                          ? `+ ${formatCurrency(totalLensPrice)}`
+                          : "Updating"}
                       </div>
                     </div>
                   ) : (
@@ -1201,7 +1214,7 @@ export default function OrderDetail() {
                           fontWeight: "600",
                         }}
                       >
-                        Chỉ mua gọng (Không kèm tròng kính)
+                        Frame only (No lenses included)
                       </span>
                     </div>
                   )}
@@ -1227,7 +1240,7 @@ export default function OrderDetail() {
                             color: "#7c3aed",
                           }}
                         >
-                          Đơn kính (Prescription)
+                          Prescription Details
                         </p>
                         <div
                           style={{
@@ -1239,10 +1252,10 @@ export default function OrderDetail() {
                           }}
                         >
                           <div>
-                            <b>Mắt phải (OD):</b>
+                            <b>Right Eye (OD):</b>
                           </div>
                           <div>
-                            <b>Mắt trái (OS):</b>
+                            <b>Left Eye (OS):</b>
                           </div>
                           <div>
                             SPH: {prescription.sphereRight ?? "—"} | CYL:{" "}
@@ -1263,27 +1276,27 @@ export default function OrderDetail() {
                               color: "#374151",
                             }}
                           >
-                            <b>PD (Khoảng cách đồng tử):</b>{" "}
+                            <b>PD (Pupillary Distance):</b>{" "}
                             {prescription.pupillaryDistance} mm
                           </p>
                         )}
                         {(prescription.doctorName ||
                           prescription.clinicName) && (
-                          <p
-                            style={{
-                              margin: "4px 0 0",
-                              fontSize: "12px",
-                              color: "#6b7280",
-                            }}
-                          >
-                            {prescription.doctorName &&
-                              `BS. ${prescription.doctorName}`}
-                            {prescription.doctorName &&
-                              prescription.clinicName &&
-                              " — "}
-                            {prescription.clinicName}
-                          </p>
-                        )}
+                            <p
+                              style={{
+                                margin: "4px 0 0",
+                                fontSize: "12px",
+                                color: "#6b7280",
+                              }}
+                            >
+                              {prescription.doctorName &&
+                                `Dr. ${prescription.doctorName}`}
+                              {prescription.doctorName &&
+                                prescription.clinicName &&
+                                " — "}
+                              {prescription.clinicName}
+                            </p>
+                          )}
                         {prescription.expirationDate && (
                           <p
                             style={{
@@ -1291,17 +1304,17 @@ export default function OrderDetail() {
                               fontSize: "12px",
                               color:
                                 new Date(prescription.expirationDate) <
-                                new Date()
+                                  new Date()
                                   ? "#dc2626"
                                   : "#6b7280",
                             }}
                           >
-                            Hạn sử dụng:{" "}
+                            Expiration Date:{" "}
                             {new Date(
                               prescription.expirationDate,
-                            ).toLocaleDateString("vi-VN")}
+                            ).toLocaleDateString("en-US")}
                             {new Date(prescription.expirationDate) <
-                              new Date() && " (Đã hết hạn)"}
+                              new Date() && " (Expired)"}
                           </p>
                         )}
                       </div>
@@ -1316,7 +1329,7 @@ export default function OrderDetail() {
                       fontWeight: "bold",
                     }}
                   >
-                    Tạm tính: {formatPrice(unitPrice * qty)}
+                    Subtotal: {formatCurrency(unitPrice * qty)}
                   </div>
                 </div>
               );
@@ -1335,9 +1348,9 @@ export default function OrderDetail() {
             border: "1px solid #bbf7d0",
           }}
         >
-          Tổng cộng:{" "}
+          Total Payment:{" "}
           <strong style={{ color: "#111827", fontSize: "26px" }}>
-            {formatPrice(order.totalAmount)}
+            {formatCurrency(order.totalAmount)}
           </strong>
         </div>
 
@@ -1367,7 +1380,7 @@ export default function OrderDetail() {
                   }}
                 >
                   <p style={{ margin: 0, fontSize: "14px", color: "#6b7280" }}>
-                    Thời hạn khiếu nại (7 ngày kể từ khi giao hàng) đã hết.
+                    The return/exchange period (7 days from delivery) has expired.
                   </p>
                 </div>
               );
@@ -1403,7 +1416,7 @@ export default function OrderDetail() {
                     color: "#9a3412",
                   }}
                 >
-                  Có vấn đề với đơn hàng?
+                  Issue with your order?
                 </p>
                 <p
                   style={{
@@ -1412,8 +1425,7 @@ export default function OrderDetail() {
                     color: "#78716c",
                   }}
                 >
-                  Bạn có thể yêu cầu đổi hàng (trong 7 ngày kể từ khi nhận
-                  hàng).
+                  You can request an exchange (within 7 days of receiving).
                 </p>
               </div>
               <Link
@@ -1432,7 +1444,7 @@ export default function OrderDetail() {
                   fontSize: "14px",
                 }}
               >
-                Yêu cầu đổi hàng
+                Request Exchange
               </Link>
             </div>
           );
