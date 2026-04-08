@@ -37,7 +37,7 @@ import AdminLensTypes from "../pages/AdminLens";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminProducts from "../pages/AdminProducts";
 import AdminOrders from "../pages/AdminOrders";
-import AdminPreorderCampaigns from "../pages/AdminPreorderCampaigns";
+import AdminPreorder from "../pages/AdminPreorder";
 import AdminComplaints from "../pages/AdminComplaints";
 import ShippingPage from "../pages/ShippingPage";
 import AdminBusinessRules from "../pages/AdminBusinessRules";
@@ -76,7 +76,7 @@ export default function AppRouter() {
             <Route path="lensindices" element={<AdminLensIndices />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
-            <Route path="campaigns" element={<AdminPreorderCampaigns />} />
+            <Route path="campaigns" element={<AdminPreorder />} />
             <Route path="complaints" element={<AdminComplaints />} />
             <Route path="/admin/shipping" element={<ShippingPage />} />
             <Route path="business-rules" element={<AdminBusinessRules />} />

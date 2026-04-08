@@ -3,7 +3,7 @@ import { UserContext } from "../context/UserContext";
 import "../components/layout/AdminLayout.css";
 import "./AdminProducts.css";
 
-export default function AdminPreorderCampaigns() {
+export default function AdminPreorder() {
   const { user } = useContext(UserContext);
   const [campaigns, setCampaigns] = useState([]);
   const [outOfStockFrames, setOutOfStockFrames] = useState([]);
