@@ -35,7 +35,7 @@ export default function AdminLayout() {
             Dashboard
           </Link>
           <Link to="/admin/products" className="admin-link">
-            Glasses Management
+            Product Management
           </Link>
           <Link to="/admin/lenstypes" className="admin-link">
             Lens Types Management

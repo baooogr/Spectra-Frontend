@@ -18,7 +18,7 @@ export default function Header() {
   // Determine admin status from cached API data or stored user
   const isAdmin = (() => {
     const role = (apiUser?.role || currentUser?.role || "").toLowerCase();
-    return role === "manager" || role === "admin";
+    return role === "manager" || role === "admin" || role === "staff";
   })();
 
   // Update localStorage if API returns newer role data

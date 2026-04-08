@@ -676,7 +676,7 @@ export default function AdminProducts() {
         style={{ display: "flex", gap: "10px", alignItems: "center" }}
       >
         <h2 className="admin-products-title" style={{ marginRight: "auto" }}>
-          Frames Management
+          Product Management
         </h2>
         <button
           className="btn-edit"
