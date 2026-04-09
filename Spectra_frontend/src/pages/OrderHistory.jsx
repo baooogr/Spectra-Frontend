@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useExchangeRate } from "../api";
-import { formatPrice } from "../utils/validation";
 import "./OrderHistory.css";
 
 export default function OrderHistory() {
@@ -16,7 +15,21 @@ export default function OrderHistory() {
   const [activeTab, setActiveTab] = useState("all"); // "all" | "orders" | "preorders"
 
   const { rate: exchangeRate } = useExchangeRate();
-  // formatPrice from utils handles VND rounding rules (500 VND step) now
+
+  // ⚡ Cập nhật hàm format để chỉ hiện USD và xử lý tỷ giá nếu là số VND
+  const formatCurrency = (amount) => {
+    let val = Number(amount) || 0;
+    // Nếu số tiền > 10.000, khả năng cao là VND -> chia tỷ giá để ra USD
+    if (val > 10000) {
+      val = val / (exchangeRate || 25400);
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(val);
+  };
 
   useEffect(() => {
     const token =
@@ -53,13 +66,10 @@ export default function OrderHistory() {
 
         if (ordersRes.ok) {
           const data = await ordersRes.json();
-          console.log("Orders API response:", data);
           const items = data.items || (Array.isArray(data) ? data : []);
-          console.log("Parsed orders:", items);
           setOrders(items);
         } else {
-          const errorText = await ordersRes.text().catch(() => "");
-          console.warn("Orders API error:", ordersRes.status, errorText);
+          console.warn("Orders API error:", ordersRes.status);
         }
 
         if (preordersRes.ok) {
@@ -69,7 +79,7 @@ export default function OrderHistory() {
           console.warn("Preorders API error:", preordersRes.status);
         }
       } catch (err) {
-        setError("Lỗi kết nối. Không thể tải lịch sử đơn hàng.");
+        setError("Connection error. Could not load order history.");
       } finally {
         setIsLoading(false);
       }
@@ -80,24 +90,24 @@ export default function OrderHistory() {
 
   const translateStatus = (status) => {
     const s = status?.toLowerCase();
-    if (s === "pending") return { text: "Chờ xác nhận", color: "#f59e0b" };
-    if (s === "processing") return { text: "Đang xử lý", color: "#3b82f6" };
+    if (s === "pending") return { text: "Pending", color: "#f59e0b" };
+    if (s === "processing") return { text: "Processing", color: "#3b82f6" };
     if (s === "shipped" || s === "delivering")
-      return { text: "Đang giao hàng", color: "#8b5cf6" };
+      return { text: "Shipping", color: "#8b5cf6" };
     if (s === "delivered" || s === "completed")
-      return { text: "Thành công", color: "#10b981" };
-    if (s === "cancelled") return { text: "Đã huỷ", color: "#ef4444" };
+      return { text: "Success", color: "#10b981" };
+    if (s === "cancelled") return { text: "Cancelled", color: "#ef4444" };
     if (s === "awaiting_payment" || s === "awaitingpayment")
-      return { text: "Chờ thanh toán", color: "#f97316" };
-    if (s === "confirmed") return { text: "Đã xác nhận", color: "#059669" };
-    if (s === "paid") return { text: "Đã thanh toán", color: "#059669" };
-    if (s === "converted") return { text: "Đang xử lý", color: "#3b82f6" };
-    return { text: status || "Không rõ", color: "gray" };
+      return { text: "Awaiting Payment", color: "#f97316" };
+    if (s === "confirmed") return { text: "Confirmed", color: "#059669" };
+    if (s === "paid") return { text: "Paid", color: "#059669" };
+    if (s === "converted") return { text: "Processing", color: "#3b82f6" };
+    return { text: status || "Unknown", color: "gray" };
   };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("vi-VN");
+    return new Date(dateStr).toLocaleDateString("en-US");
   };
 
   // Sắp xếp theo ngày mới nhất
@@ -169,7 +179,7 @@ export default function OrderHistory() {
                 color: "#6b7280",
               }}
             >
-              <b>Mã đơn:</b> #{order.id || order.orderId}
+              <b>Order Code:</b> #{order.id || order.orderId}
             </p>
             {order.convertedFromPreorderId && (
               <p
@@ -190,13 +200,13 @@ export default function OrderHistory() {
                     marginRight: "6px",
                   }}
                 >
-                  Đã chuyển từ Pre-order
+                  Converted from Pre-order
                 </span>
                 #{String(order.convertedFromPreorderId).slice(0, 8)}
               </p>
             )}
             <p style={{ margin: 0, fontWeight: "bold", fontSize: "14px" }}>
-              Ngày đặt: {formatDate(order.orderDate || order.createdAt)}
+              Order Date: {formatDate(order.orderDate || order.createdAt)}
             </p>
           </div>
           <span
@@ -225,13 +235,13 @@ export default function OrderHistory() {
         >
           <div>
             <p style={{ margin: "0 0 4px 0" }}>
-              Tổng tiền:{" "}
+              Total Amount:{" "}
               <strong style={{ color: "#111827", fontSize: "18px" }}>
-                {formatPrice(order.totalAmount || order.totalPrice || 0)}
+                {formatCurrency(order.totalAmount || order.totalPrice || 0)}
               </strong>
             </p>
             <p style={{ margin: 0, fontSize: "13px", color: "#6b7280" }}>
-              Số sản phẩm: <b>{totalQty}</b>
+              Qty: <b>{totalQty}</b>
             </p>
           </div>
           <Link
@@ -247,7 +257,7 @@ export default function OrderHistory() {
               backgroundColor: "#f9fafb",
             }}
           >
-            Xem chi tiết →
+            Details →
           </Link>
         </div>
       </div>
@@ -260,8 +270,8 @@ export default function OrderHistory() {
     const linkedOrder =
       order.status?.toLowerCase() === "converted"
         ? orders.find(
-            (o) => o.convertedFromPreorderId === (order.id || order.preorderId),
-          )
+          (o) => o.convertedFromPreorderId === (order.id || order.preorderId),
+        )
         : null;
     const displayStatus = linkedOrder ? linkedOrder.status : order.status;
     const statusObj = translateStatus(displayStatus);
@@ -283,13 +293,13 @@ export default function OrderHistory() {
     // Tổng tiền: ưu tiên từ data, fallback tính từ items
     const [finalAmount, setFinalAmount] = useState(
       order.totalAmount ||
-        order.totalPrice ||
-        itemsList.reduce((sum, item) => {
-          const price =
-            item.unitPrice || item.orderPrice || item.preorderPrice || 0;
-          const qty = item.quantity || item.qty || 1;
-          return sum + price * qty;
-        }, 0),
+      order.totalPrice ||
+      itemsList.reduce((sum, item) => {
+        const price =
+          item.unitPrice || item.orderPrice || item.preorderPrice || 0;
+        const qty = item.quantity || item.qty || 1;
+        return sum + price * qty;
+      }, 0),
     );
 
     // Nếu vẫn = 0 thì gọi Payment API để lấy số tiền đã thanh toán (fallback)
@@ -313,7 +323,7 @@ export default function OrderHistory() {
             }
           }
         } catch (err) {
-          console.error("Lỗi lấy thông tin Payment:", err);
+          console.error("Payment info error:", err);
         }
       };
       fetchPaymentAmount();
@@ -366,7 +376,7 @@ export default function OrderHistory() {
                 color: "#1e40af",
               }}
             >
-              <b>Mã đặt trước:</b> #{order.id || order.preorderId}
+              <b>Pre-order Code:</b> #{order.id || order.preorderId}
             </p>
             {linkedOrder && (
               <p
@@ -387,7 +397,7 @@ export default function OrderHistory() {
                     marginRight: "6px",
                   }}
                 >
-                  Đã chuyển thành Đơn hàng
+                  Converted to Standard Order
                 </span>
                 #{String(linkedOrder.orderId || linkedOrder.id).slice(0, 8)}
               </p>
@@ -400,7 +410,7 @@ export default function OrderHistory() {
                 color: "#1e3a8a",
               }}
             >
-              Ngày đặt: {formatDate(order.createdAt || order.orderDate)}
+              Date: {formatDate(order.createdAt || order.orderDate)}
             </p>
             {order.expectedDate && (
               <p
@@ -410,7 +420,7 @@ export default function OrderHistory() {
                   color: "#1d4ed8",
                 }}
               >
-                Dự kiến giao: {formatDate(order.expectedDate)}
+                Est. Delivery: {formatDate(order.expectedDate)}
               </p>
             )}
           </div>
@@ -440,7 +450,7 @@ export default function OrderHistory() {
           >
             {itemsList.slice(0, 3).map((item, idx) => {
               const frameName =
-                item.frame?.frameName || item.frameName || "Gọng kính";
+                item.frame?.frameName || item.frameName || "Eyeglass frame";
               const qty = item.quantity || item.qty || 1;
               const hasLens = !!(
                 item.lensType ||
@@ -466,7 +476,7 @@ export default function OrderHistory() {
                         fontWeight: "600",
                       }}
                     >
-                      (Chỉ mua gọng)
+                      (Frame only)
                     </span>
                   )}
                 </p>
@@ -476,7 +486,7 @@ export default function OrderHistory() {
               <p
                 style={{ margin: "3px 0", fontSize: "13px", color: "#6b7280" }}
               >
-                ...và {itemsList.length - 3} sản phẩm khác
+                ...and {itemsList.length - 3} other items
               </p>
             )}
           </div>
@@ -493,14 +503,14 @@ export default function OrderHistory() {
         >
           <div>
             <p style={{ margin: "0 0 4px 0" }}>
-              Tổng tiền:{" "}
+              Total:{" "}
               <strong style={{ color: "#1e40af", fontSize: "18px" }}>
-                {formatPrice(finalAmount || 0)}
+                {formatCurrency(finalAmount || 0)}
               </strong>
             </p>
             {totalQty > 0 && (
               <p style={{ margin: 0, fontSize: "13px", color: "#1e40af" }}>
-                Số sản phẩm: <b>{totalQty}</b>
+                Items: <b>{totalQty}</b>
               </p>
             )}
           </div>
@@ -520,7 +530,7 @@ export default function OrderHistory() {
               display: "inline-block",
             }}
           >
-            Xem chi tiết →
+            Details →
           </Link>
         </div>
       </div>
@@ -531,10 +541,10 @@ export default function OrderHistory() {
 
   return (
     <div style={{ maxWidth: "800px", margin: "40px auto", padding: "20px" }}>
-      <h2 style={{ marginBottom: "6px" }}>Lịch Sử Đơn Hàng</h2>
+      <h2 style={{ marginBottom: "6px" }}>Order History</h2>
       <p style={{ color: "#6b7280", marginBottom: "24px", fontSize: "14px" }}>
-        Tổng: <b>{totalCount}</b> đơn hàng ({orders.length} thường +{" "}
-        {preorders.length} đặt trước)
+        Total: <b>{totalCount}</b> orders ({orders.length} standard +{" "}
+        {preorders.length} pre-order)
       </p>
 
       {/* TABS */}
@@ -547,19 +557,19 @@ export default function OrderHistory() {
         }}
       >
         <button style={tabStyle("all")} onClick={() => setActiveTab("all")}>
-          Tất cả ({totalCount})
+          All ({totalCount})
         </button>
         <button
           style={tabStyle("orders")}
           onClick={() => setActiveTab("orders")}
         >
-          Đơn thường ({orders.length})
+          Standard ({orders.length})
         </button>
         <button
           style={tabStyle("preorders")}
           onClick={() => setActiveTab("preorders")}
         >
-          Đặt trước ({preorders.length})
+          Pre-order ({preorders.length})
         </button>
       </div>
 
@@ -577,7 +587,7 @@ export default function OrderHistory() {
           <p
             style={{ textAlign: "center", color: "#6b7280", padding: "40px 0" }}
           >
-            Đang tải đơn hàng...
+            Loading...
           </p>
         )}
 
@@ -597,8 +607,7 @@ export default function OrderHistory() {
 
         {!isLoading && !error && totalCount === 0 && (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ fontSize: "48px", marginBottom: "12px" }}></div>
-            <p style={{ color: "#6b7280" }}>Bạn chưa có đơn hàng nào.</p>
+            <p style={{ color: "#6b7280" }}>You don't have any orders yet.</p>
             <Link
               to="/"
               style={{
@@ -612,7 +621,7 @@ export default function OrderHistory() {
                 fontWeight: "bold",
               }}
             >
-              Bắt đầu mua sắm
+              Start Shopping
             </Link>
           </div>
         )}
@@ -644,11 +653,6 @@ export default function OrderHistory() {
                       />
                     ),
                   )}
-                {totalCount === 0 && !error && (
-                  <p style={{ textAlign: "center", color: "#6b7280" }}>
-                    Chưa có đơn hàng nào.
-                  </p>
-                )}
               </>
             )}
 
@@ -663,7 +667,7 @@ export default function OrderHistory() {
                       padding: "30px 0",
                     }}
                   >
-                    Chưa có đơn hàng thường nào.
+                    No standard orders found.
                   </p>
                 ) : (
                   sortedOrders.map((order) => (
@@ -684,7 +688,7 @@ export default function OrderHistory() {
                       padding: "30px 0",
                     }}
                   >
-                    Chưa có đơn đặt trước nào.
+                    No pre-orders found.
                   </p>
                 ) : (
                   sortedPreorders.map((order) => (
