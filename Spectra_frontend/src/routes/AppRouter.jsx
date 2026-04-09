@@ -41,7 +41,6 @@ import AdminPreorder from "../pages/AdminPreorder";
 import AdminComplaints from "../pages/AdminComplaints";
 import ShippingPage from "../pages/ShippingPage";
 import AdminBusinessRules from "../pages/AdminBusinessRules";
-import MyComplaints from "../pages/MyComplaints";
 import ComplaintDetail from "../pages/ComplaintDetail";
 import ComplaintForm from "../pages/ComplaintForm";
 import ComplaintEdit from "../pages/ComplaintEdit";
