@@ -61,32 +61,26 @@ export default function VNPayReturnPage() {
     let amountVND = 0;
     let rawNumber = Number(raw);
 
-    // 1. Trường hợp Backend trả về thẳng tiền USD (Ví dụ: 180)
-    // Các đơn hàng thường nhỏ hơn 10.000 USD nên dùng mốc này để nhận diện
     if (rawNumber < 10000) {
-      amountUSD = rawNumber; // Khẳng định đây là 180 USD
-      amountVND = amountUSD * EXCHANGE_RATE; // 180 * 26250 = 4.725.000 VND
+      amountUSD = rawNumber;
+      amountVND = amountUSD;
     }
-    // 2. Trường hợp trả về chuẩn vnp_Amount của VNPay (Tiền VND nhân 100)
-    // Ví dụ: 472500000
+
     else if (rawNumber > 1000000) {
-      amountVND = rawNumber / 100; // 472500000 / 100 = 4.725.000 VND
+      amountVND = rawNumber / 100;
       amountUSD = amountVND / EXCHANGE_RATE;
     }
-    // 3. Trường hợp trả về tiền VND bình thường (Ví dụ: 4725000)
     else {
       amountVND = rawNumber;
       amountUSD = amountVND / EXCHANGE_RATE;
     }
 
-    // Định dạng USD (ví dụ: $180 hoặc $372.09)
     const formattedUSD = new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 0,
     }).format(amountUSD);
 
-    // Chỉ trả về USD
     return formattedUSD;
   };
 
