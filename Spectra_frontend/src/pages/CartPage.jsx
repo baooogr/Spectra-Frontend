@@ -19,10 +19,25 @@ export default function CartPage() {
       currency: "USD",
     }).format(n);
 
+  const handleIncreaseQty = (currentItem) => {
+
+    const totalFramesInCart = cartItems
+      .filter((item) => item.id === currentItem.id)
+      .reduce((sum, item) => sum + item.quantity, 0);
+
+    const maxStock = currentItem.maxStock || currentItem.stockQuantity || Infinity;
+
+    if (totalFramesInCart >= maxStock) {
+      alert(`Cannot add more! The total quantity of the "${currentItem.name || currentItem.frameName}" frame in your cart has reached the maximum stock limit (only ${maxStock} available).`);
+      return;
+    }
+
+    updateQty(currentItem.cartKey, currentItem.quantity + 1);
+  };
+
   const goCheckout = () => {
     if (cartItems.length === 0) return;
 
-    // Kiểm tra xem trong giỏ hàng có sản phẩm pre-order không
     const hasPreorder = cartItems.some((item) => item.isPreorder);
     const hasNormal = cartItems.some((item) => !item.isPreorder);
 
@@ -33,11 +48,26 @@ export default function CartPage() {
       return;
     }
 
+    for (let i = 0; i < cartItems.length; i++) {
+      const currentItem = cartItems[i];
+
+      const totalFramesInCart = cartItems
+        .filter((item) => item.id === currentItem.id)
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+      const maxStock = currentItem.maxStock || currentItem.stockQuantity || Infinity;
+
+      if (totalFramesInCart > maxStock) {
+        alert(
+          `Checkout failed: The frame "${currentItem.name || currentItem.frameName || "this item"}" exceeds our available stock (only ${maxStock} left). Please reduce the quantity in your cart!`
+        );
+        return;
+      }
+    }
+
     if (hasPreorder) {
-      // Nếu là hàng đặt trước -> Chuyển sang trang Checkout Preorder
-      navigate("/checkout-preorder");
+      navigate("/checkout-preorder", { state: { cartItems } });
     } else {
-      // Nếu là hàng bình thường -> Chuyển sang trang Checkout cũ
       navigate("/checkout", { state: { cartItems } });
     }
   };
@@ -190,8 +220,9 @@ export default function CartPage() {
                       <span style={{ minWidth: "20px", textAlign: "center" }}>
                         {item.quantity}
                       </span>
+                      {/* ĐÃ LẮP CHỐT CHẶN VÀO NÚT CỘNG TẠI ĐÂY */}
                       <button
-                        onClick={() => updateQty(item.cartKey, item.quantity + 1)}
+                        onClick={() => handleIncreaseQty(item)}
                         style={{ padding: "5px 10px", cursor: "pointer" }}
                       >
                         +
