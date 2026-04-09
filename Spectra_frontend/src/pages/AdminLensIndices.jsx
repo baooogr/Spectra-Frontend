@@ -9,6 +9,7 @@ export default function AdminLensIndices() {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const initialForm = {
     indexValue: 1.5,
@@ -67,6 +68,7 @@ export default function AdminLensIndices() {
       setCurrentId(null);
       setFormData(initialForm);
     }
+    setFieldErrors({});
     setShowModal(true);
   };
 
@@ -76,24 +78,68 @@ export default function AdminLensIndices() {
       ...prev,
       [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
     }));
+    // Clear field error when user starts typing again
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: null }));
+    }
+  };
+
+  const validate = () => {
+    const errors = {};
+
+    if (!formData.name || !formData.name.trim()) {
+      errors.name = "Display Name cannot be empty";
+    }
+
+    if (!formData.description || !formData.description.trim()) {
+      errors.description = "Description cannot be empty";
+    }
+
+    if (formData.additionalPrice === "" || formData.additionalPrice === null || formData.additionalPrice === undefined) {
+      errors.additionalPrice = "Extra Price cannot be empty";
+    } else if (Number(formData.additionalPrice) < 0) {
+      errors.additionalPrice = "Extra Price must be >= 0";
+    }
+
+    if (formData.minPrescription === "" || formData.minPrescription === null || formData.minPrescription === undefined) {
+      errors.minPrescription = "Min Prescription cannot be empty";
+    }
+
+    if (formData.maxPrescription === "" || formData.maxPrescription === null || formData.maxPrescription === undefined) {
+      errors.maxPrescription = "Max Prescription cannot be empty";
+    }
+
+    // Check if min <= max when both have values
+    if (
+      formData.minPrescription !== "" &&
+      formData.maxPrescription !== "" &&
+      !errors.minPrescription &&
+      !errors.maxPrescription
+    ) {
+      if (Number(formData.minPrescription) > Number(formData.maxPrescription)) {
+        errors.minPrescription = "Min Prescription cannot be greater than Max";
+      }
+    }
+
+    return errors;
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+
+    const errors = validate();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
 
     const payload = {
       indexValue: Number(formData.indexValue),
       name: formData.name,
       description: formData.description,
       additionalPrice: Number(formData.additionalPrice),
-      minPrescription:
-        formData.minPrescription !== ""
-          ? Number(formData.minPrescription)
-          : null,
-      maxPrescription:
-        formData.maxPrescription !== ""
-          ? Number(formData.maxPrescription)
-          : null,
+      minPrescription: Number(formData.minPrescription),
+      maxPrescription: Number(formData.maxPrescription),
     };
 
     const method = isEditing ? "PUT" : "POST";
@@ -142,12 +188,23 @@ export default function AdminLensIndices() {
     }
   };
 
+  const errorStyle = {
+    color: "#ef4444",
+    fontSize: "12px",
+    marginTop: "4px",
+    display: "block",
+    fontWeight: "600",
+  };
+
+  const inputStyle = (fieldName) => ({
+    borderColor: fieldErrors[fieldName] ? "#ef4444" : undefined,
+    outline: fieldErrors[fieldName] ? "none" : undefined,
+  });
+
   return (
     <div className="admin-lens-container">
       <div className="admin-lens-header">
-        <h2 className="admin-lens-title">
-          Lens Indices Management
-        </h2>
+        <h2 className="admin-lens-title">Lens Indices Management</h2>
         <button onClick={() => handleOpenModal()} className="btn-add">
           + Add Lens Index
         </button>
@@ -248,14 +305,15 @@ export default function AdminLensIndices() {
             <h3 className="modal-title">
               {isEditing ? "Edit Lens Index" : "Add New Lens Index"}
             </h3>
-            <form onSubmit={handleSave}>
+            <form onSubmit={handleSave} noValidate>
+
+              {/* Index Value — fixed select, always has a value */}
               <div className="form-group">
                 <label>Index Value:</label>
                 <select
                   name="indexValue"
                   value={formData.indexValue}
                   onChange={handleChange}
-                  required
                   style={{
                     width: "100%",
                     padding: "8px",
@@ -271,6 +329,8 @@ export default function AdminLensIndices() {
                   <option value={1.74}>1.74 (Ultra thin)</option>
                 </select>
               </div>
+
+              {/* Display Name */}
               <div className="form-group">
                 <label>Display Name:</label>
                 <input
@@ -279,8 +339,14 @@ export default function AdminLensIndices() {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="e.g. 1.67 Super Thin Index"
+                  style={inputStyle("name")}
                 />
+                {fieldErrors.name && (
+                  <span style={errorStyle}>{fieldErrors.name}</span>
+                )}
               </div>
+
+              {/* Description */}
               <div className="form-group">
                 <label>Description:</label>
                 <textarea
@@ -292,12 +358,19 @@ export default function AdminLensIndices() {
                   style={{
                     width: "100%",
                     padding: "8px",
-                    border: "1px solid #d1d5db",
+                    border: `1px solid ${fieldErrors.description ? "#ef4444" : "#d1d5db"}`,
                     borderRadius: "6px",
                     resize: "vertical",
+                    fontFamily: "inherit",
+                    fontSize: "14px",
                   }}
                 />
+                {fieldErrors.description && (
+                  <span style={errorStyle}>{fieldErrors.description}</span>
+                )}
               </div>
+
+              {/* Extra Price */}
               <div className="form-group">
                 <label>Extra Price ($):</label>
                 <input
@@ -305,11 +378,16 @@ export default function AdminLensIndices() {
                   name="additionalPrice"
                   value={formData.additionalPrice}
                   onChange={handleChange}
-                  required
                   min="0"
                   step="0.01"
+                  style={inputStyle("additionalPrice")}
                 />
+                {fieldErrors.additionalPrice && (
+                  <span style={errorStyle}>{fieldErrors.additionalPrice}</span>
+                )}
               </div>
+
+              {/* Min / Max Prescription */}
               <div
                 style={{
                   display: "grid",
@@ -326,7 +404,11 @@ export default function AdminLensIndices() {
                     onChange={handleChange}
                     step="0.25"
                     placeholder="e.g. -8.00"
+                    style={inputStyle("minPrescription")}
                   />
+                  {fieldErrors.minPrescription && (
+                    <span style={errorStyle}>{fieldErrors.minPrescription}</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Max Prescription (SPH):</label>
@@ -337,7 +419,11 @@ export default function AdminLensIndices() {
                     onChange={handleChange}
                     step="0.25"
                     placeholder="e.g. +4.00"
+                    style={inputStyle("maxPrescription")}
                   />
+                  {fieldErrors.maxPrescription && (
+                    <span style={errorStyle}>{fieldErrors.maxPrescription}</span>
+                  )}
                 </div>
               </div>
 

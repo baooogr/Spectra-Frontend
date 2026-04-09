@@ -16,7 +16,7 @@ export default function ForgotPassword() {
     setResetToken(null);
 
     if (!email.trim()) {
-      setError("Vui lòng nhập địa chỉ email");
+      setError("Please enter your email address.");
       return;
     }
 
@@ -39,17 +39,17 @@ export default function ForgotPassword() {
       if (res.ok) {
         setMessage(
           data.message ||
-            "Nếu email tồn tại trong hệ thống, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.",
+            "If the email address exists in the system, you will receive instructions to reset your password.",
         );
         // In development mode, the API returns the token directly
         if (data.token) {
           setResetToken(data.token);
         }
       } else {
-        setError(data.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+        setError(data.message || "An error occurred. Please try again.");
       }
     } catch (err) {
-      setError("Lỗi kết nối. Vui lòng kiểm tra đường truyền và thử lại.");
+      setError("Connection error. Please check your internet connection and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +69,7 @@ export default function ForgotPassword() {
         }}
       >
         <h2 style={{ textAlign: "center", marginBottom: "10px" }}>
-          Quên mật khẩu
+          Forgot password
         </h2>
         <p
           style={{
@@ -79,7 +79,7 @@ export default function ForgotPassword() {
             fontSize: "14px",
           }}
         >
-          Nhập email đã đăng ký để nhận hướng dẫn đặt lại mật khẩu
+          Enter your registered email address to receive instructions on resetting your password.
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -92,7 +92,7 @@ export default function ForgotPassword() {
                 fontSize: "14px",
               }}
             >
-              Địa chỉ Email
+              Email Address
             </label>
             <input
               type="email"
@@ -155,10 +155,10 @@ export default function ForgotPassword() {
               }}
             >
               <p style={{ margin: "0 0 8px", fontWeight: "bold" }}>
-                Chế độ phát triển:
+                Development mode:
               </p>
               <p style={{ margin: "0 0 8px" }}>
-                Token đặt lại mật khẩu của bạn:
+                Token to reset your password:
               </p>
               <code
                 style={{
@@ -185,7 +185,7 @@ export default function ForgotPassword() {
                   fontSize: "13px",
                 }}
               >
-                Đặt lại mật khẩu ngay →
+                Reset your password now →
               </Link>
             </div>
           )}
@@ -206,7 +206,7 @@ export default function ForgotPassword() {
               marginBottom: "20px",
             }}
           >
-            {isLoading ? "Đang xử lý..." : "Gửi yêu cầu"}
+            {isLoading ? "Processing..." : "Send request"}
           </button>
         </form>
 
@@ -219,7 +219,7 @@ export default function ForgotPassword() {
               fontSize: "14px",
             }}
           >
-            ← Quay lại đăng nhập
+            ← Return to login
           </Link>
         </div>
       </div>

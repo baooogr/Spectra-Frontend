@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
-import "./MyComplaints.css";
+//import "./MyComplaints.css";
 
 const API_BASE = "https://myspectra.runasp.net/api";
 

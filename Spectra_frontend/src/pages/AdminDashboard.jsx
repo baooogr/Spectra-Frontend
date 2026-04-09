@@ -60,7 +60,7 @@ export default function AdminDashboard() {
         return;
       }
       if (new Date(startDate) > new Date(endDate)) {
-        setError("'From date' cannot be greater than 'Until date'. Please choose again.!");
+        setError("'From date' cannot be greater than 'To date'. Please choose again.!");
         setIsLoading(false);
         return;
       }
