@@ -93,7 +93,7 @@ export default function AppRouter() {
           <Route path="/orders/:id" element={<OrderDetail />} />
           <Route path="/preorders/:id" element={<PreorderDetail />} />
 
-          <Route path="/complaints" element={<MyComplaints />} />
+          
           <Route path="/complaints/new" element={<ComplaintForm />} />
           <Route path="/complaints/:id" element={<ComplaintDetail />} />
           <Route path="/complaints/:id/edit" element={<ComplaintEdit />} />
