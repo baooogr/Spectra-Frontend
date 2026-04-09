@@ -54,7 +54,7 @@ export const CartProvider = ({ children }) => {
         const newItems = [...prevItems];
         const newQty = newItems[existingItemIndex].quantity + quantity;
         if (newQty > maxStock) {
-          alert(`Số lượng vượt quá tồn kho (còn ${maxStock} sản phẩm).`);
+          alert(`Quantity exceeds available stock (only ${maxStock} items left).`);
           newItems[existingItemIndex].quantity = maxStock;
         } else {
           newItems[existingItemIndex].quantity = newQty;
@@ -62,7 +62,7 @@ export const CartProvider = ({ children }) => {
         return newItems;
       } else {
         if (quantity > maxStock) {
-          alert(`Số lượng vượt quá tồn kho (còn ${maxStock} sản phẩm).`);
+          alert(`Quantity exceeds available stock (only ${maxStock} items left).`);
           quantity = maxStock;
         }
         // Add unique key for new item
@@ -83,7 +83,8 @@ export const CartProvider = ({ children }) => {
         if (item.cartKey !== cartKey) return item;
         const maxStock = item.maxStock || item.stockQuantity || Infinity;
         if (newQty > maxStock) {
-          alert(`Số lượng vượt quá tồn kho (còn ${maxStock} sản phẩm).`);
+          // Dịch thông báo tồn kho
+          alert(`Quantity exceeds available stock (only ${maxStock} items left).`);
           return { ...item, quantity: maxStock };
         }
         return { ...item, quantity: newQty };

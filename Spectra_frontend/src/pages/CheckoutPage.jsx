@@ -523,7 +523,7 @@ export default function CheckoutPage() {
                 <label>
                   {phoneManualMode
                     ? "Phone Number"
-                    : "Phone Number (Fixed)"}
+                    : "Phone Number"}
                 </label>
                 <input
                   type="tel"

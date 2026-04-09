@@ -1,87 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { useExchangeRate } from "../api"; // Đã xóa import roundVND, formatVNDNumber vì không còn dùng
 
 export default function VNPayReturnPage() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading");
-  const { rate: exchangeRate = 25400 } = useExchangeRate();
 
-  // Các params có thể nhận được từ VNPay hoặc Backend của bạn
   const responseCode = searchParams.get("vnp_ResponseCode");
-  const transactionNo =
-    searchParams.get("vnp_TransactionNo") || searchParams.get("transactionId");
-  const amount = searchParams.get("vnp_Amount") || searchParams.get("amount");
-  const message = searchParams.get("message");
+  const transactionNo = searchParams.get("transactionId") || searchParams.get("vnp_TransactionNo");
+  const amount = searchParams.get("amount");
   const paymentId = searchParams.get("paymentId");
-
-  // Thêm dòng này để bắt tham số success từ URL của bạn
-  const successParam = searchParams.get("success");
+  const message = searchParams.get("message");
 
   useEffect(() => {
-    // Debug: in ra params để kiểm tra
-    console.log("VNPay Return Params:", {
-      responseCode,
-      transactionNo,
-      amount,
-      message,
-      paymentId,
-      successParam,
-      fullUrl: window.location.search,
-    });
+    console.log("VNPay Return Params:", { responseCode, transactionNo, amount, paymentId });
 
-    // Ưu tiên 1: Kiểm tra theo chuẩn VNPay gốc
     if (responseCode === "00") {
       setStatus("success");
-    } else if (responseCode) {
+    } else {
       setStatus("failed");
     }
-    // Ưu tiên 2: Kiểm tra theo tham số "success" từ Backend custom của bạn
-    else if (successParam !== null) {
-      setStatus(successParam === "true" ? "success" : "failed");
-    }
-    // Ưu tiên 3: Kiểm tra theo message (nếu có)
-    else if (message) {
-      const isSuccess =
-        message.toLowerCase().includes("success") ||
-        message.toLowerCase().includes("thành công");
-      setStatus(isSuccess ? "success" : "failed");
-    }
-    // Nếu không có bất kỳ param nào hợp lệ
-    else {
-      setStatus("failed");
-    }
-  }, [responseCode, message, successParam]);
+  }, [responseCode]);
+
 
   const formatAmount = (raw) => {
     if (!raw) return "—";
 
-    const EXCHANGE_RATE = exchangeRate || 25400;
-    let amountUSD = 0;
-    let amountVND = 0;
-    let rawNumber = Number(raw);
-
-    if (rawNumber < 10000) {
-      amountUSD = rawNumber;
-      amountVND = amountUSD;
-    }
-
-    else if (rawNumber > 1000000) {
-      amountVND = rawNumber / 100;
-      amountUSD = amountVND / EXCHANGE_RATE;
-    }
-    else {
-      amountVND = rawNumber;
-      amountUSD = amountVND / EXCHANGE_RATE;
-    }
-
-    const formattedUSD = new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-      minimumFractionDigits: 0,
-    }).format(amountUSD);
-
-    return formattedUSD;
+      minimumFractionDigits: 2,
+    }).format(Number(raw));
   };
 
   return (
@@ -120,9 +68,9 @@ export default function VNPayReturnPage() {
             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
           }}
         >
-          <div style={{ fontSize: "64px" }}></div>
+          <div style={{ fontSize: "64px" }}>✅</div>
           <h2 style={{ color: "#059669", marginTop: "12px", fontSize: "24px" }}>
-            VNPay Payment Successful!
+            Payment Successful!
           </h2>
           <p style={{ color: "#374151", marginTop: "8px" }}>
             Thank you! Your order has been successfully recorded.
@@ -156,7 +104,7 @@ export default function VNPayReturnPage() {
               <p
                 style={{ margin: "6px 0", color: "#374151", fontSize: "14px" }}
               >
-                <b>Amount:</b> {formatAmount(amount)}
+                <b>Amount:</b> <span style={{ color: "#10b981", fontWeight: "bold" }}>{formatAmount(amount)}</span>
               </p>
             )}
           </div>
@@ -217,7 +165,7 @@ export default function VNPayReturnPage() {
             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
           }}
         >
-          <div style={{ fontSize: "64px" }}></div>
+          <div style={{ fontSize: "64px" }}>❌</div>
           <h2 style={{ color: "#dc2626", marginTop: "12px", fontSize: "24px" }}>
             Payment Failed
           </h2>
