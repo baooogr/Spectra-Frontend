@@ -193,8 +193,8 @@ export default function ExchangeSelect() {
       };
       const colorId = getValidGuid(
         selectedColor?.color?.id ||
-          selectedColor?.color?.colorId ||
-          selectedColor?.colorId,
+        selectedColor?.color?.colorId ||
+        selectedColor?.colorId,
       );
       if (colorId) item.selectedColorId = colorId;
 
@@ -244,8 +244,8 @@ export default function ExchangeSelect() {
         const err = await res.json().catch(() => null);
         setError(
           err?.message ||
-            err?.Message ||
-            "Failed to create exchange order. Please try again.",
+          err?.Message ||
+          "Failed to create exchange order. Please try again.",
         );
       }
     } catch {
@@ -357,7 +357,7 @@ export default function ExchangeSelect() {
             Original Product (to be returned)
           </h4>
           <p style={{ margin: "2px 0", fontSize: "14px" }}>
-            <b>{originalItem.frameName}</b> — {fmt(originalItem.unitPrice)}₫ ×{" "}
+            <b>{originalItem.frameName}</b> — {fmt(originalItem.unitPrice)}$ ×{" "}
             {originalItem.quantity || 1}
           </p>
         </div>
@@ -536,7 +536,7 @@ export default function ExchangeSelect() {
                         color: "#6b7280",
                       }}
                     >
-                      Total paid: {fmt(originalPrice)}₫
+                      Total paid: {fmt(originalPrice)}$
                     </p>
                   </div>
                 )}
@@ -573,7 +573,7 @@ export default function ExchangeSelect() {
                       color: "#059669",
                     }}
                   >
-                    Frame price: {fmt(displayPrice)}₫
+                    Frame price: {fmt(displayPrice)}$
                   </p>
                 </div>
               </div>
@@ -618,8 +618,8 @@ export default function ExchangeSelect() {
                           color: "#6b7280",
                         }}
                       >
-                        Old product: {fmt(originalPrice)}₫ → New product:{" "}
-                        {fmt(newTotalPrice)}₫
+                        Old product: {fmt(originalPrice)}$ → New product:{" "}
+                        {fmt(newTotalPrice)}$
                       </p>
                     </div>
                     {priceDiff !== 0 && (
@@ -632,7 +632,7 @@ export default function ExchangeSelect() {
                         }}
                       >
                         {priceDiff > 0 ? "+" : "-"}
-                        {fmt(Math.abs(priceDiff))}₫
+                        {fmt(Math.abs(priceDiff))}$
                       </p>
                     )}
                   </div>
