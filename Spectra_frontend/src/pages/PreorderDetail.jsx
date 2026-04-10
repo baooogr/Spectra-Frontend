@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useExchangeRate } from "../api";
-import { formatPrice } from "../utils/validation";
 import DeliveryMap from "../components/DeliveryMap";
 
 export default function PreorderDetail() {
@@ -16,6 +15,21 @@ export default function PreorderDetail() {
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [showNotReceivedInfo, setShowNotReceivedInfo] = useState(false);
   const { rate: exchangeRate } = useExchangeRate();
+
+  // ⚡ Tạo hàm format riêng để chỉ hiển thị USD
+  const formatCurrency = (amount) => {
+    let val = Number(amount) || 0;
+    // Nếu số tiền > 10.000, khả năng cao là VND -> chia tỷ giá để ra USD
+    if (val > 10000) {
+      val = val / (exchangeRate || 25400);
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(val);
+  };
 
   useEffect(() => {
     const token =
@@ -72,12 +86,12 @@ export default function PreorderDetail() {
             }
           }
         } else if (res.status === 404) {
-          setError("Không tìm thấy đơn đặt trước này.");
+          setError("Pre-order not found.");
         } else {
-          setError(`Lỗi ${res.status} khi tải chi tiết.`);
+          setError(`Error ${res.status} while loading details.`);
         }
       } catch {
-        setError("Lỗi kết nối. Vui lòng thử lại.");
+        setError("Connection error. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -88,7 +102,7 @@ export default function PreorderDetail() {
   if (isLoading)
     return (
       <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
-        ⏳ Đang tải chi tiết đơn đặt trước...
+        ⏳ Loading pre-order details...
       </div>
     );
 
@@ -96,42 +110,42 @@ export default function PreorderDetail() {
     return (
       <div style={{ textAlign: "center", padding: "60px" }}>
         <h2 style={{ color: "#dc2626" }}>
-          {error || "Không tìm thấy đơn đặt trước"}
+          {error || "Pre-order not found"}
         </h2>
         <Link to="/orders" style={{ color: "#3b82f6" }}>
-          ← Quay lại lịch sử mua hàng
+          ← Back to order history
         </Link>
       </div>
     );
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleString("vi-VN") : "—");
+  const formatDate = (d) => (d ? new Date(d).toLocaleString("en-US") : "—");
 
   const getStatusBadge = (status) => {
     const s = status?.toLowerCase() || "";
     const map = {
-      pending: { text: "Chờ xác nhận", color: "#d97706", bg: "#fef3c7" },
-      confirmed: { text: "Đã xác nhận", color: "#059669", bg: "#d1fae5" },
-      processing: { text: "Đang xử lý", color: "#4338ca", bg: "#ede9fe" },
+      pending: { text: "Pending", color: "#d97706", bg: "#fef3c7" },
+      confirmed: { text: "Confirmed", color: "#059669", bg: "#d1fae5" },
+      processing: { text: "Processing", color: "#4338ca", bg: "#ede9fe" },
       // FIX: converted hiển thị "Đang xử lý" (linked order đang processing)
-      converted: { text: "Đang xử lý", color: "#4338ca", bg: "#ede9fe" },
+      converted: { text: "Processing", color: "#4338ca", bg: "#ede9fe" },
       awaiting_payment: {
-        text: "Chờ thanh toán",
+        text: "Awaiting Payment",
         color: "#f97316",
         bg: "#fff7ed",
       },
       awaitingpayment: {
-        text: "Chờ thanh toán",
+        text: "Awaiting Payment",
         color: "#f97316",
         bg: "#fff7ed",
       },
-      paid: { text: "Đã thanh toán", color: "#059669", bg: "#d1fae5" },
-      shipped: { text: "Đang giao hàng", color: "#7e22ce", bg: "#f3e8ff" },
-      delivered: { text: "Hoàn thành", color: "#059669", bg: "#d1fae5" },
-      completed: { text: "Hoàn thành", color: "#059669", bg: "#d1fae5" },
-      cancelled: { text: "Đã huỷ", color: "#dc2626", bg: "#fee2e2" },
+      paid: { text: "Paid", color: "#059669", bg: "#d1fae5" },
+      shipped: { text: "Delivering", color: "#7e22ce", bg: "#f3e8ff" },
+      delivered: { text: "Completed", color: "#059669", bg: "#d1fae5" },
+      completed: { text: "Completed", color: "#059669", bg: "#d1fae5" },
+      cancelled: { text: "Cancelled", color: "#dc2626", bg: "#fee2e2" },
     };
     const s2 = map[s] || {
-      text: status || "Không rõ",
+      text: status || "Unknown",
       color: "#6b7280",
       bg: "#f3f4f6",
     };
@@ -215,7 +229,7 @@ export default function PreorderDetail() {
     shippingAddress = matchOld[3];
   }
 
-  const orderNote = order.note || "Không có";
+  const orderNote = order.note || "None";
 
   // ===== DANH SÁCH SẢN PHẨM =====
   const itemsList = (
@@ -232,7 +246,7 @@ export default function PreorderDetail() {
       (sum, item) =>
         sum +
         (item.orderPrice || item.preorderPrice || item.unitPrice || 0) *
-          (item.quantity || 1),
+        (item.quantity || 1),
       0,
     );
 
@@ -255,7 +269,7 @@ export default function PreorderDetail() {
           marginBottom: "20px",
         }}
       >
-        ← Lịch sử mua hàng
+        ← Order History
       </Link>
 
       <div
@@ -294,12 +308,12 @@ export default function PreorderDetail() {
               🚀 PRE-ORDER
             </span>
             <h2 style={{ margin: "8px 0 0", fontSize: "22px" }}>
-              Chi Tiết Đơn Đặt Trước
+              Pre-order Details
             </h2>
             <p
               style={{ margin: "6px 0 0", color: "#6b7280", fontSize: "14px" }}
             >
-              Mã đơn:{" "}
+              Code:{" "}
               <b style={{ color: "#1e40af" }}>
                 #{order.preorderId || order.id}
               </b>
@@ -329,7 +343,7 @@ export default function PreorderDetail() {
                 color: "#1e40af",
               }}
             >
-              📦 Bạn đã nhận được đơn hàng chưa?
+              📦 Have you received your order?
             </p>
             <div
               style={{
@@ -352,7 +366,7 @@ export default function PreorderDetail() {
                   cursor: "pointer",
                 }}
               >
-                ✅ Đã nhận
+                ✅ Received
               </button>
               <button
                 onClick={() => setShowNotReceivedInfo(true)}
@@ -367,7 +381,7 @@ export default function PreorderDetail() {
                   cursor: "pointer",
                 }}
               >
-                ❌ Chưa nhận
+                ❌ Not Received
               </button>
             </div>
 
@@ -382,7 +396,7 @@ export default function PreorderDetail() {
                 }}
               >
                 <p style={{ margin: 0, fontSize: "14px", color: "#991b1b" }}>
-                  Nếu bạn chưa nhận được hàng, vui lòng liên hệ tổng đài hỗ trợ:
+                  If you haven't received your package, please contact support:
                 </p>
                 <p
                   style={{
@@ -401,7 +415,7 @@ export default function PreorderDetail() {
                     color: "#78716c",
                   }}
                 >
-                  Thời gian hỗ trợ: 8:00 – 21:00 hàng ngày
+                  Support hours: 8:00 AM – 9:00 PM daily
                 </p>
               </div>
             )}
@@ -436,21 +450,21 @@ export default function PreorderDetail() {
                 paddingBottom: "8px",
               }}
             >
-              Thông tin đơn đặt trước
+              Order Information
             </h4>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Ngày đặt:</b> {formatDate(order.createdAt || order.orderDate)}
+              <b>Order Date:</b> {formatDate(order.createdAt || order.orderDate)}
             </p>
             {order.expectedDate && (
               <p style={{ margin: "6px 0", fontSize: "14px" }}>
-                <b>Dự kiến giao:</b> {formatDate(order.expectedDate)}
+                <b>Est. Delivery:</b> {formatDate(order.expectedDate)}
               </p>
             )}
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Thanh toán:</b> VNPay (100%)
+              <b>Payment:</b> VNPay (100% Upfront)
             </p>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Ghi chú:</b> {orderNote}
+              <b>Notes:</b> {orderNote}
             </p>
           </div>
 
@@ -473,13 +487,13 @@ export default function PreorderDetail() {
                 paddingBottom: "8px",
               }}
             >
-              Thông tin giao hàng
+              Shipping Information
             </h4>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Người nhận:</b> {receiverName}
+              <b>Receiver:</b> {receiverName}
             </p>
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Số điện thoại:</b> {receiverPhone}
+              <b>Phone:</b> {receiverPhone}
             </p>
             {receiverEmail !== "—" && (
               <p style={{ margin: "6px 0", fontSize: "14px" }}>
@@ -487,7 +501,7 @@ export default function PreorderDetail() {
               </p>
             )}
             <p style={{ margin: "6px 0", fontSize: "14px" }}>
-              <b>Địa chỉ giao hàng:</b> {shippingAddress}
+              <b>Address:</b> {shippingAddress}
             </p>
           </div>
         </div>
@@ -559,15 +573,15 @@ export default function PreorderDetail() {
 
           const steps = [
             {
-              label: "Đơn hàng đã đặt",
-              desc: "Đơn đặt trước đã được chuyển thành đơn hàng",
+              label: "Order Placed",
+              desc: "Pre-order has been successfully converted to order",
               time: createdAt,
               done: statusIdx >= 0,
               active: statusIdx === 0,
             },
             {
-              label: "Đã xác nhận",
-              desc: "Cửa hàng đã xác nhận đơn hàng",
+              label: "Confirmed",
+              desc: "Store has confirmed your order",
               time: createdAt
                 ? new Date(createdAt.getTime() + 2 * 3600000)
                 : null,
@@ -575,27 +589,27 @@ export default function PreorderDetail() {
               active: statusIdx === 1,
             },
             {
-              label: "Đang chuẩn bị hàng",
-              desc: "Sản phẩm đang được đóng gói và chuẩn bị giao",
+              label: "Preparing Items",
+              desc: "Items are being packed and prepared for shipping",
               time: null,
               done: statusIdx >= 2,
               active: statusIdx === 2,
             },
             {
               label: shipped
-                ? `Đã giao cho ${shippingCarrier || "hãng vận chuyển"}`
-                : "Chờ giao cho hãng vận chuyển",
+                ? `Handed over to ${shippingCarrier || "carrier"}`
+                : "Waiting for carrier pickup",
               desc: hasTracking
-                ? `Mã vận đơn: ${trackingNumber}`
-                : "Đơn hàng sẽ được bàn giao cho đơn vị vận chuyển",
+                ? `Tracking number: ${trackingNumber}`
+                : "Order will be handed over to the shipping provider",
               time: shipped,
               done: statusIdx >= 3,
               active:
                 statusIdx === 3 && (!inTransitTime || now < inTransitTime),
             },
             {
-              label: "Đang vận chuyển",
-              desc: "Đang trên đường đến địa chỉ của bạn",
+              label: "In Transit",
+              desc: "Package is on the way to your address",
               time:
                 inTransitTime && now >= inTransitTime ? inTransitTime : null,
               done:
@@ -608,8 +622,8 @@ export default function PreorderDetail() {
                 (!outForDeliveryTime || now < outForDeliveryTime),
             },
             {
-              label: "Đang giao hàng",
-              desc: "Shipper đang trên đường giao đến bạn",
+              label: "Out for Delivery",
+              desc: "Shipper is delivering the package to you",
               time:
                 outForDeliveryTime && now >= outForDeliveryTime
                   ? outForDeliveryTime
@@ -625,10 +639,10 @@ export default function PreorderDetail() {
                 now >= outForDeliveryTime,
             },
             {
-              label: "Giao hàng thành công",
+              label: "Delivered",
               desc: confirmedAt
-                ? "Người nhận đã xác nhận"
-                : "Đơn hàng đã được giao",
+                ? "Receiver has confirmed delivery"
+                : "Package has been successfully delivered",
               time: deliveredDate,
               done: statusIdx >= 4,
               active: statusIdx === 4 && !confirmedAt,
@@ -637,8 +651,8 @@ export default function PreorderDetail() {
 
           if (confirmedAt || statusIdx >= 4) {
             steps.push({
-              label: "Đã xác nhận nhận hàng",
-              desc: "Bạn đã xác nhận nhận được đơn hàng",
+              label: "Delivery Confirmed",
+              desc: "You have confirmed receiving the package",
               time: confirmedAt,
               done: !!confirmedAt,
               active: false,
@@ -652,13 +666,13 @@ export default function PreorderDetail() {
 
           const fmtTime = (d) =>
             d
-              ? new Date(d).toLocaleString("vi-VN", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+              ? new Date(d).toLocaleString("en-US", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
               : null;
 
           return (
@@ -682,7 +696,7 @@ export default function PreorderDetail() {
                 }}
               >
                 <h4 style={{ margin: 0, fontSize: "17px", color: "#1e293b" }}>
-                  Lộ trình đơn hàng
+                  Delivery Timeline
                 </h4>
                 {estimated && statusIdx < 4 && (
                   <span
@@ -696,8 +710,8 @@ export default function PreorderDetail() {
                       fontWeight: 600,
                     }}
                   >
-                    Dự kiến:{" "}
-                    {new Date(estimated).toLocaleDateString("vi-VN", {
+                    Expected:{" "}
+                    {new Date(estimated).toLocaleDateString("en-US", {
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
@@ -766,7 +780,7 @@ export default function PreorderDetail() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      Theo dõi trên {shippingCarrier || "website"}
+                      Track on {shippingCarrier || "website"}
                     </a>
                   )}
                 </div>
@@ -904,15 +918,15 @@ export default function PreorderDetail() {
                 >
                   <span>
                     {linkedOrder.shippingMethod === "express"
-                      ? "Giao hàng nhanh"
-                      : "Giao hàng tiêu chuẩn"}
+                      ? "Express Delivery"
+                      : "Standard Delivery"}
                   </span>
                   {linkedOrder.shippingFee !== null &&
                     linkedOrder.shippingFee !== undefined && (
                       <span>
-                        Phí ship:{" "}
+                        Shipping Fee:{" "}
                         {linkedOrder.shippingFee === 0
-                          ? "Miễn phí"
+                          ? "Free"
                           : `$${linkedOrder.shippingFee}`}
                       </span>
                     )}
@@ -932,7 +946,7 @@ export default function PreorderDetail() {
             color: "#1e40af",
           }}
         >
-          Sản phẩm đặt trước
+          Pre-order Items
         </h3>
 
         {itemsList.length === 0 ? (
@@ -944,12 +958,12 @@ export default function PreorderDetail() {
               padding: "20px 0",
             }}
           >
-            Không có thông tin sản phẩm.
+            No product information found.
           </p>
         ) : (
           <div style={{ marginBottom: "24px" }}>
             {itemsList.map((item, index) => {
-              const frameName = item.frame?.frameName || "Gọng kính";
+              const frameName = item.frame?.frameName || "Eyeglass frame";
               const frameColor =
                 item.selectedColor || item.frame?.color || null;
               const qty = item.quantity || 1;
@@ -1005,7 +1019,7 @@ export default function PreorderDetail() {
                             }}
                           >
                             {" "}
-                            - Màu: {frameColor}
+                            - Color: {frameColor}
                           </span>
                         )}
                       </p>
@@ -1017,7 +1031,7 @@ export default function PreorderDetail() {
                             color: "#6b7280",
                           }}
                         >
-                          Thương hiệu: {brand}
+                          Brand: {brand}
                         </p>
                       )}
                       <p
@@ -1027,7 +1041,7 @@ export default function PreorderDetail() {
                           color: "#374151",
                         }}
                       >
-                        Số lượng: <b>x{qty}</b>
+                        Quantity: <b>x{qty}</b>
                       </p>
                     </div>
                     <div
@@ -1039,7 +1053,7 @@ export default function PreorderDetail() {
                         textAlign: "right",
                       }}
                     >
-                      {formatPrice(unitPrice)}
+                      {formatCurrency(unitPrice)}
                     </div>
                   </div>
 
@@ -1066,7 +1080,7 @@ export default function PreorderDetail() {
                             fontWeight: "500",
                           }}
                         >
-                          🔭 Tròng kính: {lensType || "Không có"}
+                          🔭 Lens type: {lensType || "None"}
                           {lensFeature ? ` — ${lensFeature}` : ""}
                         </p>
                         {prescriptionUrl && (
@@ -1083,7 +1097,7 @@ export default function PreorderDetail() {
                               textDecoration: "underline",
                             }}
                           >
-                            👁️ Xem Toa thuốc / Đơn kính
+                            👁️ View Prescription
                           </a>
                         )}
                       </div>
@@ -1111,7 +1125,7 @@ export default function PreorderDetail() {
                             color: "#7c3aed",
                           }}
                         >
-                          Đơn kính (Prescription)
+                          Prescription Details
                         </p>
                         <div
                           style={{
@@ -1123,10 +1137,10 @@ export default function PreorderDetail() {
                           }}
                         >
                           <div>
-                            <b>Mắt phải (OD):</b>
+                            <b>Right Eye (OD):</b>
                           </div>
                           <div>
-                            <b>Mắt trái (OS):</b>
+                            <b>Left Eye (OS):</b>
                           </div>
                           <div>
                             SPH: {prescription.sphereRight ?? "—"} | CYL:{" "}
@@ -1147,27 +1161,27 @@ export default function PreorderDetail() {
                               color: "#374151",
                             }}
                           >
-                            <b>PD (Khoảng cách đồng tử):</b>{" "}
+                            <b>PD (Pupillary Distance):</b>{" "}
                             {prescription.pupillaryDistance} mm
                           </p>
                         )}
                         {(prescription.doctorName ||
                           prescription.clinicName) && (
-                          <p
-                            style={{
-                              margin: "4px 0 0",
-                              fontSize: "12px",
-                              color: "#6b7280",
-                            }}
-                          >
-                            {prescription.doctorName &&
-                              `BS. ${prescription.doctorName}`}
-                            {prescription.doctorName &&
-                              prescription.clinicName &&
-                              " — "}
-                            {prescription.clinicName}
-                          </p>
-                        )}
+                            <p
+                              style={{
+                                margin: "4px 0 0",
+                                fontSize: "12px",
+                                color: "#6b7280",
+                              }}
+                            >
+                              {prescription.doctorName &&
+                                `Dr. ${prescription.doctorName}`}
+                              {prescription.doctorName &&
+                                prescription.clinicName &&
+                                " — "}
+                              {prescription.clinicName}
+                            </p>
+                          )}
                         {prescription.expirationDate && (
                           <p
                             style={{
@@ -1175,17 +1189,17 @@ export default function PreorderDetail() {
                               fontSize: "12px",
                               color:
                                 new Date(prescription.expirationDate) <
-                                new Date()
+                                  new Date()
                                   ? "#dc2626"
                                   : "#6b7280",
                             }}
                           >
-                            Hạn sử dụng:{" "}
+                            Expiration Date:{" "}
                             {new Date(
                               prescription.expirationDate,
-                            ).toLocaleDateString("vi-VN")}
+                            ).toLocaleDateString("en-US")}
                             {new Date(prescription.expirationDate) <
-                              new Date() && " (Đã hết hạn)"}
+                              new Date() && " (Expired)"}
                           </p>
                         )}
                       </div>
@@ -1201,7 +1215,7 @@ export default function PreorderDetail() {
                       fontWeight: "bold",
                     }}
                   >
-                    Tạm tính: {formatPrice(unitPrice * qty)}
+                    Subtotal: {formatCurrency(unitPrice * qty)}
                   </div>
                 </div>
               );
@@ -1220,9 +1234,9 @@ export default function PreorderDetail() {
             border: "1px solid #bfdbfe",
           }}
         >
-          Tổng cộng:{" "}
+          Total Payment:{" "}
           <strong style={{ color: "#1e40af", fontSize: "26px" }}>
-            {formatPrice(totalAmount)}
+            {formatCurrency(totalAmount)}
           </strong>
         </div>
 
@@ -1252,7 +1266,7 @@ export default function PreorderDetail() {
                     color: "#9a3412",
                   }}
                 >
-                  Có vấn đề với đơn đặt trước?
+                  Issue with your pre-order?
                 </p>
                 <p
                   style={{
@@ -1261,8 +1275,7 @@ export default function PreorderDetail() {
                     color: "#78716c",
                   }}
                 >
-                  Bạn có thể yêu cầu đổi hàng (trong 7 ngày kể từ khi nhận
-                  hàng).
+                  You can request an exchange (within 7 days of receiving).
                 </p>
               </div>
               <Link
@@ -1287,7 +1300,7 @@ export default function PreorderDetail() {
                   fontSize: "14px",
                 }}
               >
-                Yêu cầu đổi hàng
+                Request Exchange
               </Link>
             </div>
           )}
