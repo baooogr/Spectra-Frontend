@@ -1193,7 +1193,7 @@ export default function ShippingPage() {
                   className="btn-confirm"
                   disabled={isSubmittingManual}
                 >
-                  {isSubmittingManual ? "Đang lưu..." : "Xác Nhận"}
+                  {isSubmittingManual ? "Saving..." : "Confirm"}
                 </button>
               </div>
             </form>
@@ -1355,7 +1355,7 @@ export default function ShippingPage() {
                     type="text"
                     value={destAddress}
                     onChange={(e) => setDestAddress(e.target.value)}
-                    placeholder="VD: 123 Nguyễn Văn Linh"
+                    placeholder="Ex: 123 Nguyễn Văn Linh"
                   />
                 </div>
 
@@ -1421,7 +1421,7 @@ export default function ShippingPage() {
                     onClick={handleGhnGetServices}
                     disabled={ghnLoading}
                   >
-                    {ghnLoading ? "Đang tải..." : "Chọn dịch vụ →"}
+                    {ghnLoading ? "Loading..." : "Select service →"}
                   </button>
                 </div>
               </div>
