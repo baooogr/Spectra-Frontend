@@ -1,219 +1,493 @@
+// Import React và các hook cần dùng
+// - useState: tạo state trong component
+// - useEffect: chạy side effect khi component mount / state thay đổi
+// - useContext: lấy dữ liệu từ Context API
 import React, { useState, useEffect, useContext } from "react";
+
+// Import các hook / component từ react-router-dom
+// - useParams: lấy param trên URL, ở đây là id complaint
+// - Link: điều hướng bằng thẻ link trong React Router
+// - useNavigate: chuyển trang bằng code
 import { useParams, Link, useNavigate } from "react-router-dom";
+
+// Import UserContext để lấy thông tin user đang đăng nhập
 import { UserContext } from "../context/UserContext";
+
+// Import modal chọn/cấu hình lens (tròng kính)
+// Component này được tái sử dụng để user cấu hình kính cho gọng mới
 import LensSelectionModal from "../components/ui/LensSelectionModal";
 
+
+// ==========================
+// KHAI BÁO CÁC API ENDPOINT
+// ==========================
+
+// API complaints
+// Đây là API backend dùng để:
+// - lấy chi tiết complaint
+// - tạo exchange order từ complaint
 const API_COMPLAINTS = "https://myspectra.runasp.net/api/Complaints";
+
+// API frames
+// Đây là API backend dùng để:
+// - lấy danh sách gọng kính
+// - lấy chi tiết 1 gọng kính
+// - lấy các loại lens hỗ trợ cho gọng kính đó
 const API_FRAMES = "https://myspectra.runasp.net/api/Frames";
 
+
+// Hàm format số theo kiểu Việt Nam
+// Ví dụ: 1000000 -> "1.000.000"
+// Nếu n không tồn tại thì trả về "—"
 const fmt = (n) => n?.toLocaleString("vi-VN") ?? "—";
 
+
+// Export component mặc định của file
 export default function ExchangeSelect() {
+  // Lấy id từ URL
+  // Ví dụ route là /complaints/:id/exchange thì id ở đây chính là complaint id
   const { id } = useParams();
+
+  // Lấy user từ UserContext
+  // Thường context này được set sau khi user đăng nhập
   const { user } = useContext(UserContext);
+
+  // Hook điều hướng trang
   const navigate = useNavigate();
+
+  // Lấy token đăng nhập
+  // Ưu tiên lấy từ user trong Context
+  // Nếu context chưa có thì fallback sang localStorage
   const token = user?.token || JSON.parse(localStorage.getItem("user"))?.token;
 
+
+  // ==========================
+  // CÁC STATE CHÍNH CỦA TRANG
+  // ==========================
+
+  // complaint hiện tại (chi tiết khiếu nại / yêu cầu đổi)
   const [complaint, setComplaint] = useState(null);
+
+  // danh sách gọng kính để user chọn đổi sang
   const [frames, setFrames] = useState([]);
+
+  // trạng thái loading chung của trang lúc mới vào
   const [loading, setLoading] = useState(true);
 
-  // Selected frame & its full details
+
+  // ==========================
+  // STATE LIÊN QUAN ĐẾN FRAME
+  // ==========================
+
+  // gọng mà user đang chọn trên grid
   const [selectedFrame, setSelectedFrame] = useState(null);
+
+  // chi tiết đầy đủ của gọng đang chọn
+  // vì list frame có thể chỉ là dữ liệu rút gọn
   const [frameDetail, setFrameDetail] = useState(null);
+
+  // danh sách lens types mà gọng này hỗ trợ
   const [supportedLensTypes, setSupportedLensTypes] = useState([]);
+
+  // màu user đang chọn cho gọng
   const [selectedColor, setSelectedColor] = useState(null);
+
+  // loading riêng cho phần tải chi tiết frame
   const [loadingDetail, setLoadingDetail] = useState(false);
 
-  // Lens config (filled by the modal)
-  const [lensConfig, setLensConfig] = useState(null); // { lensIncluded, finalPrice, lensDetails }
+
+  // ==========================
+  // STATE LIÊN QUAN ĐẾN LENS
+  // ==========================
+
+  // lensConfig sẽ được trả về từ modal cấu hình lens
+  // Ví dụ object có dạng:
+  // {
+  //   lensIncluded: true/false,
+  //   finalPrice: ...,
+  //   lensDetails: {
+  //     typeId,
+  //     featureId,
+  //     prescriptionId
+  //   }
+  // }
+  const [lensConfig, setLensConfig] = useState(null);
+
+  // trạng thái mở / đóng modal cấu hình lens
   const [isLensModalOpen, setIsLensModalOpen] = useState(false);
 
-  // Shipping form
+
+  // ==========================
+  // STATE FORM GIAO HÀNG
+  // ==========================
+
+  // số lượng sản phẩm muốn đổi
   const [quantity, setQuantity] = useState(1);
+
+  // địa chỉ giao hàng
   const [address, setAddress] = useState("");
+
+  // họ tên người nhận
   const [fullName, setFullName] = useState("");
+
+  // số điện thoại người nhận
   const [phone, setPhone] = useState("");
+
+  // trạng thái đang submit form tạo đơn đổi
   const [submitting, setSubmitting] = useState(false);
+
+  // message lỗi để hiển thị lên UI
   const [error, setError] = useState("");
+
+  // keyword tìm kiếm frame
   const [search, setSearch] = useState("");
 
+
+  // ==========================================================
+  // useEffect chạy khi component mount hoặc khi id / token thay đổi
+  // ==========================================================
   useEffect(() => {
+    // Nếu chưa có token => chưa đăng nhập => chuyển về trang login
     if (!token) {
       navigate("/login");
       return;
     }
+
+    // Tải dữ liệu complaint + danh sách frame
     loadData();
+
+    // Tải profile user để autofill tên, sđt, địa chỉ
     fetchUserProfile();
   }, [id, token]);
+  // id đổi -> tải lại complaint mới
+  // token đổi -> tải lại dữ liệu theo user mới
 
+
+  // ==========================================
+  // HÀM LẤY PROFILE USER ĐANG ĐĂNG NHẬP
+  // ==========================================
   const fetchUserProfile = async () => {
     try {
+      // Gọi API lấy profile của user hiện tại
+      // API: GET /api/Users/me
       const res = await fetch("https://myspectra.runasp.net/api/Users/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Nếu gọi thành công
       if (res.ok) {
+        // Parse JSON response
         const data = await res.json();
+
+        // Gán dữ liệu vào form để user không cần nhập lại
         setFullName(data.fullName || "");
         setPhone(data.phone || "");
         setAddress(data.address || "");
       }
     } catch {
+      // Nếu lỗi mạng / lỗi bất kỳ thì bỏ qua, không chặn trang
       /* ignore */
     }
   };
 
+
+  // ==========================================
+  // HÀM TẢI DỮ LIỆU BAN ĐẦU CHO TRANG
+  // - complaint detail
+  // - danh sách frame
+  // ==========================================
   const loadData = async () => {
     try {
+      // Gọi song song 2 API để tiết kiệm thời gian
       const [cRes, fRes] = await Promise.all([
+        // API lấy chi tiết complaint theo id
         fetch(`${API_COMPLAINTS}/${id}`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         }),
+
+        // API lấy danh sách frames
+        // page=1&pageSize=100 nghĩa là lấy 100 item đầu tiên
         fetch(`${API_FRAMES}?page=1&pageSize=100`),
       ]);
 
+      // ==========================
+      // XỬ LÝ KẾT QUẢ COMPLAINT
+      // ==========================
       if (cRes.ok) {
+        // Parse complaint JSON
         const c = await cRes.json();
+
+        // Chuẩn hóa status về chữ thường để dễ so sánh
         const status = (c.status || "").toLowerCase();
+
+        // Chuẩn hóa requestType về chữ thường
         const type = (c.requestType || "").toLowerCase();
+
+        // Nếu complaint không phải loại exchange thì chặn luôn
         if (type !== "exchange") {
           setError("This complaint is not an Exchange type.");
+
+        // Nếu complaint đã có exchangeOrderId rồi thì nghĩa là đơn đổi đã được tạo
         } else if (c.exchangeOrderId) {
           setError("An exchange order has already been created for this complaint.");
+
+        // Chỉ cho phép khi complaint đã được duyệt
+        // Ở đây cho phép 2 trạng thái:
+        // - approved
+        // - in_progress
         } else if (status !== "approved" && status !== "in_progress") {
           setError("The request has not been approved yet. Please wait for staff to process it.");
+
+        // Nếu mọi điều kiện đều hợp lệ thì lưu complaint vào state
         } else {
           setComplaint(c);
         }
       } else {
+        // Nếu API complaint trả về lỗi
         setError("Unable to load complaint information.");
       }
 
+      // ==========================
+      // XỬ LÝ KẾT QUẢ FRAME LIST
+      // ==========================
       if (fRes.ok) {
+        // Parse JSON
         const fData = await fRes.json();
+
+        // Có backend trả về dạng { items: [...] }
+        // Có backend trả về trực tiếp [...]
+        // Nên code này xử lý cả 2 trường hợp
         const items = fData.items || fData || [];
+
+        // Tạo Set để loại trùng tên frame
         const seen = new Set();
+
+        // Lọc ra danh sách frame unique theo frameName
         const unique = items.filter((f) => {
+          // Nếu đã gặp tên frame này rồi thì bỏ qua
           if (seen.has(f.frameName)) return false;
+
+          // Nếu chưa gặp thì thêm vào Set
           seen.add(f.frameName);
           return true;
         });
+
+        // Lưu danh sách đã lọc vào state
         setFrames(unique);
       }
     } catch {
+      // Nếu có lỗi mạng / server / fetch
       setError("Connection error. Please try again.");
     }
+
+    // Dù thành công hay thất bại cũng tắt loading chung
     setLoading(false);
   };
 
-  // When user clicks a frame in the grid, fetch its full detail
+
+  // ==================================================
+  // HÀM XỬ LÝ KHI USER CHỌN 1 FRAME TRÊN GRID
+  // - reset lựa chọn cũ
+  // - gọi API lấy chi tiết frame
+  // - gọi API lấy lens types hỗ trợ
+  // ==================================================
   const handleSelectFrame = async (frame) => {
+    // Lưu frame user vừa click
     setSelectedFrame(frame);
+
+    // Reset màu cũ vì frame mới có thể có màu khác
     setSelectedColor(null);
+
+    // Reset lens config cũ vì frame mới cần cấu hình lại
     setLensConfig(null);
+
+    // Xóa frame detail cũ
     setFrameDetail(null);
+
+    // Xóa lens type cũ
     setSupportedLensTypes([]);
+
+    // Xóa lỗi cũ
     setError("");
+
+    // Bật loading detail
     setLoadingDetail(true);
 
+    // Lấy id của frame
+    // Có chỗ backend dùng frameId, có chỗ dùng id
     const frameId = frame.frameId || frame.id;
+
     try {
+      // Gọi song song:
+      // 1. API lấy chi tiết frame
+      // 2. API lấy lens types hỗ trợ
       const [detailRes, lensRes] = await Promise.all([
         fetch(`${API_FRAMES}/${frameId}`),
         fetch(`${API_FRAMES}/${frameId}/lens-types`),
       ]);
 
+      // Nếu lấy chi tiết frame thành công
       if (detailRes.ok) {
         const detail = await detailRes.json();
+
+        // Lưu chi tiết frame
         setFrameDetail(detail);
-        // Auto-select first color
+
+        // Nếu frame có danh sách màu thì auto chọn màu đầu tiên
         if (detail.frameColors?.length > 0) {
           setSelectedColor(detail.frameColors[0]);
         }
       }
+
+      // Nếu lấy lens types thành công
       if (lensRes.ok) {
         const lensData = await lensRes.json();
+
+        // supportedLensTypes là field backend trả về
         setSupportedLensTypes(lensData.supportedLensTypes || []);
       }
     } catch {
+      // Nếu lỗi thì bỏ qua
       /* ignore */
     }
+
+    // Tắt loading detail sau khi fetch xong
     setLoadingDetail(false);
   };
 
+
+  // ==========================================
+  // HÀM NHẬN KẾT QUẢ TỪ MODAL CẤU HÌNH LENS
+  // ==========================================
   const handleLensConfirm = (config) => {
+    // Lưu cấu hình lens user đã chọn
     setLensConfig(config);
+
+    // Đóng modal lại
     setIsLensModalOpen(false);
   };
 
+
+  // ==========================================
+  // HÀM SUBMIT TẠO EXCHANGE ORDER
+  // ==========================================
   const handleSubmit = async () => {
+    // Validate: chưa chọn frame mới
     if (!selectedFrame) {
       setError("Please select a replacement product.");
       return;
     }
+
+    // Nếu frame có màu mà user chưa chọn màu
     if (frameDetail?.frameColors?.length > 0 && !selectedColor) {
       setError("Please select a color.");
       return;
     }
+
+    // Bắt buộc phải cấu hình lens trước khi submit
     if (!lensConfig) {
       setError(
         "Please configure the lenses (click the 'Configure Lenses' button).",
       );
       return;
     }
+
+    // Validate tên người nhận
     if (!fullName.trim()) {
       setError("Please enter the recipient's full name.");
       return;
     }
+
+    // Validate số điện thoại
     if (!phone.trim()) {
       setError("Please enter the phone number.");
       return;
     }
+
+    // Validate địa chỉ
     if (!address.trim()) {
       setError("Please enter the shipping address.");
       return;
     }
+
+    // Bật trạng thái submitting để disable nút / đổi text nút
     setSubmitting(true);
+
+    // Xóa lỗi cũ
     setError("");
 
     try {
+      // Lấy frameId chuẩn từ frameDetail hoặc selectedFrame
+      // String(...) để đảm bảo gửi lên backend dạng string
       const frameId = String(
         frameDetail?.id || frameDetail?.frameId || selectedFrame.frameId,
       );
+
+      // Tạo item cơ bản gửi lên payload
       const item = { frameId, quantity };
 
-      // Color
+      // ==========================================
+      // HÀM KIỂM TRA GIÁ TRỊ GUID HỢP LỆ
+      // ==========================================
       const getValidGuid = (val) => {
+        // Nếu không có giá trị hoặc giá trị rỗng / null / undefined dạng string
+        // thì trả về undefined để không đính vào payload
         if (!val || val === "null" || val === "undefined" || val === "")
           return undefined;
+
+        // Nếu hợp lệ thì ép thành string
         return String(val);
       };
+
+      // ==========================================
+      // THÊM selectedColorId vào item nếu có
+      // ==========================================
       const colorId = getValidGuid(
         selectedColor?.color?.id ||
           selectedColor?.color?.colorId ||
           selectedColor?.colorId,
       );
+
+      // Chỉ gắn selectedColorId nếu colorId hợp lệ
       if (colorId) item.selectedColorId = colorId;
 
-      // Lens
+      // ==========================================
+      // THÊM THÔNG TIN LENS VÀO item nếu user chọn lens
+      // ==========================================
       if (lensConfig?.lensIncluded && lensConfig.lensDetails) {
+        // Lấy object lensDetails cho ngắn gọn
         const ld = lensConfig.lensDetails;
+
+        // Kiểm tra từng id hợp lệ
         const validTypeId = getValidGuid(ld.typeId);
         const validFeatureId = getValidGuid(ld.featureId);
         const validPrescriptionId = getValidGuid(ld.prescriptionId);
+
+        // Nếu có thì thêm vào item
         if (validTypeId) item.lensTypeId = validTypeId;
         if (validFeatureId) item.featureId = validFeatureId;
         if (validPrescriptionId) item.prescriptionId = validPrescriptionId;
       }
 
+      // ==========================================
+      // TẠO PAYLOAD GỬI LÊN BACKEND
+      // ==========================================
       const payload = {
+        // Gộp tên + số điện thoại + địa chỉ thành 1 chuỗi shippingAddress
+        // Ví dụ: [Nguyen Van A - 0901234567] 123 ABC Street
         shippingAddress: `[${fullName.trim()} - ${phone.trim()}] ${address.trim()}`,
+
+        // Backend nhận danh sách items
         items: [item],
       };
 
+      // ==========================================
+      // GỌI API TẠO EXCHANGE ORDER
+      // API: POST /api/Complaints/{id}/create-exchange-order
+      // ==========================================
       const res = await fetch(`${API_COMPLAINTS}/${id}/create-exchange-order`, {
         method: "POST",
         headers: {
@@ -223,25 +497,49 @@ export default function ExchangeSelect() {
         body: JSON.stringify(payload),
       });
 
+      // Nếu tạo đơn thành công
       if (res.ok) {
+        // Parse JSON, nếu parse lỗi thì trả về null
         const data = await res.json().catch(() => null);
+
+        // Tổng tiền đơn đổi
         const exchangeTotal = data?.exchangeOrderTotal;
+
+        // Giá sản phẩm gốc
         const origPrice = data?.originalItemPrice;
+
+        // Message thành công mặc định
         let msg = "Replacement order has been created successfully!";
+
+        // Nếu backend có trả về 2 giá trị để so sánh
         if (exchangeTotal != null && origPrice != null) {
+          // Tính chênh lệch giá
           const diff = exchangeTotal - origPrice;
+
+          // Nếu sản phẩm mới đắt hơn
           if (diff > 0) {
             msg += `\n\nThe new product is more expensive by ${fmt(diff)}₫. You need to pay the difference.`;
+
+          // Nếu sản phẩm mới rẻ hơn
           } else if (diff < 0) {
             msg += `\n\nThe new product is cheaper by ${fmt(Math.abs(diff))}₫. The difference will be refunded to you.`;
+
+          // Nếu bằng giá
           } else {
             msg += "\n\nThe product prices are equivalent, so there is no price difference.";
           }
         }
+
+        // Hiển thị thông báo
         alert(msg);
+
+        // Chuyển về trang complaint detail
         navigate(`/complaints/${id}`);
       } else {
+        // Nếu backend trả về lỗi
         const err = await res.json().catch(() => null);
+
+        // Ưu tiên đọc message từ backend
         setError(
           err?.message ||
             err?.Message ||
@@ -249,17 +547,29 @@ export default function ExchangeSelect() {
         );
       }
     } catch {
+      // Nếu lỗi mạng / fetch lỗi
       setError("Connection error. Please try again.");
     }
+
+    // Tắt trạng thái submitting
     setSubmitting(false);
   };
 
+
+  // ==========================================
+  // CÁC NHÁNH RENDER SỚM
+  // ==========================================
+
+  // Nếu đang loading toàn trang
   if (loading)
     return (
       <div style={{ textAlign: "center", padding: "60px", fontSize: "16px" }}>
         Loading...
       </div>
     );
+
+  // Nếu có lỗi và chưa có complaint hợp lệ
+  // tức là trang không thể tiếp tục dùng được
   if (error && !complaint)
     return (
       <div style={{ textAlign: "center", padding: "60px" }}>
@@ -270,24 +580,54 @@ export default function ExchangeSelect() {
       </div>
     );
 
+
+  // ==========================================
+  // BIẾN PHỤC VỤ HIỂN THỊ / TÍNH TOÁN
+  // ==========================================
+
+  // Lấy item gốc từ complaint
   const originalItem = complaint?.originalItem;
+
+  // Lọc danh sách frame theo text search
   const filteredFrames = frames.filter(
     (f) => !search || f.frameName?.toLowerCase().includes(search.toLowerCase()),
   );
+
+  // Chi phí cộng thêm của màu đang chọn
   const colorExtraCost = selectedColor?.colorExtraCost || 0;
+
+  // Giá hiển thị của frame mới
+  // ưu tiên:
+  // - frameDetail.basePrice
+  // - selectedFrame.basePrice
+  // - selectedFrame.price
+  // rồi cộng thêm tiền màu
   const displayPrice =
     (frameDetail?.basePrice ||
       selectedFrame?.basePrice ||
       selectedFrame?.price ||
       0) + colorExtraCost;
 
-  // Price comparison
+  // ==========================================
+  // SO SÁNH GIÁ CŨ VÀ GIÁ MỚI
+  // ==========================================
+
+  // Tổng giá sản phẩm gốc = đơn giá * số lượng
   const originalPrice =
     (originalItem?.unitPrice || 0) * (originalItem?.quantity || 1);
+
+  // Tổng giá sản phẩm mới
+  // chỉ tính khi đã có lensConfig
   const newTotalPrice = lensConfig ? lensConfig.finalPrice * quantity : null;
+
+  // Chênh lệch giá mới - giá cũ
   const priceDiff =
     newTotalPrice !== null ? newTotalPrice - originalPrice : null;
 
+
+  // ==========================================
+  // PHẦN GIAO DIỆN JSX CHÍNH
+  // ==========================================
   return (
     <div
       style={{
@@ -297,7 +637,14 @@ export default function ExchangeSelect() {
         fontFamily: "sans-serif",
       }}
     >
-      {/* Lens modal — reuses the existing LensSelectionModal */}
+      {/* 
+        Modal cấu hình lens
+        - isOpen: modal có đang mở hay không
+        - onClose: đóng modal
+        - product: truyền thông tin frame đang chọn cho modal
+        - supportedLensTypes: danh sách lens hỗ trợ
+        - onConfirmAddToCart: callback khi user xác nhận cấu hình lens
+      */}
       <LensSelectionModal
         isOpen={isLensModalOpen}
         onClose={() => setIsLensModalOpen(false)}
@@ -308,6 +655,7 @@ export default function ExchangeSelect() {
         onConfirmAddToCart={handleLensConfirm}
       />
 
+      {/* Link quay lại complaint detail */}
       <Link
         to={`/complaints/${id}`}
         style={{
@@ -321,9 +669,12 @@ export default function ExchangeSelect() {
         ← Back to complaint details
       </Link>
 
+      {/* Tiêu đề trang */}
       <h2 style={{ margin: "0 0 8px", fontSize: "24px" }}>
         Select Replacement Product
       </h2>
+
+      {/* Hiển thị complaint code ngắn gọn */}
       <p
         style={{
           color: "#6b7280",
@@ -335,7 +686,9 @@ export default function ExchangeSelect() {
         Complaint Code: <b>#{String(complaint.requestId).slice(0, 8)}</b>
       </p>
 
-      {/* Original item summary */}
+      {/* ==========================
+          TÓM TẮT SẢN PHẨM GỐC
+          ========================== */}
       {originalItem && (
         <div
           style={{
@@ -356,6 +709,8 @@ export default function ExchangeSelect() {
           >
             Original Product (to be returned)
           </h4>
+
+          {/* Tên sản phẩm gốc + đơn giá + số lượng */}
           <p style={{ margin: "2px 0", fontSize: "14px" }}>
             <b>{originalItem.frameName}</b> — {fmt(originalItem.unitPrice)}₫ ×{" "}
             {originalItem.quantity || 1}
@@ -363,7 +718,9 @@ export default function ExchangeSelect() {
         </div>
       )}
 
-      {/* Search */}
+      {/* ==========================
+          Ô TÌM KIẾM SẢN PHẨM
+          ========================== */}
       <div style={{ marginBottom: "16px" }}>
         <input
           type="text"
@@ -382,7 +739,9 @@ export default function ExchangeSelect() {
         />
       </div>
 
-      {/* Product grid */}
+      {/* ==========================
+          GRID HIỂN THỊ DANH SÁCH FRAME
+          ========================== */}
       <div
         style={{
           display: "grid",
@@ -392,9 +751,13 @@ export default function ExchangeSelect() {
         }}
       >
         {filteredFrames.map((f) => {
+          // Kiểm tra frame này có đang được chọn không
           const isSelected = selectedFrame?.frameId === f.frameId;
+
+          // Lấy ảnh từ nhiều nguồn field khác nhau để tránh backend không đồng nhất
           const imgUrl =
             f.frameMedia?.[0]?.mediaUrl || f.media?.[0]?.mediaUrl || f.imageUrl;
+
           return (
             <div
               key={f.frameId}
@@ -411,6 +774,7 @@ export default function ExchangeSelect() {
                   : "0 1px 3px rgba(0,0,0,0.05)",
               }}
             >
+              {/* Nếu có ảnh thì hiển thị ảnh */}
               {imgUrl && (
                 <img
                   src={imgUrl}
@@ -424,6 +788,8 @@ export default function ExchangeSelect() {
                   }}
                 />
               )}
+
+              {/* Tên frame */}
               <p
                 style={{
                   margin: "0 0 4px",
@@ -434,6 +800,8 @@ export default function ExchangeSelect() {
               >
                 {f.frameName}
               </p>
+
+              {/* Giá frame */}
               <p
                 style={{
                   margin: 0,
@@ -444,6 +812,8 @@ export default function ExchangeSelect() {
               >
                 ${f.basePrice || f.price}
               </p>
+
+              {/* Nếu item này đang được chọn thì hiển thị badge */}
               {isSelected && (
                 <span
                   style={{
@@ -460,6 +830,8 @@ export default function ExchangeSelect() {
             </div>
           );
         })}
+
+        {/* Nếu sau khi filter mà không còn frame nào */}
         {filteredFrames.length === 0 && (
           <p
             style={{
@@ -474,7 +846,9 @@ export default function ExchangeSelect() {
         )}
       </div>
 
-      {/* Configuration section — shown when a frame is selected */}
+      {/* ==========================
+          PHẦN CẤU HÌNH CHỈ HIỆN KHI ĐÃ CHỌN FRAME
+          ========================== */}
       {selectedFrame && (
         <div
           style={{
@@ -489,11 +863,14 @@ export default function ExchangeSelect() {
             Confirm Exchange
           </h3>
 
+          {/* Nếu đang tải chi tiết frame */}
           {loadingDetail ? (
             <p style={{ color: "#6b7280" }}>Loading product information...</p>
           ) : (
             <>
-              {/* Old vs New comparison */}
+              {/* ==========================
+                  SO SÁNH SẢN PHẨM CŨ VÀ MỚI
+                  ========================== */}
               <div
                 style={{
                   display: "grid",
@@ -502,6 +879,7 @@ export default function ExchangeSelect() {
                   marginBottom: "20px",
                 }}
               >
+                {/* Box sản phẩm cũ */}
                 {originalItem && (
                   <div
                     style={{
@@ -540,6 +918,8 @@ export default function ExchangeSelect() {
                     </p>
                   </div>
                 )}
+
+                {/* Box sản phẩm mới */}
                 <div
                   style={{
                     padding: "14px",
@@ -578,7 +958,10 @@ export default function ExchangeSelect() {
                 </div>
               </div>
 
-              {/* Price difference banner — only allow equal price */}
+              {/* ==========================
+                  BANNER CHÊNH LỆCH GIÁ
+                  Ở ĐÂY LOGIC ĐANG CHỈ CHO ĐỔI KHI GIÁ BẰNG NHAU
+                  ========================== */}
               {priceDiff !== null && originalItem && (
                 <div
                   style={{
@@ -622,6 +1005,8 @@ export default function ExchangeSelect() {
                         {fmt(newTotalPrice)}₫
                       </p>
                     </div>
+
+                    {/* Nếu không bằng giá thì hiện số chênh */}
                     {priceDiff !== 0 && (
                       <p
                         style={{
@@ -636,6 +1021,8 @@ export default function ExchangeSelect() {
                       </p>
                     )}
                   </div>
+
+                  {/* Message nhắc user phải chọn sản phẩm tương đương giá */}
                   {priceDiff !== 0 && (
                     <p
                       style={{
@@ -653,7 +1040,9 @@ export default function ExchangeSelect() {
                 </div>
               )}
 
-              {/* Color selection */}
+              {/* ==========================
+                  CHỌN MÀU CHO FRAME
+                  ========================== */}
               {frameDetail?.frameColors?.length > 0 && (
                 <div style={{ marginBottom: "16px" }}>
                   <label
@@ -666,12 +1055,17 @@ export default function ExchangeSelect() {
                   >
                     Select Color *
                   </label>
+
                   <div
                     style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
                   >
                     {frameDetail.frameColors.map((fc) => {
+                      // Kiểm tra màu này có đang được chọn không
                       const isActive = selectedColor?.colorId === fc.colorId;
+
+                      // Lấy tồn kho màu này
                       const stock = fc.stockQuantity || 0;
+
                       return (
                         <button
                           key={fc.colorId}
@@ -695,6 +1089,7 @@ export default function ExchangeSelect() {
                           }}
                           disabled={stock <= 0}
                         >
+                          {/* Chấm tròn hiển thị màu */}
                           <span
                             style={{
                               width: "16px",
@@ -704,7 +1099,11 @@ export default function ExchangeSelect() {
                               border: "1px solid #999",
                             }}
                           />
+
+                          {/* Tên màu */}
                           <span>{fc.color?.colorName || "N/A"}</span>
+
+                          {/* Trạng thái tồn kho */}
                           <span
                             style={{
                               fontSize: "11px",
@@ -720,7 +1119,9 @@ export default function ExchangeSelect() {
                 </div>
               )}
 
-              {/* Lens configuration button */}
+              {/* ==========================
+                  PHẦN CẤU HÌNH LENS
+                  ========================== */}
               <div style={{ marginBottom: "16px" }}>
                 <label
                   style={{
@@ -732,6 +1133,8 @@ export default function ExchangeSelect() {
                 >
                   Lens Configuration *
                 </label>
+
+                {/* Nếu đã cấu hình lens rồi */}
                 {lensConfig ? (
                   <div
                     style={{
@@ -767,6 +1170,8 @@ export default function ExchangeSelect() {
                         Total: ${lensConfig.finalPrice}
                       </p>
                     </div>
+
+                    {/* Nút đổi cấu hình lens */}
                     <button
                       onClick={() => setIsLensModalOpen(true)}
                       style={{
@@ -784,9 +1189,12 @@ export default function ExchangeSelect() {
                     </button>
                   </div>
                 ) : (
+                  // Nếu chưa cấu hình lens thì hiện nút để mở modal
                   <button
                     onClick={() => {
+                      // Nếu chưa có frameDetail thì không mở
                       if (!frameDetail) return;
+
                       setIsLensModalOpen(true);
                     }}
                     disabled={!frameDetail}
@@ -806,7 +1214,9 @@ export default function ExchangeSelect() {
                 )}
               </div>
 
-              {/* Quantity */}
+              {/* ==========================
+                  SỐ LƯỢNG
+                  ========================== */}
               <div style={{ marginBottom: "12px" }}>
                 <label
                   style={{
@@ -818,12 +1228,15 @@ export default function ExchangeSelect() {
                 >
                   Quantity
                 </label>
+
                 <input
                   type="number"
                   min="1"
                   max={selectedColor?.stockQuantity || 10}
                   value={quantity}
                   onChange={(e) =>
+                    // parseInt để đổi string -> number
+                    // Math.max(1, ...) để không cho nhỏ hơn 1
                     setQuantity(Math.max(1, parseInt(e.target.value) || 1))
                   }
                   style={{
@@ -836,7 +1249,11 @@ export default function ExchangeSelect() {
                 />
               </div>
 
-              {/* Shipping info */}
+              {/* ==========================
+                  THÔNG TIN NGƯỜI NHẬN
+                  ========================== */}
+
+              {/* Họ tên */}
               <div style={{ marginBottom: "12px" }}>
                 <label
                   style={{
@@ -863,6 +1280,8 @@ export default function ExchangeSelect() {
                   }}
                 />
               </div>
+
+              {/* Số điện thoại */}
               <div style={{ marginBottom: "12px" }}>
                 <label
                   style={{
@@ -889,6 +1308,8 @@ export default function ExchangeSelect() {
                   }}
                 />
               </div>
+
+              {/* Địa chỉ */}
               <div style={{ marginBottom: "20px" }}>
                 <label
                   style={{
@@ -916,6 +1337,7 @@ export default function ExchangeSelect() {
                 />
               </div>
 
+              {/* Nếu có lỗi thì hiện khối báo lỗi */}
               {error && (
                 <div
                   style={{
@@ -931,10 +1353,15 @@ export default function ExchangeSelect() {
                 </div>
               )}
 
+              {/* ==========================
+                  NÚT HÀNH ĐỘNG
+                  ========================== */}
               <div style={{ display: "flex", gap: "12px" }}>
                 <button
                   onClick={handleSubmit}
                   disabled={
+                    // Disable khi đang submit
+                    // hoặc khi có priceDiff nhưng khác 0
                     submitting || (priceDiff !== null && priceDiff !== 0)
                   }
                   style={{
@@ -956,6 +1383,8 @@ export default function ExchangeSelect() {
                 >
                   {submitting ? "Creating order..." : "Confirm Exchange"}
                 </button>
+
+                {/* Nút hủy -> quay lại complaint detail */}
                 <Link
                   to={`/complaints/${id}`}
                   style={{
