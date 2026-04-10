@@ -47,7 +47,7 @@ export default function AdminLayout() {
             Lens Indices Management
           </Link>
           <Link to="/admin/orders" className="admin-link">
-            Orders
+            Orders Management
           </Link>
           <Link to="/admin/campaigns" className="admin-link">
             Pre-order Management
