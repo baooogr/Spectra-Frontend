@@ -410,7 +410,7 @@ function PreorderAmountCell({ order, headers, formatUSD }) {
           list.find((p) => p.paymentStatus === "completed") || list[0];
         if (paid?.amount) setAmount(paid.amount);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       cancelled = true;
     };
@@ -580,8 +580,8 @@ export default function AdminOrders() {
           const err = await convertRes.json();
           alert(
             "Conversion error: " +
-              (err.message ||
-                "Please check order status (must be Paid or Confirmed)"),
+            (err.message ||
+              "Please check order status (must be Paid or Confirmed)"),
           );
           return;
         }
@@ -736,13 +736,13 @@ export default function AdminOrders() {
 
     const itemsList = selectedOrder.isPreorder
       ? selectedOrder.preorderItems ||
-        selectedOrder.items ||
-        selectedOrder.orderItems ||
-        []
+      selectedOrder.items ||
+      selectedOrder.orderItems ||
+      []
       : selectedOrder.orderItems ||
-        selectedOrder.items ||
-        selectedOrder.orderDetails ||
-        [];
+      selectedOrder.items ||
+      selectedOrder.orderDetails ||
+      [];
 
     return (
       <>
@@ -1051,41 +1051,41 @@ export default function AdminOrders() {
                             </option>
                             {isPreorder
                               ? (() => {
-                                  const s = (order.status || "").toLowerCase();
-                                  const preorderTransitions = {
-                                    pending: ["confirmed", "cancelled"],
-                                    confirmed: ["paid", "cancelled"],
-                                    paid: ["converted", "cancelled"],
-                                    converted: [],
-                                    cancelled: [],
-                                  };
-                                  const allowed = preorderTransitions[s] || [];
-                                  return allowed.map((st) => (
-                                    <option key={st} value={st}>
-                                      {st === "converted"
-                                        ? "Processing"
-                                        : st.charAt(0).toUpperCase() +
-                                          st.slice(1)}
-                                    </option>
-                                  ));
-                                })()
+                                const s = (order.status || "").toLowerCase();
+                                const preorderTransitions = {
+                                  pending: ["confirmed", "cancelled"],
+                                  confirmed: ["paid", "cancelled"],
+                                  paid: ["converted", "cancelled"],
+                                  converted: [],
+                                  cancelled: [],
+                                };
+                                const allowed = preorderTransitions[s] || [];
+                                return allowed.map((st) => (
+                                  <option key={st} value={st}>
+                                    {st === "converted"
+                                      ? "Processing"
+                                      : st.charAt(0).toUpperCase() +
+                                      st.slice(1)}
+                                  </option>
+                                ));
+                              })()
                               : (() => {
-                                  const s = (order.status || "").toLowerCase();
-                                  const orderTransitions = {
-                                    pending: ["confirmed", "cancelled"],
-                                    confirmed: ["processing", "cancelled"],
-                                    processing: ["shipped", "cancelled"],
-                                    shipped: ["delivered"],
-                                    delivered: [],
-                                    cancelled: [],
-                                  };
-                                  const allowed = orderTransitions[s] || [];
-                                  return allowed.map((st) => (
-                                    <option key={st} value={st}>
-                                      {st.charAt(0).toUpperCase() + st.slice(1)}
-                                    </option>
-                                  ));
-                                })()}
+                                const s = (order.status || "").toLowerCase();
+                                const orderTransitions = {
+                                  pending: ["confirmed", "cancelled"],
+                                  confirmed: ["processing", "cancelled"],
+                                  processing: ["cancelled"],
+                                  shipped: ["delivered"],
+                                  delivered: [],
+                                  cancelled: [],
+                                };
+                                const allowed = orderTransitions[s] || [];
+                                return allowed.map((st) => (
+                                  <option key={st} value={st}>
+                                    {st.charAt(0).toUpperCase() + st.slice(1)}
+                                  </option>
+                                ));
+                              })()}
                           </select>
                         </div>
                       </td>
@@ -1184,30 +1184,30 @@ export default function AdminOrders() {
               <span className="total-price">
                 {selectedOrder
                   ? (() => {
-                      const t =
-                        selectedOrder.totalAmount || selectedOrder.totalPrice;
-                      if (t) return formatUSD(t);
-                      const iList = selectedOrder.isPreorder
-                        ? selectedOrder.preorderItems ||
-                          selectedOrder.items ||
-                          selectedOrder.orderItems ||
-                          []
-                        : selectedOrder.orderItems ||
-                          selectedOrder.items ||
-                          selectedOrder.orderDetails ||
-                          [];
-                      const calc = iList.reduce((s, it) => {
-                        const p =
-                          it.orderPrice ||
-                          it.preorderPrice ||
-                          it.campaignPrice ||
-                          it.unitPrice ||
-                          it.price ||
-                          0;
-                        return s + p * (it.quantity || 1);
-                      }, 0);
-                      return formatUSD(calc);
-                    })()
+                    const t =
+                      selectedOrder.totalAmount || selectedOrder.totalPrice;
+                    if (t) return formatUSD(t);
+                    const iList = selectedOrder.isPreorder
+                      ? selectedOrder.preorderItems ||
+                      selectedOrder.items ||
+                      selectedOrder.orderItems ||
+                      []
+                      : selectedOrder.orderItems ||
+                      selectedOrder.items ||
+                      selectedOrder.orderDetails ||
+                      [];
+                    const calc = iList.reduce((s, it) => {
+                      const p =
+                        it.orderPrice ||
+                        it.preorderPrice ||
+                        it.campaignPrice ||
+                        it.unitPrice ||
+                        it.price ||
+                        0;
+                      return s + p * (it.quantity || 1);
+                    }, 0);
+                    return formatUSD(calc);
+                  })()
                   : "$0.00"}
               </span>
             </div>
